@@ -1,0 +1,124 @@
+/* ==========================================================================
+   Alantech brand tokens — shared by desk (app_include_css) and website/login
+   (web_include_css). Colours are sampled from the Alantech logo and
+   alantech.in: leaf green + water blue, joined by a teal gradient.
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap");
+
+:root,
+[data-theme="light"] {
+	/* raw brand palette */
+	--al-green: #5bba47; /* logo green */
+	--al-green-50: #f0f9ed;
+	--al-green-100: #dff2d9;
+	--al-green-200: #bfe5b3;
+	--al-green-500: #46a336;
+	--al-green-600: #2f8a2a; /* white text passes ~4.4:1 */
+	--al-green-700: #2e7d24;
+	--al-blue: #2389b1; /* logo blue */
+	--al-blue-50: #eaf5fa;
+	--al-blue-100: #d3eaf4;
+	--al-blue-600: #1e7fa5;
+	--al-blue-700: #1c7396;
+	--al-teal: #2fa39a;
+	--al-ink: #1f2a30; /* website heading ink */
+
+	--al-gradient: linear-gradient(135deg, #2389b1 0%, #2fa39a 50%, #5bba47 100%);
+	--al-gradient-strong: linear-gradient(135deg, #1c7396 0%, #22887f 50%, #2f8a2a 100%);
+	--al-gradient-soft: linear-gradient(135deg, #eaf5fa 0%, #f0f9ed 100%);
+
+	--al-font-heading: "Outfit", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	--al-radius: 10px;
+	--al-radius-lg: 16px;
+	--al-shadow-card: 0 1px 2px rgba(16, 40, 50, 0.04), 0 8px 24px rgba(16, 40, 50, 0.06);
+	--al-ring: 0 0 0 3px rgba(91, 186, 71, 0.22);
+
+	/* Frappe semantic tokens (v15 + v16 names) */
+	--primary: var(--al-green-600);
+	--primary-color: var(--al-green-600);
+	--brand-color: var(--al-green-600);
+	--btn-primary: var(--al-green-600);
+	--primary-light: var(--al-green-50);
+	--progress-bar-bg: var(--al-green);
+	--checkbox-color: var(--al-green-600);
+	--checkbox-gradient: linear-gradient(180deg, var(--al-green-500) -124.51%, var(--al-green-600) 100%);
+	--date-active-bg: var(--al-green-600);
+	--date-active-text: #fff;
+	--date-range-bg: var(--al-green-50);
+	--focus-default: var(--al-ring);
+	--link-color: var(--al-blue-700);
+}
+
+[data-theme="dark"] {
+	--al-green-50: rgba(91, 186, 71, 0.12);
+	--al-green-100: rgba(91, 186, 71, 0.2);
+	--al-green-200: rgba(91, 186, 71, 0.32);
+	--al-green-500: #6cc65a;
+	--al-green-600: #4fae3d;
+	--al-green-700: #3e9a35;
+	--al-blue-50: rgba(35, 137, 177, 0.14);
+	--al-blue-100: rgba(35, 137, 177, 0.24);
+	--al-blue-700: #5fb6d8;
+	--al-ink: #f1f5f7;
+	--al-gradient-soft: linear-gradient(135deg, rgba(35, 137, 177, 0.14) 0%, rgba(91, 186, 71, 0.12) 100%);
+	--al-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+
+	--primary: var(--al-green-600);
+	--primary-color: var(--al-green-600);
+	--brand-color: var(--al-green-600);
+	--btn-primary: var(--al-green-600);
+	--primary-light: var(--al-green-50);
+	--checkbox-color: var(--al-green-600);
+	--date-active-bg: var(--al-green-600);
+	--date-range-bg: var(--al-green-50);
+	--link-color: var(--al-blue-700);
+}
+
+/* ---- Buttons: shared between desk and web --------------------------------- */
+
+/* Bootstrap/legacy primary (v15 everywhere, v16 dialogs & older pages) */
+.btn.btn-primary,
+.btn-primary {
+	background-color: var(--al-green-600);
+	border-color: var(--al-green-600);
+	color: #fff;
+	--icon-fill-bg: var(--al-green-600);
+	--icon-stroke: #fff;
+}
+.btn.btn-primary:hover,
+.btn.btn-primary:focus,
+.btn-primary:not(:disabled):not(.disabled):hover {
+	background-color: var(--al-green-700);
+	border-color: var(--al-green-700);
+	color: #fff;
+}
+.btn.btn-primary:active,
+.btn-primary:not(:disabled):not(.disabled):active {
+	background-color: var(--al-green-700) !important;
+	border-color: var(--al-green-700) !important;
+}
+.btn.btn-primary:focus-visible {
+	box-shadow: var(--al-ring);
+}
+
+.btn-primary-light,
+.btn.btn-primary-light {
+	background-color: var(--al-green-50);
+	color: var(--al-green-700);
+}
+.btn-primary-light:hover {
+	background-color: var(--al-green-100);
+	color: var(--al-green-700);
+}
+
+/* Espresso solid buttons (v16): only the default gray theme gets the brand,
+   so red "danger" buttons keep their colour. */
+.es-button[data-variant="solid"]:not([data-theme]),
+.es-button[data-variant="solid"][data-theme="gray"] {
+	--bt-solid-bg: var(--al-green-600);
+	--bt-solid-bg-hover: var(--al-green-700);
+	--bt-solid-bg-active: var(--al-green-700);
+	--bt-solid-fg: #fff;
+	--bt-focus: 2px solid rgba(91, 186, 71, 0.45);
+}

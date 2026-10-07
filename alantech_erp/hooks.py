@@ -4,7 +4,7 @@ app_publisher = "JincyTricta"
 app_description = "ERP Platform"
 app_email = "jincy@tricta.com"
 app_license = "mit"
-
+app_logo_url = "/assets/alantech_erp/images/alantech-logo.png"
 # Apps
 # ------------------
 
@@ -13,24 +13,37 @@ app_license = "mit"
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
 # 	{
-# 		"name": "alantech_erp",
-# 		"logo": "/assets/alantech_erp/logo.png",
-# 		"title": "AlanTech",
-# 		"route": "/alantech_erp",
-# 		"has_permission": "alantech_erp.api.permission.has_app_permission"
+# 		"name": "AlanTech ERP",
+# 		# "logo": "/assets/crm/images/logo.svg",
+# 		"title": "AlanTech ERP",
+# 		"route": "/core",
 # 	}
 # ]
+
+website_context = {
+	"footer_powered": "AlanTech ERP",
+	"favicon": "/assets/alantech_erp/images/alantech-favicon.png",
+	"splash_image": "/assets/alantech_erp/images/alantech-logo.png",
+	"banner_image": "/assets/alantech_erp/images/alantech-logo.png",
+	"navbar_logo": "/assets/alantech_erp/images/alantech-logo.png",
+}
 
 # Includes in <head>
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/alantech_erp/css/alantech_erp.css"
+app_include_css = [
+	"/assets/alantech_erp/css/alantech_tokens.css",
+	"/assets/alantech_erp/css/alantech_desk.css",
+]
 # app_include_js = "/assets/alantech_erp/js/alantech_erp.js"
 
 # include js, css files in header of web template
-# web_include_css = "/assets/alantech_erp/css/alantech_erp.css"
-# web_include_js = "/assets/alantech_erp/js/alantech_erp.js"
+web_include_css = [
+	"/assets/alantech_erp/css/alantech_tokens.css",
+	"/assets/alantech_erp/css/alantech_web.css",
+]
+# web_include_js = "/assets/alantech_erp/js/alantech_web.js"
 
 # include custom scss in every website theme (without file extension ".scss")
 # website_theme_scss = "alantech_erp/public/scss/website"
@@ -253,3 +266,6 @@ app_license = "mit"
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
+# Login page branding ("Login to AlanTech" + logo)
+after_install = "alantech_erp.install.apply_branding"
+after_migrate = "alantech_erp.install.apply_branding"

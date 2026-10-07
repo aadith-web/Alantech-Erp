@@ -1,0 +1,323 @@
+/* ==========================================================================
+   Alantech ERP — Desk theme  (loaded via app_include_css)
+   Works on Frappe/ERPNext v16 (espresso sidebar) and v15 (navbar + sidebar).
+   Requires alantech_tokens.css to be loaded first.
+   ========================================================================== */
+
+/* ---- Typography ---------------------------------------------------------- */
+.page-title .title-text,
+.page-head .title-text,
+.widget-group-title,
+.workspace-title,
+.form-section-heading,
+.section-head,
+.modal-title,
+.header-title,
+h1, h2, h3, .h1, .h2, .h3 {
+	font-family: var(--al-font-heading);
+	letter-spacing: -0.01em;
+}
+.page-title .title-text,
+.page-head .title-text {
+	font-weight: 600;
+	color: var(--al-ink);
+}
+
+/* ---- Top brand stripe (sits above everything, both versions) ------------- */
+body[data-route]::before {
+	content: "";
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 3px;
+	background: var(--al-gradient);
+	z-index: 1050;
+	pointer-events: none;
+}
+
+/* ---- v15 top navbar ------------------------------------------------------ */
+.navbar {
+	border-bottom: 1px solid var(--border-color);
+	box-shadow: 0 1px 0 rgba(35, 137, 177, 0.06);
+}
+.navbar .navbar-brand .app-logo {
+	max-height: 28px;
+	width: auto;
+}
+.navbar .search-bar .awesomplete input:focus {
+	box-shadow: var(--al-ring);
+}
+
+/* ---- Sidebar (v16 .body-sidebar, v15 .desk-sidebar / .layout-side-section) */
+.body-sidebar .sidebar-header .header-logo img,
+.shell-header .header-logo img {
+	object-fit: contain;
+	border-radius: 6px;
+}
+
+.body-sidebar .standard-sidebar-item,
+.desk-sidebar .standard-sidebar-item,
+.sidebar-item-container .standard-sidebar-item {
+	position: relative;
+	border-radius: 8px;
+	transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.body-sidebar .standard-sidebar-item:hover,
+.desk-sidebar .standard-sidebar-item:hover,
+.body-sidebar .hover {
+	background-color: var(--al-green-50);
+}
+
+/* active item: soft green fill + gradient accent bar */
+.standard-sidebar-item.active-sidebar,
+.standard-sidebar-item.selected,
+.body-sidebar .active-sidebar:not(.shell-header) {
+	background: var(--al-green-50) !important;
+	box-shadow: inset 0 0 0 1px var(--al-green-100) !important;
+}
+.standard-sidebar-item.active-sidebar::before,
+.standard-sidebar-item.selected::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 6px;
+	bottom: 6px;
+	width: 3px;
+	border-radius: 0 3px 3px 0;
+	background: var(--al-gradient);
+}
+.standard-sidebar-item.active-sidebar .sidebar-item-label,
+.standard-sidebar-item.selected .sidebar-item-label {
+	color: var(--al-green-700);
+	font-weight: 600;
+}
+.standard-sidebar-item.active-sidebar .sidebar-item-icon,
+.standard-sidebar-item.selected .sidebar-item-icon {
+	color: var(--al-green-600);
+	--icon-stroke: var(--al-green-600);
+}
+.standard-sidebar-item.active-sidebar .sidebar-item-icon .icon,
+.standard-sidebar-item.selected .sidebar-item-icon .icon {
+	stroke: var(--al-green-600);
+}
+
+/* section labels */
+.body-sidebar .section-break .sidebar-item-label,
+.desk-sidebar .standard-sidebar-section .standard-sidebar-label {
+	color: var(--al-blue-700);
+	font-weight: 600;
+	text-transform: uppercase;
+	font-size: 11px;
+	letter-spacing: 0.06em;
+}
+
+/* list / report left sidebar (v15 + v16) */
+.list-sidebar .sidebar-label .icon,
+.list-sidebar .list-link a:hover {
+	color: var(--al-green-600);
+}
+
+/* ---- Page header --------------------------------------------------------- */
+.page-head {
+	border-bottom: 1px solid var(--border-color);
+}
+
+/* ---- Workspace / home page widgets -------------------------------------- */
+.widget {
+	border-radius: var(--al-radius) !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.widget.shortcut-widget-box:hover,
+.widget.links-widget-box:hover,
+.widget.number-widget-box:hover,
+.widget.quick-list-widget-box:hover {
+	border-color: var(--al-green-200) !important;
+	box-shadow: var(--al-shadow-card);
+}
+.widget.shortcut-widget-box:hover {
+	transform: translateY(-1px);
+}
+.widget.shortcut-widget-box .widget-title,
+.widget.shortcut-widget-box:hover .widget-title {
+	color: var(--al-ink);
+}
+.widget.shortcut-widget-box:hover .widget-title {
+	color: var(--al-green-700);
+}
+
+/* number cards: brand top accent */
+.widget.number-widget-box {
+	position: relative;
+	overflow: hidden;
+}
+.widget.number-widget-box::before {
+	content: "";
+	position: absolute;
+	inset: 0 0 auto 0;
+	height: 3px;
+	background: var(--al-gradient);
+}
+.widget.number-widget-box .widget-content .number {
+	font-family: var(--al-font-heading);
+	color: var(--al-ink);
+}
+
+/* card links list */
+.widget.links-widget-box .link-item:hover,
+.widget.links-widget-box .link-item:hover .link-text {
+	color: var(--al-green-700);
+}
+.widget.links-widget-box .widget-head .widget-title {
+	color: var(--al-blue-700);
+}
+
+/* workspace header blocks & spacers */
+.ce-header {
+	font-family: var(--al-font-heading);
+	color: var(--al-ink);
+}
+
+/* onboarding widget */
+.widget.onboarding-widget-box {
+	background: var(--al-gradient-soft);
+	border-color: var(--al-green-100);
+}
+.onboarding-step.active .step-title,
+.onboarding-step.complete .step-index {
+	color: var(--al-green-700);
+}
+
+/* ---- Forms --------------------------------------------------------------- */
+.form-control:focus,
+.form-control:focus-within,
+.awesomplete input:focus,
+.frappe-control .control-input:focus-within .form-control,
+select.form-control:focus,
+textarea.form-control:focus {
+	border-color: var(--al-green) !important;
+	box-shadow: var(--al-ring) !important;
+}
+
+/* form tabs */
+.form-tabs-list .form-tabs .nav-item .nav-link.active {
+	color: var(--al-green-700);
+	font-weight: 600;
+	border-bottom: 2px solid var(--al-green-600);
+	padding-bottom: 8px;
+}
+.form-tabs-list .form-tabs .nav-item .nav-link:hover {
+	color: var(--al-green-700);
+}
+
+/* section collapse arrows & links */
+.form-section .section-head.collapsible:hover,
+.form-dashboard-section .section-head:hover {
+	color: var(--al-green-700);
+}
+
+/* checkboxes & switches */
+input[type="checkbox"]:checked,
+.form-check-input:checked {
+	background-color: var(--al-green-600) !important;
+	border-color: var(--al-green-600) !important;
+}
+.switch input:checked + .slider,
+.form-switch .form-check-input:checked {
+	background-color: var(--al-green-600) !important;
+}
+
+/* grid (child tables) */
+.grid-heading-row {
+	background: var(--al-gradient-soft) !important;
+}
+.grid-row-open .grid-form-heading,
+.grid-row .row-index:hover {
+	color: var(--al-green-700);
+}
+
+/* ---- List view ----------------------------------------------------------- */
+.list-row:hover,
+.list-row-container:hover .list-row {
+	background-color: var(--al-green-50);
+}
+.list-row .level-left .list-subject a:hover,
+.list-row .list-subject .bold a:hover {
+	color: var(--al-green-700);
+}
+.list-paging-area .btn-paging.btn-info,
+.list-paging-area .btn-group .btn.btn-info {
+	background: var(--al-green-50);
+	color: var(--al-green-700);
+}
+.filter-selector .filter-button.btn-primary-light,
+.filter-button.btn-primary-light {
+	background: var(--al-green-50) !important;
+	color: var(--al-green-700) !important;
+}
+
+/* ---- Datepicker ---------------------------------------------------------- */
+.datepicker--cell.-selected-,
+.datepicker--cell.-selected-.-current- {
+	background: var(--al-green-600) !important;
+	color: #fff !important;
+}
+.datepicker--cell.-current- {
+	color: var(--al-green-700);
+}
+.datepicker--cell.-in-range- {
+	background: var(--al-green-50);
+}
+
+/* ---- Progress, pills, misc ---------------------------------------------- */
+.progress-bar,
+.es-progress [data-part="indicator"] {
+	background: var(--al-gradient);
+}
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+	background-color: var(--al-green-600);
+}
+.dropdown-item:active,
+.dropdown-item.active {
+	background-color: var(--al-green-50);
+	color: var(--al-green-700);
+}
+.awesomplete > ul > li[aria-selected="true"],
+.awesomplete > ul > li:hover {
+	background-color: var(--al-green-50) !important;
+}
+::selection {
+	background: rgba(91, 186, 71, 0.25);
+}
+
+/* modal header accent */
+.modal-content {
+	border-radius: var(--al-radius-lg);
+	overflow: hidden;
+	position: relative;
+}
+.modal-content::before {
+	content: "";
+	position: absolute;
+	inset: 0 0 auto 0;
+	height: 3px;
+	background: var(--al-gradient);
+	z-index: 1;
+}
+
+/* ---- Desk splash screen -------------------------------------------------- */
+.splash {
+	background: var(--bg-color);
+}
+.splash img {
+	max-width: 220px;
+	max-height: 120px;
+	object-fit: contain;
+}
+
+/* ---- Scrollbar ----------------------------------------------------------- */
+::-webkit-scrollbar-thumb:hover {
+	background-color: var(--al-green-200);
+}
