@@ -1,40 +1,36 @@
-### Alantech Erp
+# Alantech ERP
 
-Alentech Erp Customization
+Custom Frappe/ERPNext app for Alantech Industries India Pvt. Ltd.
 
-### Installation
+Built on ERPNext, Frappe HRMS and India Compliance (**version-16**).
 
-You can install this app using the [bench](https://github.com/frappe/bench) CLI:
+It brands the platform for Alantech: app name and logos on the login page, apps
+screen, splash screen and favicon, plus a light brand layer (leaf green + water
+blue) on top of Frappe v16's Espresso design system for the desk, login and website.
+
+## Requirements
+
+- Frappe / ERPNext `version-16`
+- Python 3.14, Node 24, MariaDB 11.8 (Frappe v16 requirements)
+
+## Install
 
 ```bash
-cd $PATH_TO_YOUR_BENCH
-bench get-app $URL_OF_THIS_REPO --branch version-16
-bench install-app alantech_erp
+bench get-app <repo-url> --branch version-16
+bench --site <site> install-app alantech_erp
+bench build --app alantech_erp
 ```
 
-### Contributing
+Branding values are (re)applied on every `bench migrate`.
 
-This app uses `pre-commit` for code formatting and linting. Please [install pre-commit](https://pre-commit.com/#installation) and enable it for this repository:
+## Theme files
 
-```bash
-cd apps/alantech_erp
-pre-commit install
-```
+| File | Loaded on | Purpose |
+|---|---|---|
+| `public/css/alantech_tokens.css` | desk + web | Brand palette mapped onto Frappe v16 tokens, buttons |
+| `public/css/alantech_desk.css` | desk (`/desk`) | Sidebar, dock, apps screen, forms, lists, workspaces |
+| `public/css/alantech_web.css` | web (`/login`, portal) | Login / password pages, website |
 
-Pre-commit is configured to use the following tools for checking and formatting your code:
+## License
 
-- ruff
-- eslint
-- prettier
-- pyupgrade
-### CI
-
-This app can use GitHub Actions for CI. The following workflows are configured:
-
-- CI: Installs this app and runs unit tests on every push to `develop` branch.
-- Linters: Runs [Frappe Semgrep Rules](https://github.com/frappe/semgrep-rules) and [pip-audit](https://pypi.org/project/pip-audit/) on every pull request.
-
-
-### License
-
-mit
+Proprietary

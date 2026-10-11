@@ -1,9 +1,9 @@
 [project]
 name = "alantech_erp"
 authors = [
-    { name = "Aadith", email = "aadith.p@tricta.com"}
+    { name = "JincyTricta", email = "jincy@tricta.com"}
 ]
-description = "Alentech Erp Customization"
+description = "ERP Platform"
 requires-python = ">=3.14"
 readme = "README.md"
 dynamic = ["version"]
@@ -51,11 +51,6 @@ ignore = [
     "F405", # can't detect undefined names from * import
     "F722", # syntax error in forward type annotation
     "W191", # indentation contains tabs
-    "UP030", # Use implicit references for positional format fields (translations)
-    "UP031", # Use format specifiers instead of percent format
-    "UP032", # Use f-string instead of `format` call (translations)
-    "UP037", # quoted annotations
-    "UP040", # Use type aliases instead of type annotations
 ]
 typing-modules = ["frappe.types.DF"]
 

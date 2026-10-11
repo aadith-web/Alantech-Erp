@@ -1,9 +1,14 @@
 app_name = "alantech_erp"
-app_title = "Alantech Erp"
-app_publisher = "Aadith"
-app_description = "Alentech Erp Customization"
-app_email = "aadith.p@tricta.com"
+app_title = "AlanTech"
+app_publisher = "JincyTricta"
+app_description = "ERP Platform"
+app_email = "jincy@tricta.com"
 app_license = "mit"
+app_logo_url = "/assets/alantech_erp/images/alantech-logo.png"
+
+# Frappe v16: desk lives under /desk (/app/* redirects there).
+# This app adds no modules of its own, so it is deliberately NOT placed on the
+# apps screen (add_to_apps_screen) and ships no Dock record.
 
 # Apps
 # ------------------
@@ -13,24 +18,38 @@ app_license = "mit"
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
 # 	{
-# 		"name": "alantech_erp",
-# 		"logo": "/assets/alantech_erp/logo.png",
-# 		"title": "Alantech Erp",
-# 		"route": "/alantech_erp",
-# 		"has_permission": "alantech_erp.api.permission.has_app_permission"
+# 		"name": "AlanTech ERP",
+# 		# "logo": "/assets/crm/images/logo.svg",
+# 		"title": "AlanTech ERP",
+# 		"route": "/core",
 # 	}
 # ]
+
+website_context = {
+	"footer_powered": "AlanTech ERP",
+	"favicon": "/assets/alantech_erp/images/alantech-favicon.png",
+	"splash_image": "/assets/alantech_erp/images/alantech-logo.png",
+	"banner_image": "/assets/alantech_erp/images/alantech-logo.png",
+	"navbar_logo": "/assets/alantech_erp/images/alantech-logo.png",
+}
 
 # Includes in <head>
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/alantech_erp/css/alantech_erp.css"
+# Brand layer on top of Frappe v16's Espresso design system. Tokens must load first.
+app_include_css = [
+	"/assets/alantech_erp/css/alantech_tokens.css",
+	"/assets/alantech_erp/css/alantech_desk.css",
+]
 # app_include_js = "/assets/alantech_erp/js/alantech_erp.js"
 
 # include js, css files in header of web template
-# web_include_css = "/assets/alantech_erp/css/alantech_erp.css"
-# web_include_js = "/assets/alantech_erp/js/alantech_erp.js"
+web_include_css = [
+	"/assets/alantech_erp/css/alantech_tokens.css",
+	"/assets/alantech_erp/css/alantech_web.css",
+]
+# web_include_js = "/assets/alantech_erp/js/alantech_web.js"
 
 # include custom scss in every website theme (without file extension ".scss")
 # website_theme_scss = "alantech_erp/public/scss/website"
@@ -70,9 +89,6 @@ app_license = "mit"
 # automatically create page for each record of this doctype
 # website_generators = ["Web Page"]
 
-# automatically load and sync documents of this doctype from downstream apps
-# importable_doctypes = [doctype_1]
-
 # Jinja
 # ----------
 
@@ -110,12 +126,6 @@ app_license = "mit"
 # before_app_uninstall = "alantech_erp.utils.before_app_uninstall"
 # after_app_uninstall = "alantech_erp.utils.after_app_uninstall"
 
-# Build
-# ------------------
-# To hook into the build process
-
-# after_build = "alantech_erp.build.after_build"
-
 # Desk Notifications
 # ------------------
 # See frappe.core.notifications.get_notification_config
@@ -138,6 +148,14 @@ app_license = "mit"
 #
 # has_permission = {
 # 	"Event": "frappe.desk.doctype.event.event.has_permission",
+# }
+
+# DocType Class
+# ---------------
+# Override standard doctype classes
+
+# override_doctype_class = {
+# 	"ToDo": "custom_app.overrides.CustomToDo"
 # }
 
 # Document Events
@@ -177,14 +195,6 @@ app_license = "mit"
 # -------
 
 # before_tests = "alantech_erp.install.before_tests"
-
-# Extend DocType Class
-# ------------------------------
-#
-# Specify custom mixins to extend the standard doctype controller.
-# extend_doctype_class = {
-# 	"Task": "alantech_erp.custom.task.CustomTaskMixin"
-# }
 
 # Overriding Methods
 # ------------------------------
@@ -262,3 +272,6 @@ app_license = "mit"
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
+# Branding: app name + logo on /login, /update-password and the v16 apps screen (/desk)
+after_install = "alantech_erp.install.apply_branding"
+after_migrate = "alantech_erp.install.apply_branding"

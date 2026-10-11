@@ -1,0 +1,185 @@
+/* ==========================================================================
+   Alantech ERP — Desk theme for Frappe v16  (app_include_css)
+   Requires alantech_tokens.css first.
+
+   Selectors follow the v16 desk shell (verified against frappe version-16):
+     .body-sidebar-container > .body-sidebar   left sidebar (no top .navbar)
+     .dock#desk-dock                           floating module rail
+     .desktop-wrapper                          apps screen at /desk
+     .page-head .es-breadcrumbs                page title (no .title-text)
+     .es-button[data-variant="solid"]          primary actions
+   The look stays v16 (neutral surfaces, flat, Inter); only accents change.
+   ========================================================================== */
+
+/* ---- Sidebar ------------------------------------------------------------- */
+
+/* Header mark (app logo or module icon) */
+.body-sidebar .sidebar-header .header-logo img,
+.shell-header .header-logo img {
+	object-fit: contain;
+}
+
+/* Active row: keep v16's raised white row, carry the brand in its glyph
+   and a short accent bar on the leading edge. */
+.body-sidebar .standard-sidebar-item {
+	position: relative;
+}
+.body-sidebar .standard-sidebar-item.active-sidebar::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 7px;
+	bottom: 7px;
+	width: 2px;
+	border-radius: 0 2px 2px 0;
+	background: var(--al-accent);
+}
+.body-sidebar .standard-sidebar-item.active-sidebar .item-anchor {
+	color: var(--ink-gray-9);
+}
+.body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-icon {
+	color: var(--al-accent-ink);
+	--icon-stroke: var(--al-accent-ink);
+}
+.body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-icon .icon {
+	stroke: var(--al-accent-ink);
+}
+/* collapsed 48px rail: the bar would sit under the glyph, drop it */
+.body-sidebar-container:not(.expanded) .standard-sidebar-item.active-sidebar::before {
+	display: none;
+}
+
+/* ---- Dock (module rail) -------------------------------------------------- */
+/* tile fill only: dock icons can be duotone app marks, so their colours stay */
+.dock .dock-item.active:not(.dock-user-button) {
+	background: var(--al-accent-subtle-hover);
+}
+
+/* ---- Apps screen (/desk) ------------------------------------------------- */
+.desktop-wrapper #brand-logo {
+	height: 28px;
+	max-width: 160px;
+	object-fit: contain;
+}
+.desktop-wrapper .desktop-icon:hover .icon-container:has(.icon) {
+	background-color: var(--al-accent-subtle-hover);
+}
+.desktop-wrapper .desktop-icon:focus-visible .icon-container {
+	box-shadow: var(--al-ring);
+}
+
+/* ---- Page head ----------------------------------------------------------- */
+.page-head .es-breadcrumbs a.es-breadcrumbs__item:hover {
+	color: var(--al-accent-ink);
+}
+
+/* ---- Workspaces ---------------------------------------------------------- */
+.widget.shortcut-widget-box,
+.widget.links-widget-box,
+.widget.number-widget-box,
+.widget.quick-list-widget-box {
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.widget.shortcut-widget-box:hover,
+.widget.number-widget-box:hover,
+.widget.quick-list-widget-box:hover {
+	border-color: var(--al-accent-outline);
+}
+.widget.shortcut-widget-box:hover .widget-title {
+	color: var(--al-accent-ink);
+}
+.widget.links-widget-box a.link-item:hover,
+.widget.links-widget-box a.link-item:hover .link-text {
+	color: var(--al-accent-ink);
+}
+.widget.onboarding-widget-box .onboarding-step.active .step-title {
+	color: var(--al-accent-ink);
+}
+
+/* ---- Forms --------------------------------------------------------------- */
+
+/* Inputs: v16 filled gray control, brand ring on focus */
+.frappe-control .form-control:focus,
+.frappe-control .form-control:focus-within,
+.frappe-control .awesomplete input:focus,
+.modal .form-control:focus {
+	border-color: var(--al-accent-outline);
+	box-shadow: var(--al-ring);
+}
+
+/* Form tabs: v16 draws a 1px ink underline; make it a 2px brand line */
+.form-tabs-list .form-tabs .nav-item .nav-link.active {
+	border-bottom: 2px solid var(--al-accent);
+	padding-bottom: 8px;
+	color: var(--ink-gray-9);
+}
+.form-tabs-list .form-tabs .nav-item .nav-link:not(.active):hover {
+	color: var(--ink-gray-8);
+}
+
+/* Espresso tabs (side panels, settings pages) */
+.es-tabs__indicator {
+	background: var(--al-accent);
+}
+
+/* Switch: v16 checked track is near-black */
+.switch-control .input-area:has(input:checked) ~ .switch-visual {
+	background-color: var(--al-accent);
+}
+.switch-control:hover .input-area:has(input:checked) ~ .switch-visual {
+	background-color: var(--al-accent-hover);
+}
+.switch-control .input-area:has(input:focus-visible) ~ .switch-visual {
+	box-shadow: var(--al-ring);
+}
+
+/* Checkboxes in dark: v16 swaps to a black tick on a light box; on green
+   keep the tick in the button ink colour. */
+html[data-theme="dark"] input[type="checkbox"]:checked {
+	background-color: var(--al-accent);
+	background-image: url("data:image/svg+xml, <svg viewBox='0 0 8 7' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M1 4.00001L2.66667 5.80001L7 1.20001' stroke='%230f2a0b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>"),
+		var(--checkbox-gradient);
+}
+
+/* ---- Lists & reports ----------------------------------------------------- */
+.list-row-container .list-row .list-subject a:hover,
+.list-row .level-left .list-subject a:hover {
+	color: var(--al-accent-ink);
+}
+.list-row-container:has(.list-row-checkbox:checked) .list-row {
+	background-color: var(--al-accent-subtle);
+}
+
+/* ---- Progress ------------------------------------------------------------ */
+.progress-bar,
+.es-progress__fill,
+.es-progress__segment[data-filled] {
+	background: var(--al-accent);
+}
+
+/* ---- Menus / awesomebar -------------------------------------------------- */
+.dropdown-item.active,
+.dropdown-item:active {
+	background-color: var(--al-accent-subtle);
+	color: var(--al-accent-ink);
+}
+.awesomplete > ul > li[aria-selected="true"] {
+	background-color: var(--al-accent-subtle);
+}
+.navbar-modal-wrapper #navbar-search:focus {
+	box-shadow: none;
+}
+
+/* ---- Links inside content ------------------------------------------------ */
+.ql-editor a,
+.form-dashboard a.badge-link:hover,
+.timeline-content a:not(.btn):not(.es-button) {
+	color: var(--al-link);
+}
+
+/* ---- Splash screen ------------------------------------------------------- */
+.splash img {
+	max-width: 200px;
+	max-height: 96px;
+	object-fit: contain;
+}

@@ -1,0 +1,112 @@
+/* ==========================================================================
+   Alantech ERP — Login & website theme for Frappe v16  (web_include_css)
+   Requires alantech_tokens.css first.
+
+   v16 login markup (www/login.html):
+     body[data-path="login"] section.for-login|for-forgot|for-signup|
+       for-login-with-email-link > .login-content.page-card
+         .page-card-head > img.app-logo + .page-card-head-text > h4 + .page-card-subtitle
+         form .page-card-body (.form-group > label + .email-field|.password-field > input.form-control)
+         .page-card-actions > .es-button[data-variant="solid"], .btn-login-option
+   /update-password uses the same .page-card under .for-reset-password.
+   The card keeps v16's size, spacing and type; Alantech adds the logo,
+   a soft brand backdrop, green actions and brand focus rings.
+   ========================================================================== */
+
+/* ---- General website pages ---------------------------------------------- */
+.navbar .navbar-brand img {
+	max-height: 32px;
+	width: auto;
+}
+.navbar-light .navbar-nav .nav-link:hover,
+.navbar-light .navbar-nav .nav-link.active {
+	color: var(--al-accent-ink);
+}
+.web-footer {
+	border-top: 2px solid var(--al-accent);
+}
+.web-form .form-control:focus,
+.portal-container .form-control:focus {
+	border-color: var(--al-accent-outline);
+	box-shadow: var(--al-ring);
+}
+
+/* ==========================================================================
+   LOGIN / UPDATE PASSWORD
+   ========================================================================== */
+
+body[data-path="login"],
+body[data-path="update-password"] {
+	background-color: var(--surface-base, #fff);
+	background-image: var(--al-brand-wash);
+	background-attachment: fixed;
+}
+
+/* ---- Card ---------------------------------------------------------------- */
+body[data-path="login"] .page-card,
+body[data-path="update-password"] .page-card {
+	position: relative;
+	background-color: var(--surface-base, #fff);
+	border: 1px solid var(--outline-gray-1, #ededed);
+	box-shadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.06));
+	overflow: hidden;
+}
+/* thin brand rule along the top edge */
+body[data-path="login"] .page-card::before,
+body[data-path="update-password"] .page-card::before {
+	content: "";
+	position: absolute;
+	inset: 0 0 auto 0;
+	height: 3px;
+	background: linear-gradient(90deg, var(--al-blue) 0%, var(--al-green) 100%);
+}
+
+body[data-path="login"] .page-card-head .app-logo,
+body[data-path="update-password"] .page-card-head .app-logo {
+	height: 40px;
+	width: auto;
+	max-width: 180px;
+	object-fit: contain;
+	object-position: left center;
+}
+
+/* ---- Inputs -------------------------------------------------------------- */
+body[data-path="login"] .page-card-body .form-control:focus,
+body[data-path="update-password"] .page-card .form-control:focus {
+	border-color: var(--al-accent);
+	box-shadow: var(--al-ring);
+	outline: none;
+}
+
+/* ---- Actions ------------------------------------------------------------- */
+/* Solid buttons are branded via tokens; secondary options get a brand hover. */
+body[data-path="login"] .btn-login-option:hover {
+	background-color: var(--al-accent-subtle);
+	border-color: var(--al-accent-outline);
+}
+
+/* ---- Links --------------------------------------------------------------- */
+body[data-path="login"] .page-card a:not(.es-button):not(.btn),
+body[data-path="update-password"] .page-card a:not(.es-button):not(.btn) {
+	color: var(--al-link);
+	text-decoration: none;
+}
+body[data-path="login"] .page-card a:not(.es-button):not(.btn):hover,
+body[data-path="update-password"] .page-card a:not(.es-button):not(.btn):hover {
+	color: var(--al-accent-ink);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+/* ---- Mobile: v16 turns the card into a full-height sheet ----------------- */
+@media (max-width: 575.98px) {
+	body[data-path="login"],
+	body[data-path="update-password"] {
+		background-image: none;
+	}
+	body[data-path="login"] .page-card,
+	body[data-path="update-password"] .page-card {
+		border: 0;
+		box-shadow: none;
+	}
+}

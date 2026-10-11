@@ -1,0 +1,148 @@
+/* ==========================================================================
+   Alantech brand tokens — Frappe v16 (Espresso design system)
+   Loaded on desk (app_include_css) and website/login (web_include_css),
+   always before alantech_desk.css / alantech_web.css.
+
+   v16 is a neutral, flat system: gray surfaces (--surface-*), ink (--ink-*),
+   outlines (--outline-*), Inter, 8px radii, soft elevation. Alantech keeps
+   that language and only swaps the *accent*: everything that v16 paints
+   near-black (solid buttons, checkboxes, active tabs, date picks, focus
+   rings) becomes Alantech leaf green; links use Alantech water blue.
+
+   Theme selection in v16: <html data-theme="light|dark">. Espresso
+   components also use data-theme="red|green|…" on buttons/badges, so dark
+   overrides are always scoped to html[data-theme="dark"].
+
+   Deliberately NOT overridden: --surface-gray-10 (it also paints tooltips,
+   badges and the calendar "today" chip) and the gray surface/ink scales.
+   ========================================================================== */
+
+:root,
+html[data-theme="light"] {
+	/* ---- Raw brand palette (sampled from the Alantech logo) ---- */
+	--al-green: #5bba47;
+	--al-green-50: #f0f9ed;
+	--al-green-100: #dff2d9;
+	--al-green-200: #bfe5b3;
+	--al-green-500: #46a336;
+	--al-green-600: #2f8a2a; /* white text ≈ 4.5:1 */
+	--al-green-700: #276f22;
+	--al-green-800: #1f5a1b;
+	--al-blue: #2389b1;
+	--al-blue-50: #eaf5fa;
+	--al-blue-600: #1e7fa5;
+	--al-blue-700: #1c7396;
+
+	/* ---- Semantic brand roles (use these, not the raw palette) ---- */
+	--al-accent: var(--al-green-600); /* solid fills */
+	--al-accent-hover: var(--al-green-700);
+	--al-accent-active: var(--al-green-800);
+	--al-accent-fg: #ffffff; /* text/icon on solid accent */
+	--al-accent-subtle: var(--al-green-50); /* tinted surfaces */
+	--al-accent-subtle-hover: var(--al-green-100);
+	--al-accent-outline: var(--al-green-200);
+	--al-accent-ink: var(--al-green-700); /* brand-coloured text on page */
+	--al-link: var(--al-blue-700);
+	--al-ring-color: rgba(47, 138, 42, 0.35);
+	--al-ring: 0 0 0 2px var(--al-ring-color); /* same geometry as v16 --focus-default */
+	--al-ring-outline: 2px solid var(--al-ring-color);
+	--al-brand-wash: linear-gradient(160deg, var(--al-blue-50) 0%, #ffffff 45%, var(--al-green-50) 100%);
+
+	/* ---- Frappe v16 tokens re-pointed to the brand ---- */
+	--primary: var(--al-accent); /* checkbox/radio fill, filters, list sidebar, grid */
+	--primary-color: var(--al-accent);
+	--brand-color: var(--al-accent);
+	--btn-primary: var(--al-accent); /* legacy .btn.btn-primary */
+	--progress-bar-bg: var(--al-accent);
+	--checkbox-gradient: linear-gradient(180deg, var(--al-accent) 0%, var(--al-accent) 100%);
+	--checkbox-focus-shadow: var(--al-ring);
+	--date-active-bg: var(--al-accent);
+	--date-active-text: var(--al-accent-fg);
+	--date-range-bg: var(--al-accent-subtle);
+	--focus-default: var(--al-ring);
+	--focus-outline-default: var(--al-ring-outline);
+}
+
+html[data-theme="dark"] {
+	/* v16 dark buttons are *inverted* (light fill, dark text). Alantech follows
+	   that: a bright leaf-green fill with deep-green ink, ≈ 7:1 contrast. */
+	--al-accent: #5bba47;
+	--al-accent-hover: #6cc65a;
+	--al-accent-active: #7fd06e;
+	--al-accent-fg: #0f2a0b;
+	--al-accent-subtle: rgba(91, 186, 71, 0.14);
+	--al-accent-subtle-hover: rgba(91, 186, 71, 0.22);
+	--al-accent-outline: rgba(91, 186, 71, 0.4);
+	--al-accent-ink: #8fd57f;
+	--al-link: #5fb6d8;
+	--al-ring-color: rgba(91, 186, 71, 0.45);
+	--al-ring: 0 0 0 3px var(--al-ring-color); /* v16 dark rings are 3px */
+	--al-ring-outline: 3px solid var(--al-ring-color);
+	--al-brand-wash: none;
+
+	--primary: var(--al-accent);
+	--primary-color: var(--al-accent);
+	--brand-color: var(--al-accent);
+	--btn-primary: var(--al-accent);
+	--progress-bar-bg: var(--al-accent);
+	--checkbox-gradient: linear-gradient(180deg, var(--al-accent) 0%, var(--al-accent) 100%);
+	--checkbox-focus-shadow: var(--al-ring);
+	--date-active-bg: var(--al-accent);
+	--date-active-text: var(--al-accent-fg);
+	--date-range-bg: var(--al-accent-subtle);
+	--focus-default: var(--al-ring);
+	--focus-outline-default: var(--al-ring-outline);
+}
+
+/* ---- Buttons (desk + web) ------------------------------------------------ */
+
+/* Espresso button (v16 default everywhere: page primary action, dialogs,
+   login). Its colours are local vars declared on .es-button itself, so they
+   must be re-declared here, not on :root. Only the default gray theme is
+   branded; data-theme="red" (destructive) keeps its colour. */
+.es-button:not([data-theme]),
+.es-button[data-theme="gray"] {
+	--bt-solid-bg: var(--al-accent);
+	--bt-solid-bg-hover: var(--al-accent-hover);
+	--bt-solid-bg-active: var(--al-accent-active);
+	--bt-solid-fg: var(--al-accent-fg);
+	--bt-focus: var(--al-ring-outline);
+}
+
+/* Legacy Bootstrap primary (still used by some v16 screens and by ERPNext/HRMS) */
+.btn.btn-primary {
+	background-color: var(--al-accent);
+	border-color: var(--al-accent);
+	color: var(--al-accent-fg);
+	--icon-stroke: currentColor;
+	--icon-fill-bg: var(--al-accent);
+}
+.btn.btn-primary:hover,
+.btn.btn-primary:focus {
+	background-color: var(--al-accent-hover);
+	border-color: var(--al-accent-hover);
+	color: var(--al-accent-fg);
+}
+.btn.btn-primary:focus-visible {
+	box-shadow: var(--al-ring);
+}
+/* frappe sets :active with !important (and an undefined --invert-neutral) */
+.btn.btn-primary:active,
+.btn.btn-primary:not(:disabled):not(.disabled):active {
+	background-color: var(--al-accent-active) !important;
+	border-color: var(--al-accent-active) !important;
+	color: var(--al-accent-fg) !important;
+}
+
+.btn.btn-primary-light {
+	background-color: var(--al-accent-subtle);
+	color: var(--al-accent-ink);
+}
+.btn.btn-primary-light:hover {
+	background-color: var(--al-accent-subtle-hover);
+	color: var(--al-accent-ink);
+}
+
+::selection {
+	background: var(--al-accent-subtle-hover);
+}
