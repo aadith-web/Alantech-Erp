@@ -55,17 +55,207 @@
 	background: var(--al-accent-subtle-hover);
 }
 
-/* ---- Apps screen (/desk) ------------------------------------------------- */
+/* ---- Apps screen (/desk): Alantech launcher ----------------------------- */
+/* Scoped to .desktop-wrapper: v16 puts body.desktop-page on every desk page. */
+.desktop-wrapper {
+	--al-launch-bg: #f5f9f7;
+	--al-launch-glow-1: rgba(35, 137, 177, 0.14);
+	--al-launch-glow-2: rgba(91, 186, 71, 0.14);
+	--al-tile-bg: rgba(255, 255, 255, 0.85);
+	--al-tile-border: rgba(31, 42, 48, 0.08);
+	--al-tile-shadow: 0 1px 2px rgba(16, 40, 50, 0.05), 0 6px 18px -8px rgba(16, 40, 50, 0.12);
+	--al-tile-shadow-hover: 0 2px 4px rgba(16, 40, 50, 0.06), 0 16px 32px -12px rgba(16, 40, 50, 0.22);
+	--al-hero-from: #1c7396;
+	--al-hero-via: #22887f;
+	--al-hero-to: #2f8a2a;
+	min-height: 100vh;
+	background-color: var(--al-launch-bg);
+	background-image:
+		radial-gradient(900px 480px at 0% 0%, var(--al-launch-glow-1), transparent 60%),
+		radial-gradient(800px 520px at 100% 100%, var(--al-launch-glow-2), transparent 60%);
+	background-attachment: fixed;
+}
+html[data-theme="dark"] .desktop-wrapper {
+	--al-launch-bg: var(--surface-base);
+	--al-launch-glow-1: rgba(35, 137, 177, 0.16);
+	--al-launch-glow-2: rgba(91, 186, 71, 0.12);
+	--al-tile-bg: rgba(255, 255, 255, 0.04);
+	--al-tile-border: rgba(255, 255, 255, 0.08);
+	--al-tile-shadow: none;
+	--al-tile-shadow-hover: 0 16px 32px -12px rgba(0, 0, 0, 0.6);
+	--al-hero-from: #155a76;
+	--al-hero-via: #1a6b64;
+	--al-hero-to: #24691f;
+}
+
+/* top bar: frosted, so the backdrop shows through */
+.desktop-wrapper .desktop-navbar {
+	background: color-mix(in srgb, var(--surface-base) 72%, transparent);
+	backdrop-filter: saturate(160%) blur(12px);
+	-webkit-backdrop-filter: saturate(160%) blur(12px);
+	border-bottom-color: var(--al-tile-border);
+}
 .desktop-wrapper #brand-logo {
-	height: 28px;
-	max-width: 160px;
+	height: 30px;
+	max-width: 170px;
 	object-fit: contain;
+}
+.desktop-wrapper .desktop-navbar-modal-search,
+.desktop-wrapper .search-widget-button {
+	background: var(--al-tile-bg);
+	border: 1px solid var(--al-tile-border);
+}
+
+/* launcher column: hero on top, apps below */
+.desktop-wrapper .desktop-container.al-desk-launcher {
+	flex-direction: column;
+	align-items: center;
+	padding: 32px 24px 48px;
+}
+.desktop-wrapper .al-desk-launcher .icons-container {
+	margin-top: 0;
+	padding: 0;
+	width: min(100%, 980px);
+}
+
+/* hero */
+.al-desk-hero {
+	position: relative;
+	width: min(100%, 980px);
+	margin: 0 0 28px;
+	padding: 28px 32px;
+	border-radius: 20px;
+	color: #fff;
+	background: linear-gradient(120deg, var(--al-hero-from) 0%, var(--al-hero-via) 55%, var(--al-hero-to) 100%);
+	box-shadow: 0 18px 40px -20px rgba(28, 115, 150, 0.55);
+	overflow: hidden;
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 24px;
+	isolation: isolate;
+}
+/* the Alantech drop as a soft watermark */
+.al-desk-hero::after {
+	content: "";
+	position: absolute;
+	right: 24px;
+	top: 50%;
+	width: 190px;
+	height: 190px;
+	transform: translateY(-50%);
+	background: url("/assets/alantech_erp/images/alantech-drop-white.png") center / contain no-repeat;
+	opacity: 0.14;
+	z-index: -1;
+	pointer-events: none;
+}
+.al-desk-hero__date {
+	margin: 0 0 6px;
+	font-size: var(--text-sm, 13px);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	opacity: 0.8;
+}
+.al-desk-hero__title {
+	margin: 0;
+	font-size: 30px;
+	line-height: 1.15;
+	font-weight: 650;
+	letter-spacing: -0.015em;
+	color: #fff;
+}
+.al-desk-hero__subtitle {
+	margin: 8px 0 0;
+	font-size: var(--text-base, 14px);
+	opacity: 0.88;
+}
+
+/* app tiles as cards */
+.desktop-wrapper .al-desk-launcher .icons {
+	grid-template-rows: none;
+	gap: 16px;
+	justify-items: stretch;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+}
+.desktop-wrapper .al-desk-launcher .desktop-icon {
+	width: auto;
+	height: auto;
+	min-height: 140px;
+	justify-content: center;
+	padding: 20px 12px 16px;
+	border: 1px solid var(--al-tile-border);
+	border-radius: 18px;
+	background: var(--al-tile-bg);
+	box-shadow: var(--al-tile-shadow);
+	transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.desktop-wrapper .al-desk-launcher .desktop-icon:hover {
+	transform: translateY(-3px);
+	border-color: var(--al-accent-outline);
+	box-shadow: var(--al-tile-shadow-hover);
+}
+/* the card lifts; the icon no longer needs v16's own zoom */
+.desktop-wrapper .al-desk-launcher .desktop-icon:hover .icon-container,
+.desktop-wrapper .al-desk-launcher .icon-container:hover {
+	transform: none;
+}
+.desktop-wrapper .al-desk-launcher .icon-link::after {
+	border-radius: 18px;
+}
+.desktop-wrapper .al-desk-launcher .icon-container {
+	box-shadow: 0 6px 14px -8px rgba(16, 40, 50, 0.45);
+}
+.desktop-wrapper .al-desk-launcher .icon-title {
+	color: var(--ink-gray-8);
+}
+.desktop-wrapper .al-desk-launcher .desktop-icon:hover .icon-title {
+	color: var(--al-accent-ink);
+}
+.desktop-wrapper .desktop-icon:focus-within {
+	outline: none;
+	box-shadow: var(--al-ring), var(--al-tile-shadow);
 }
 .desktop-wrapper .desktop-icon:hover .icon-container:has(.icon) {
 	background-color: var(--al-accent-subtle-hover);
 }
-.desktop-wrapper .desktop-icon:focus-visible .icon-container {
-	box-shadow: var(--al-ring);
+
+@media (max-width: 767.98px) {
+	.desktop-wrapper .desktop-container.al-desk-launcher {
+		padding: 16px 16px 32px;
+	}
+	.al-desk-hero {
+		padding: 22px 20px;
+		border-radius: 16px;
+		margin-bottom: 20px;
+	}
+	.al-desk-hero__title {
+		font-size: 22px;
+	}
+	.al-desk-hero::after {
+		right: -20px;
+		width: 150px;
+		height: 150px;
+	}
+	/* beats v16's fixed 117px mobile tiles (body.desktop-page … > .desktop-icon) */
+	.desktop-wrapper .desktop-container.al-desk-launcher > .icons-container > .icons {
+		grid-template-columns: repeat(3, 1fr) !important;
+		gap: 10px;
+	}
+	.desktop-wrapper .desktop-container.al-desk-launcher > .icons-container > .icons > .desktop-icon {
+		width: 100%;
+		height: auto;
+		min-height: 112px;
+		padding: 14px 6px 10px;
+		gap: 8px;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.desktop-wrapper .al-desk-launcher .desktop-icon {
+		transition: none;
+	}
+	.desktop-wrapper .al-desk-launcher .desktop-icon:hover {
+		transform: none;
+	}
 }
 
 /* ---- Page head ----------------------------------------------------------- */

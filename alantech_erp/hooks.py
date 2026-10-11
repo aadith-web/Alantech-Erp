@@ -42,7 +42,9 @@ app_include_css = [
 	"/assets/alantech_erp/css/alantech_tokens.css",
 	"/assets/alantech_erp/css/alantech_desk.css",
 ]
-# app_include_js = "/assets/alantech_erp/js/alantech_erp.js"
+app_include_js = [
+	"/assets/alantech_erp/js/alantech_desk.js",  # apps screen welcome banner
+]
 
 # include js, css files in header of web template
 web_include_css = [
