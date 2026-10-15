@@ -163,6 +163,19 @@ web_include_css = [
 # 		"on_trash": "method"
 # 	}
 # }
+doc_events = {
+     "Employee": {
+        "validate": "alantech_erp.org_structure.apply_designation_defaults",
+        "on_update": "alantech_erp.org_structure.sync_user_role_profile",
+        }
+ }
+
+ fixtures += [
+    {"dt": "Role", "filters": [["name", "in", ["Proposal Engineer", "Design Engineer"]]]},
+    {"dt": "Role Profile", "filters": [["name", "like", "ALT %"]]},
+     {"dt": "Designation"},
+     {"dt": "Department"},
+ ]
 
 # Scheduled Tasks
 # ---------------
