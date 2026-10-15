@@ -163,19 +163,26 @@ web_include_css = [
 # 		"on_trash": "method"
 # 	}
 # }
-doc_events = {
-     "Employee": {
-        "validate": "alantech_erp.org_structure.apply_designation_defaults",
-        "on_update": "alantech_erp.org_structure.sync_user_role_profile",
-        }
- }
-
- fixtures += [
+fixtures = [
+    {"dt": "Custom Field", "filters": [["fieldname", "like", "alt\\_%"]]},
+    {"dt": "Property Setter", "filters": [["name", "like", "%alt\\_%"]]},
+    {"dt": "Workflow"},
+    {"dt": "Workflow State"},
+    {"dt": "Workflow Action Master"},
     {"dt": "Role", "filters": [["name", "in", ["Proposal Engineer", "Design Engineer"]]]},
     {"dt": "Role Profile", "filters": [["name", "like", "ALT %"]]},
-     {"dt": "Designation"},
-     {"dt": "Department"},
- ]
+    {"dt": "Designation"},
+    {"dt": "Department"},
+]
+
+doc_events = {
+    "Employee": {
+        "validate": "alantech_erp.org_structure.apply_designation_defaults",
+        "on_update": "alantech_erp.org_structure.sync_user_role_profile",
+    }
+}
+
+ 
 
 # Scheduled Tasks
 # ---------------
@@ -281,7 +288,9 @@ doc_events = {
 
 # Login page branding ("Login to AlanTech" + logo)
 after_install = [
-    "alantech_erp.install.apply_branding",
-    "alantech_erp.org_structure.excute"
+    "alantech_erp.install.apply_branding"
     ]
-after_migrate = "alantech_erp.install.apply_branding"
+after_migrate = [
+    "alantech_erp.install.apply_branding",
+     "alantech_erp.org_structure.setup_if_ready",
+    ]

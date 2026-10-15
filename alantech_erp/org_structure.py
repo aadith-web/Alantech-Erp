@@ -318,6 +318,12 @@ def sync_user_role_profile(doc, method=None):
         user.role_profile_name = profile
     user.save(ignore_permissions=True)
 
+def setup_if_ready():
+    """after_migrate hook: run the org setup once a Company exists (skips silently on a fresh site)."""
+    if not frappe.db.get_value("Company", {}, "name"):
+        return
+    execute()
+
 
 # ---------------------------------------------------------------------------
 # hooks.py additions
