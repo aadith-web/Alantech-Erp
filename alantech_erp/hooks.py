@@ -280,5 +280,8 @@ doc_events = {
 # ignore_translatable_strings_from = []
 
 # Login page branding ("Login to AlanTech" + logo)
-after_install = "alantech_erp.install.apply_branding"
+after_install = [
+    "alantech_erp.install.apply_branding",
+    "alantech_erp.org_structure.excute"
+    ]
 after_migrate = "alantech_erp.install.apply_branding"
