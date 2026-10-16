@@ -282,4 +282,5 @@ after_install = [
 after_migrate = [
     "alantech_erp.install.apply_branding",
      "alantech_erp.org_structure.setup_if_ready",
+     "alantech_erp.setup.employee_fields.execute",
     ]
