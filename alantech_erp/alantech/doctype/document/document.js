@@ -19,6 +19,7 @@ frappe.ui.form.on("Document", {
 	},
 
 	refresh(frm) {
+		frm.__alt_ref_dt = frm.doc.reference_doctype;
 		frm.toggle_enable("reference_doctype", frm.is_new() && !frappe.route_options?.reference_doctype);
 		alt_doc.set_card_number_label(frm);
 		alt_doc.take_snapshot(frm);
@@ -31,7 +32,13 @@ frappe.ui.form.on("Document", {
 	},
 
 	reference_doctype(frm) {
-		if (frm.doc.reference_name) frm.set_value("reference_name", "");
+		// Clear "Belongs To" only when the user switches Module Type (e.g. Employee -> Supplier),
+		// not when the form opens with values passed in (Upload button, Documents tab)
+		const previous = frm.__alt_ref_dt;
+		frm.__alt_ref_dt = frm.doc.reference_doctype;
+		if (previous && previous !== frm.doc.reference_doctype && frm.doc.reference_name) {
+			frm.set_value("reference_name", "");
+		}
 	},
 
 	validate(frm) {

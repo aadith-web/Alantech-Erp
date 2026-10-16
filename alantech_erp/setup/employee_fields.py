@@ -1,4 +1,4 @@
-"""Custom fields on Employee for the Alantech employee import (bank and family details).
+"""Custom fields on Employee: bank and family details, and the Documents section.
 
 Runs on every `bench migrate` (see after_migrate in hooks.py). Safe to re-run:
 existing fields are updated, never duplicated.
@@ -8,6 +8,19 @@ from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 EMPLOYEE_FIELDS = {
     "Employee": [
+        # Overview tab, below Company Details: list of this employee's documents
+        {
+            "fieldname": "alt_documents_section",
+            "label": "Documents",
+            "fieldtype": "Section Break",
+            "insert_after": "grade",
+        },
+        {
+            "fieldname": "alt_documents_html",
+            "label": "Documents",
+            "fieldtype": "HTML",
+            "insert_after": "alt_documents_section",
+        },
         # Personal details tab
         {
             "fieldname": "alt_father_name",

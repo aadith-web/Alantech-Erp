@@ -5,11 +5,6 @@ app_description = "ERP Platform"
 app_email = "jincy@tricta.com"
 app_license = "mit"
 app_logo_url = "/assets/alantech_erp/images/alantech-logo.png"
-
-# Frappe v16: desk lives under /desk (/app/* redirects there).
-# This app adds no modules of its own, so it is deliberately NOT placed on the
-# apps screen (add_to_apps_screen) and ships no Dock record.
-
 # Apps
 # ------------------
 
@@ -37,15 +32,12 @@ website_context = {
 # ------------------
 
 # include js, css files in header of desk.html
-# Brand layer on top of Frappe v16's Espresso design system. Tokens must load first.
 app_include_css = [
 	"/assets/alantech_erp/css/alantech_tokens.css",
 	"/assets/alantech_erp/css/alantech_desk.css",
+        "/assets/alantech_erp/js/alantech_documents.js",
 ]
-
-app_include_js = [
-    "/assets/alantech_erp/js/alantech_documents.js",
-]
+# app_include_js = "/assets/alantech_erp/js/alantech_erp.js"
 
 # include js, css files in header of web template
 web_include_css = [
@@ -65,12 +57,16 @@ web_include_css = [
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-doctype_js = {
-    "Employee": "public/js/employee.js",
-}
+# doctype_js = {"doctype" : "public/js/doctype.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
+doctype_js = {
+    "Employee": "public/js/employee.js",
+}
+doctype_list_js = {
+    "Employee": "public/js/employee_list.js",
+}
 
 # Svg Icons
 # ------------------
@@ -188,8 +184,15 @@ fixtures = [
 
 doc_events = {
     "Employee": {
-        "validate": "alantech_erp.org_structure.apply_designation_defaults",
-        "on_update": "alantech_erp.org_structure.sync_user_role_profile",
+        "validate": [
+            "alantech_erp.org_structure.apply_designation_defaults",
+            "alantech_erp.setup.employee_validation.validate_unique_employee",
+            "alantech_erp.setup.access.employee_validate",
+        ],
+        "on_update": [
+            "alantech_erp.org_structure.sync_user_role_profile",
+            "alantech_erp.setup.access.employee_on_update",
+        ],
     }
 }
 
@@ -291,7 +294,9 @@ after_install = [
     ]
 after_migrate = [
     "alantech_erp.install.apply_branding",
-     "alantech_erp.org_structure.setup_if_ready",
-     "alantech_erp.setup.designations.execute",
+    "alantech_erp.setup.access.extend_role_profiles",
+    "alantech_erp.org_structure.setup_if_ready",
+    "alantech_erp.setup.designations.execute",
+    "alantech_erp.setup.access.execute",
     "alantech_erp.setup.employee_fields.execute",
-    ]
+]
