@@ -1,124 +1,148 @@
 /* ==========================================================================
-   Alantech brand tokens — shared by desk (app_include_css) and website/login
-   (web_include_css). Colours are sampled from the Alantech logo and
-   alantech.in: leaf green + water blue, joined by a teal gradient.
+   Alantech brand tokens — Frappe v16 (Espresso design system)
+   Loaded on desk (app_include_css) and website/login (web_include_css),
+   always before alantech_desk.css / alantech_web.css.
+
+   v16 is a neutral, flat system: gray surfaces (--surface-*), ink (--ink-*),
+   outlines (--outline-*), Inter, 8px radii, soft elevation. Alantech keeps
+   that language and only swaps the *accent*: everything that v16 paints
+   near-black (solid buttons, checkboxes, active tabs, date picks, focus
+   rings) becomes Alantech leaf green; links use Alantech water blue.
+
+   Theme selection in v16: <html data-theme="light|dark">. Espresso
+   components also use data-theme="red|green|…" on buttons/badges, so dark
+   overrides are always scoped to html[data-theme="dark"].
+
+   Deliberately NOT overridden: --surface-gray-10 (it also paints tooltips,
+   badges and the calendar "today" chip) and the gray surface/ink scales.
    ========================================================================== */
 
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap");
-
 :root,
-[data-theme="light"] {
-	/* raw brand palette */
-	--al-green: #5bba47; /* logo green */
+html[data-theme="light"] {
+	/* ---- Raw brand palette (sampled from the Alantech logo) ---- */
+	--al-green: #5bba47;
 	--al-green-50: #f0f9ed;
 	--al-green-100: #dff2d9;
 	--al-green-200: #bfe5b3;
 	--al-green-500: #46a336;
-	--al-green-600: #2f8a2a; /* white text passes ~4.4:1 */
-	--al-green-700: #2e7d24;
-	--al-blue: #2389b1; /* logo blue */
+	--al-green-600: #2f8a2a; /* white text ≈ 4.5:1 */
+	--al-green-700: #276f22;
+	--al-green-800: #1f5a1b;
+	--al-blue: #2389b1;
 	--al-blue-50: #eaf5fa;
-	--al-blue-100: #d3eaf4;
 	--al-blue-600: #1e7fa5;
 	--al-blue-700: #1c7396;
-	--al-teal: #2fa39a;
-	--al-ink: #1f2a30; /* website heading ink */
 
-	--al-gradient: linear-gradient(135deg, #2389b1 0%, #2fa39a 50%, #5bba47 100%);
-	--al-gradient-strong: linear-gradient(135deg, #1c7396 0%, #22887f 50%, #2f8a2a 100%);
-	--al-gradient-soft: linear-gradient(135deg, #eaf5fa 0%, #f0f9ed 100%);
+	/* ---- Semantic brand roles (use these, not the raw palette) ---- */
+	--al-accent: var(--al-green-600); /* solid fills */
+	--al-accent-hover: var(--al-green-700);
+	--al-accent-active: var(--al-green-800);
+	--al-accent-fg: #ffffff; /* text/icon on solid accent */
+	--al-accent-subtle: var(--al-green-50); /* tinted surfaces */
+	--al-accent-subtle-hover: var(--al-green-100);
+	--al-accent-outline: var(--al-green-200);
+	--al-accent-ink: var(--al-green-700); /* brand-coloured text on page */
+	--al-link: var(--al-blue-700);
+	--al-ring-color: rgba(47, 138, 42, 0.35);
+	--al-ring: 0 0 0 2px var(--al-ring-color); /* same geometry as v16 --focus-default */
+	--al-ring-outline: 2px solid var(--al-ring-color);
+	--al-brand-wash: linear-gradient(160deg, var(--al-blue-50) 0%, #ffffff 45%, var(--al-green-50) 100%);
 
-	--al-font-heading: "Outfit", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-	--al-radius: 10px;
-	--al-radius-lg: 16px;
-	--al-shadow-card: 0 1px 2px rgba(16, 40, 50, 0.04), 0 8px 24px rgba(16, 40, 50, 0.06);
-	--al-ring: 0 0 0 3px rgba(91, 186, 71, 0.22);
-
-	/* Frappe semantic tokens (v15 + v16 names) */
-	--primary: var(--al-green-600);
-	--primary-color: var(--al-green-600);
-	--brand-color: var(--al-green-600);
-	--btn-primary: var(--al-green-600);
-	--primary-light: var(--al-green-50);
-	--progress-bar-bg: var(--al-green);
-	--checkbox-color: var(--al-green-600);
-	--checkbox-gradient: linear-gradient(180deg, var(--al-green-500) -124.51%, var(--al-green-600) 100%);
-	--date-active-bg: var(--al-green-600);
-	--date-active-text: #fff;
-	--date-range-bg: var(--al-green-50);
+	/* ---- Frappe v16 tokens re-pointed to the brand ---- */
+	--primary: var(--al-accent); /* checkbox/radio fill, filters, list sidebar, grid */
+	--primary-color: var(--al-accent);
+	--brand-color: var(--al-accent);
+	--btn-primary: var(--al-accent); /* legacy .btn.btn-primary */
+	--progress-bar-bg: var(--al-accent);
+	--checkbox-gradient: linear-gradient(180deg, var(--al-accent) 0%, var(--al-accent) 100%);
+	--checkbox-focus-shadow: var(--al-ring);
+	--date-active-bg: var(--al-accent);
+	--date-active-text: var(--al-accent-fg);
+	--date-range-bg: var(--al-accent-subtle);
 	--focus-default: var(--al-ring);
-	--link-color: var(--al-blue-700);
+	--focus-outline-default: var(--al-ring-outline);
 }
 
-[data-theme="dark"] {
-	--al-green-50: rgba(91, 186, 71, 0.12);
-	--al-green-100: rgba(91, 186, 71, 0.2);
-	--al-green-200: rgba(91, 186, 71, 0.32);
-	--al-green-500: #6cc65a;
-	--al-green-600: #4fae3d;
-	--al-green-700: #3e9a35;
-	--al-blue-50: rgba(35, 137, 177, 0.14);
-	--al-blue-100: rgba(35, 137, 177, 0.24);
-	--al-blue-700: #5fb6d8;
-	--al-ink: #f1f5f7;
-	--al-gradient-soft: linear-gradient(135deg, rgba(35, 137, 177, 0.14) 0%, rgba(91, 186, 71, 0.12) 100%);
-	--al-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+html[data-theme="dark"] {
+	/* v16 dark buttons are *inverted* (light fill, dark text). Alantech follows
+	   that: a bright leaf-green fill with deep-green ink, ≈ 7:1 contrast. */
+	--al-accent: #5bba47;
+	--al-accent-hover: #6cc65a;
+	--al-accent-active: #7fd06e;
+	--al-accent-fg: #0f2a0b;
+	--al-accent-subtle: rgba(91, 186, 71, 0.14);
+	--al-accent-subtle-hover: rgba(91, 186, 71, 0.22);
+	--al-accent-outline: rgba(91, 186, 71, 0.4);
+	--al-accent-ink: #8fd57f;
+	--al-link: #5fb6d8;
+	--al-ring-color: rgba(91, 186, 71, 0.45);
+	--al-ring: 0 0 0 3px var(--al-ring-color); /* v16 dark rings are 3px */
+	--al-ring-outline: 3px solid var(--al-ring-color);
+	--al-brand-wash: none;
 
-	--primary: var(--al-green-600);
-	--primary-color: var(--al-green-600);
-	--brand-color: var(--al-green-600);
-	--btn-primary: var(--al-green-600);
-	--primary-light: var(--al-green-50);
-	--checkbox-color: var(--al-green-600);
-	--date-active-bg: var(--al-green-600);
-	--date-range-bg: var(--al-green-50);
-	--link-color: var(--al-blue-700);
+	--primary: var(--al-accent);
+	--primary-color: var(--al-accent);
+	--brand-color: var(--al-accent);
+	--btn-primary: var(--al-accent);
+	--progress-bar-bg: var(--al-accent);
+	--checkbox-gradient: linear-gradient(180deg, var(--al-accent) 0%, var(--al-accent) 100%);
+	--checkbox-focus-shadow: var(--al-ring);
+	--date-active-bg: var(--al-accent);
+	--date-active-text: var(--al-accent-fg);
+	--date-range-bg: var(--al-accent-subtle);
+	--focus-default: var(--al-ring);
+	--focus-outline-default: var(--al-ring-outline);
 }
 
-/* ---- Buttons: shared between desk and web --------------------------------- */
+/* ---- Buttons (desk + web) ------------------------------------------------ */
 
-/* Bootstrap/legacy primary (v15 everywhere, v16 dialogs & older pages) */
-.btn.btn-primary,
-.btn-primary {
-	background-color: var(--al-green-600);
-	border-color: var(--al-green-600);
-	color: #fff;
-	--icon-fill-bg: var(--al-green-600);
-	--icon-stroke: #fff;
+/* Espresso button (v16 default everywhere: page primary action, dialogs,
+   login). Its colours are local vars declared on .es-button itself, so they
+   must be re-declared here, not on :root. Only the default gray theme is
+   branded; data-theme="red" (destructive) keeps its colour. */
+.es-button:not([data-theme]),
+.es-button[data-theme="gray"] {
+	--bt-solid-bg: var(--al-accent);
+	--bt-solid-bg-hover: var(--al-accent-hover);
+	--bt-solid-bg-active: var(--al-accent-active);
+	--bt-solid-fg: var(--al-accent-fg);
+	--bt-focus: var(--al-ring-outline);
+}
+
+/* Legacy Bootstrap primary (still used by some v16 screens and by ERPNext/HRMS) */
+.btn.btn-primary {
+	background-color: var(--al-accent);
+	border-color: var(--al-accent);
+	color: var(--al-accent-fg);
+	--icon-stroke: currentColor;
+	--icon-fill-bg: var(--al-accent);
 }
 .btn.btn-primary:hover,
-.btn.btn-primary:focus,
-.btn-primary:not(:disabled):not(.disabled):hover {
-	background-color: var(--al-green-700);
-	border-color: var(--al-green-700);
-	color: #fff;
-}
-.btn.btn-primary:active,
-.btn-primary:not(:disabled):not(.disabled):active {
-	background-color: var(--al-green-700) !important;
-	border-color: var(--al-green-700) !important;
+.btn.btn-primary:focus {
+	background-color: var(--al-accent-hover);
+	border-color: var(--al-accent-hover);
+	color: var(--al-accent-fg);
 }
 .btn.btn-primary:focus-visible {
 	box-shadow: var(--al-ring);
 }
+/* frappe sets :active with !important (and an undefined --invert-neutral) */
+.btn.btn-primary:active,
+.btn.btn-primary:not(:disabled):not(.disabled):active {
+	background-color: var(--al-accent-active) !important;
+	border-color: var(--al-accent-active) !important;
+	color: var(--al-accent-fg) !important;
+}
 
-.btn-primary-light,
 .btn.btn-primary-light {
-	background-color: var(--al-green-50);
-	color: var(--al-green-700);
+	background-color: var(--al-accent-subtle);
+	color: var(--al-accent-ink);
 }
-.btn-primary-light:hover {
-	background-color: var(--al-green-100);
-	color: var(--al-green-700);
+.btn.btn-primary-light:hover {
+	background-color: var(--al-accent-subtle-hover);
+	color: var(--al-accent-ink);
 }
 
-/* Espresso solid buttons (v16): only the default gray theme gets the brand,
-   so red "danger" buttons keep their colour. */
-.es-button[data-variant="solid"]:not([data-theme]),
-.es-button[data-variant="solid"][data-theme="gray"] {
-	--bt-solid-bg: var(--al-green-600);
-	--bt-solid-bg-hover: var(--al-green-700);
-	--bt-solid-bg-active: var(--al-green-700);
-	--bt-solid-fg: #fff;
-	--bt-focus: 2px solid rgba(91, 186, 71, 0.45);
+::selection {
+	background: var(--al-accent-subtle-hover);
 }

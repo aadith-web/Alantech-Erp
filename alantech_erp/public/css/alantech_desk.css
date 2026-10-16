@@ -1,323 +1,375 @@
 /* ==========================================================================
-   Alantech ERP — Desk theme  (loaded via app_include_css)
-   Works on Frappe/ERPNext v16 (espresso sidebar) and v15 (navbar + sidebar).
-   Requires alantech_tokens.css to be loaded first.
+   Alantech ERP — Desk theme for Frappe v16  (app_include_css)
+   Requires alantech_tokens.css first.
+
+   Selectors follow the v16 desk shell (verified against frappe version-16):
+     .body-sidebar-container > .body-sidebar   left sidebar (no top .navbar)
+     .dock#desk-dock                           floating module rail
+     .desktop-wrapper                          apps screen at /desk
+     .page-head .es-breadcrumbs                page title (no .title-text)
+     .es-button[data-variant="solid"]          primary actions
+   The look stays v16 (neutral surfaces, flat, Inter); only accents change.
    ========================================================================== */
 
-/* ---- Typography ---------------------------------------------------------- */
-.page-title .title-text,
-.page-head .title-text,
-.widget-group-title,
-.workspace-title,
-.form-section-heading,
-.section-head,
-.modal-title,
-.header-title,
-h1, h2, h3, .h1, .h2, .h3 {
-	font-family: var(--al-font-heading);
-	letter-spacing: -0.01em;
-}
-.page-title .title-text,
-.page-head .title-text {
-	font-weight: 600;
-	color: var(--al-ink);
-}
+/* ---- Sidebar ------------------------------------------------------------- */
 
-/* ---- Top brand stripe (sits above everything, both versions) ------------- */
-body[data-route]::before {
-	content: "";
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 3px;
-	background: var(--al-gradient);
-	z-index: 1050;
-	pointer-events: none;
-}
-
-/* ---- v15 top navbar ------------------------------------------------------ */
-.navbar {
-	border-bottom: 1px solid var(--border-color);
-	box-shadow: 0 1px 0 rgba(35, 137, 177, 0.06);
-}
-.navbar .navbar-brand .app-logo {
-	max-height: 28px;
-	width: auto;
-}
-.navbar .search-bar .awesomplete input:focus {
-	box-shadow: var(--al-ring);
-}
-
-/* ---- Sidebar (v16 .body-sidebar, v15 .desk-sidebar / .layout-side-section) */
+/* Header mark (app logo or module icon) */
 .body-sidebar .sidebar-header .header-logo img,
 .shell-header .header-logo img {
 	object-fit: contain;
-	border-radius: 6px;
 }
 
-.body-sidebar .standard-sidebar-item,
-.desk-sidebar .standard-sidebar-item,
-.sidebar-item-container .standard-sidebar-item {
+/* Active row: keep v16's raised white row, carry the brand in its glyph
+   and a short accent bar on the leading edge. */
+.body-sidebar .standard-sidebar-item {
 	position: relative;
-	border-radius: 8px;
-	transition: background-color 0.15s ease, color 0.15s ease;
 }
-
-.body-sidebar .standard-sidebar-item:hover,
-.desk-sidebar .standard-sidebar-item:hover,
-.body-sidebar .hover {
-	background-color: var(--al-green-50);
-}
-
-/* active item: soft green fill + gradient accent bar */
-.standard-sidebar-item.active-sidebar,
-.standard-sidebar-item.selected,
-.body-sidebar .active-sidebar:not(.shell-header) {
-	background: var(--al-green-50) !important;
-	box-shadow: inset 0 0 0 1px var(--al-green-100) !important;
-}
-.standard-sidebar-item.active-sidebar::before,
-.standard-sidebar-item.selected::before {
+.body-sidebar .standard-sidebar-item.active-sidebar::before {
 	content: "";
 	position: absolute;
 	left: 0;
-	top: 6px;
-	bottom: 6px;
-	width: 3px;
-	border-radius: 0 3px 3px 0;
-	background: var(--al-gradient);
+	top: 7px;
+	bottom: 7px;
+	width: 2px;
+	border-radius: 0 2px 2px 0;
+	background: var(--al-accent);
 }
-.standard-sidebar-item.active-sidebar .sidebar-item-label,
-.standard-sidebar-item.selected .sidebar-item-label {
-	color: var(--al-green-700);
-	font-weight: 600;
+.body-sidebar .standard-sidebar-item.active-sidebar .item-anchor {
+	color: var(--ink-gray-9);
 }
-.standard-sidebar-item.active-sidebar .sidebar-item-icon,
-.standard-sidebar-item.selected .sidebar-item-icon {
-	color: var(--al-green-600);
-	--icon-stroke: var(--al-green-600);
+.body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-icon {
+	color: var(--al-accent-ink);
+	--icon-stroke: var(--al-accent-ink);
 }
-.standard-sidebar-item.active-sidebar .sidebar-item-icon .icon,
-.standard-sidebar-item.selected .sidebar-item-icon .icon {
-	stroke: var(--al-green-600);
+.body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-icon .icon {
+	stroke: var(--al-accent-ink);
 }
-
-/* section labels */
-.body-sidebar .section-break .sidebar-item-label,
-.desk-sidebar .standard-sidebar-section .standard-sidebar-label {
-	color: var(--al-blue-700);
-	font-weight: 600;
-	text-transform: uppercase;
-	font-size: 11px;
-	letter-spacing: 0.06em;
+/* collapsed 48px rail: the bar would sit under the glyph, drop it */
+.body-sidebar-container:not(.expanded) .standard-sidebar-item.active-sidebar::before {
+	display: none;
 }
 
-/* list / report left sidebar (v15 + v16) */
-.list-sidebar .sidebar-label .icon,
-.list-sidebar .list-link a:hover {
-	color: var(--al-green-600);
+/* ---- Dock (module rail) -------------------------------------------------- */
+/* tile fill only: dock icons can be duotone app marks, so their colours stay */
+.dock .dock-item.active:not(.dock-user-button) {
+	background: var(--al-accent-subtle-hover);
 }
 
-/* ---- Page header --------------------------------------------------------- */
-.page-head {
-	border-bottom: 1px solid var(--border-color);
+/* ---- Apps screen (/desk): Alantech launcher ----------------------------- */
+/* Scoped to .desktop-wrapper: v16 puts body.desktop-page on every desk page. */
+.desktop-wrapper {
+	--al-launch-bg: #f5f9f7;
+	--al-launch-glow-1: rgba(35, 137, 177, 0.14);
+	--al-launch-glow-2: rgba(91, 186, 71, 0.14);
+	--al-tile-bg: rgba(255, 255, 255, 0.85);
+	--al-tile-border: rgba(31, 42, 48, 0.08);
+	--al-tile-shadow: 0 1px 2px rgba(16, 40, 50, 0.05), 0 6px 18px -8px rgba(16, 40, 50, 0.12);
+	--al-tile-shadow-hover: 0 2px 4px rgba(16, 40, 50, 0.06), 0 16px 32px -12px rgba(16, 40, 50, 0.22);
+	--al-hero-from: #1c7396;
+	--al-hero-via: #22887f;
+	--al-hero-to: #2f8a2a;
+	min-height: 100vh;
+	background-color: var(--al-launch-bg);
+	background-image:
+		radial-gradient(900px 480px at 0% 0%, var(--al-launch-glow-1), transparent 60%),
+		radial-gradient(800px 520px at 100% 100%, var(--al-launch-glow-2), transparent 60%);
+	background-attachment: fixed;
+}
+html[data-theme="dark"] .desktop-wrapper {
+	--al-launch-bg: var(--surface-base);
+	--al-launch-glow-1: rgba(35, 137, 177, 0.16);
+	--al-launch-glow-2: rgba(91, 186, 71, 0.12);
+	--al-tile-bg: rgba(255, 255, 255, 0.04);
+	--al-tile-border: rgba(255, 255, 255, 0.08);
+	--al-tile-shadow: none;
+	--al-tile-shadow-hover: 0 16px 32px -12px rgba(0, 0, 0, 0.6);
+	--al-hero-from: #155a76;
+	--al-hero-via: #1a6b64;
+	--al-hero-to: #24691f;
 }
 
-/* ---- Workspace / home page widgets -------------------------------------- */
-.widget {
-	border-radius: var(--al-radius) !important;
-	transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+/* top bar: frosted, so the backdrop shows through */
+.desktop-wrapper .desktop-navbar {
+	background: color-mix(in srgb, var(--surface-base) 72%, transparent);
+	backdrop-filter: saturate(160%) blur(12px);
+	-webkit-backdrop-filter: saturate(160%) blur(12px);
+	border-bottom-color: var(--al-tile-border);
 }
-.widget.shortcut-widget-box:hover,
-.widget.links-widget-box:hover,
-.widget.number-widget-box:hover,
-.widget.quick-list-widget-box:hover {
-	border-color: var(--al-green-200) !important;
-	box-shadow: var(--al-shadow-card);
+.desktop-wrapper #brand-logo {
+	height: 30px;
+	max-width: 170px;
+	object-fit: contain;
 }
-.widget.shortcut-widget-box:hover {
-	transform: translateY(-1px);
-}
-.widget.shortcut-widget-box .widget-title,
-.widget.shortcut-widget-box:hover .widget-title {
-	color: var(--al-ink);
-}
-.widget.shortcut-widget-box:hover .widget-title {
-	color: var(--al-green-700);
+.desktop-wrapper .desktop-navbar-modal-search,
+.desktop-wrapper .search-widget-button {
+	background: var(--al-tile-bg);
+	border: 1px solid var(--al-tile-border);
 }
 
-/* number cards: brand top accent */
-.widget.number-widget-box {
+/* launcher column: hero on top, apps below */
+.desktop-wrapper .desktop-container.al-desk-launcher {
+	flex-direction: column;
+	align-items: center;
+	padding: 32px 24px 48px;
+}
+.desktop-wrapper .al-desk-launcher .icons-container {
+	margin-top: 0;
+	padding: 0;
+	width: min(100%, 980px);
+}
+
+/* hero */
+.al-desk-hero {
 	position: relative;
+	width: min(100%, 980px);
+	margin: 0 0 28px;
+	padding: 28px 32px;
+	border-radius: 20px;
+	color: #fff;
+	background: linear-gradient(120deg, var(--al-hero-from) 0%, var(--al-hero-via) 55%, var(--al-hero-to) 100%);
+	box-shadow: 0 18px 40px -20px rgba(28, 115, 150, 0.55);
 	overflow: hidden;
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 24px;
+	isolation: isolate;
 }
-.widget.number-widget-box::before {
+/* the Alantech drop as a soft watermark */
+.al-desk-hero::after {
 	content: "";
 	position: absolute;
-	inset: 0 0 auto 0;
-	height: 3px;
-	background: var(--al-gradient);
+	right: 24px;
+	top: 50%;
+	width: 190px;
+	height: 190px;
+	transform: translateY(-50%);
+	background: url("/assets/alantech_erp/images/alantech-drop-white.png") center / contain no-repeat;
+	opacity: 0.14;
+	z-index: -1;
+	pointer-events: none;
 }
-.widget.number-widget-box .widget-content .number {
-	font-family: var(--al-font-heading);
-	color: var(--al-ink);
+.al-desk-hero__date {
+	margin: 0 0 6px;
+	font-size: var(--text-sm, 13px);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	opacity: 0.8;
+}
+.al-desk-hero__title {
+	margin: 0;
+	font-size: 30px;
+	line-height: 1.15;
+	font-weight: 650;
+	letter-spacing: -0.015em;
+	color: #fff;
+}
+.al-desk-hero__subtitle {
+	margin: 8px 0 0;
+	font-size: var(--text-base, 14px);
+	opacity: 0.88;
 }
 
-/* card links list */
-.widget.links-widget-box .link-item:hover,
-.widget.links-widget-box .link-item:hover .link-text {
-	color: var(--al-green-700);
+/* app tiles as cards */
+.desktop-wrapper .al-desk-launcher .icons {
+	grid-template-rows: none;
+	gap: 16px;
+	justify-items: stretch;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
 }
-.widget.links-widget-box .widget-head .widget-title {
-	color: var(--al-blue-700);
+.desktop-wrapper .al-desk-launcher .desktop-icon {
+	width: auto;
+	height: auto;
+	min-height: 140px;
+	justify-content: center;
+	padding: 20px 12px 16px;
+	border: 1px solid var(--al-tile-border);
+	border-radius: 18px;
+	background: var(--al-tile-bg);
+	box-shadow: var(--al-tile-shadow);
+	transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.desktop-wrapper .al-desk-launcher .desktop-icon:hover {
+	transform: translateY(-3px);
+	border-color: var(--al-accent-outline);
+	box-shadow: var(--al-tile-shadow-hover);
+}
+/* the card lifts; the icon no longer needs v16's own zoom */
+.desktop-wrapper .al-desk-launcher .desktop-icon:hover .icon-container,
+.desktop-wrapper .al-desk-launcher .icon-container:hover {
+	transform: none;
+}
+.desktop-wrapper .al-desk-launcher .icon-link::after {
+	border-radius: 18px;
+}
+.desktop-wrapper .al-desk-launcher .icon-container {
+	box-shadow: 0 6px 14px -8px rgba(16, 40, 50, 0.45);
+}
+.desktop-wrapper .al-desk-launcher .icon-title {
+	color: var(--ink-gray-8);
+}
+.desktop-wrapper .al-desk-launcher .desktop-icon:hover .icon-title {
+	color: var(--al-accent-ink);
+}
+.desktop-wrapper .desktop-icon:focus-within {
+	outline: none;
+	box-shadow: var(--al-ring), var(--al-tile-shadow);
+}
+.desktop-wrapper .desktop-icon:hover .icon-container:has(.icon) {
+	background-color: var(--al-accent-subtle-hover);
 }
 
-/* workspace header blocks & spacers */
-.ce-header {
-	font-family: var(--al-font-heading);
-	color: var(--al-ink);
+@media (max-width: 767.98px) {
+	.desktop-wrapper .desktop-container.al-desk-launcher {
+		padding: 16px 16px 32px;
+	}
+	.al-desk-hero {
+		padding: 22px 20px;
+		border-radius: 16px;
+		margin-bottom: 20px;
+	}
+	.al-desk-hero__title {
+		font-size: 22px;
+	}
+	.al-desk-hero::after {
+		right: -20px;
+		width: 150px;
+		height: 150px;
+	}
+	/* beats v16's fixed 117px mobile tiles (body.desktop-page … > .desktop-icon) */
+	.desktop-wrapper .desktop-container.al-desk-launcher > .icons-container > .icons {
+		grid-template-columns: repeat(3, 1fr) !important;
+		gap: 10px;
+	}
+	.desktop-wrapper .desktop-container.al-desk-launcher > .icons-container > .icons > .desktop-icon {
+		width: 100%;
+		height: auto;
+		min-height: 112px;
+		padding: 14px 6px 10px;
+		gap: 8px;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.desktop-wrapper .al-desk-launcher .desktop-icon {
+		transition: none;
+	}
+	.desktop-wrapper .al-desk-launcher .desktop-icon:hover {
+		transform: none;
+	}
 }
 
-/* onboarding widget */
-.widget.onboarding-widget-box {
-	background: var(--al-gradient-soft);
-	border-color: var(--al-green-100);
+/* ---- Page head ----------------------------------------------------------- */
+.page-head .es-breadcrumbs a.es-breadcrumbs__item:hover {
+	color: var(--al-accent-ink);
 }
-.onboarding-step.active .step-title,
-.onboarding-step.complete .step-index {
-	color: var(--al-green-700);
+
+/* ---- Workspaces ---------------------------------------------------------- */
+.widget.shortcut-widget-box,
+.widget.links-widget-box,
+.widget.number-widget-box,
+.widget.quick-list-widget-box {
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.widget.shortcut-widget-box:hover,
+.widget.number-widget-box:hover,
+.widget.quick-list-widget-box:hover {
+	border-color: var(--al-accent-outline);
+}
+.widget.shortcut-widget-box:hover .widget-title {
+	color: var(--al-accent-ink);
+}
+.widget.links-widget-box a.link-item:hover,
+.widget.links-widget-box a.link-item:hover .link-text {
+	color: var(--al-accent-ink);
+}
+.widget.onboarding-widget-box .onboarding-step.active .step-title {
+	color: var(--al-accent-ink);
 }
 
 /* ---- Forms --------------------------------------------------------------- */
-.form-control:focus,
-.form-control:focus-within,
-.awesomplete input:focus,
-.frappe-control .control-input:focus-within .form-control,
-select.form-control:focus,
-textarea.form-control:focus {
-	border-color: var(--al-green) !important;
-	box-shadow: var(--al-ring) !important;
+
+/* Inputs: v16 filled gray control, brand ring on focus */
+.frappe-control .form-control:focus,
+.frappe-control .form-control:focus-within,
+.frappe-control .awesomplete input:focus,
+.modal .form-control:focus {
+	border-color: var(--al-accent-outline);
+	box-shadow: var(--al-ring);
 }
 
-/* form tabs */
+/* Form tabs: v16 draws a 1px ink underline; make it a 2px brand line */
 .form-tabs-list .form-tabs .nav-item .nav-link.active {
-	color: var(--al-green-700);
-	font-weight: 600;
-	border-bottom: 2px solid var(--al-green-600);
+	border-bottom: 2px solid var(--al-accent);
 	padding-bottom: 8px;
+	color: var(--ink-gray-9);
 }
-.form-tabs-list .form-tabs .nav-item .nav-link:hover {
-	color: var(--al-green-700);
-}
-
-/* section collapse arrows & links */
-.form-section .section-head.collapsible:hover,
-.form-dashboard-section .section-head:hover {
-	color: var(--al-green-700);
+.form-tabs-list .form-tabs .nav-item .nav-link:not(.active):hover {
+	color: var(--ink-gray-8);
 }
 
-/* checkboxes & switches */
-input[type="checkbox"]:checked,
-.form-check-input:checked {
-	background-color: var(--al-green-600) !important;
-	border-color: var(--al-green-600) !important;
-}
-.switch input:checked + .slider,
-.form-switch .form-check-input:checked {
-	background-color: var(--al-green-600) !important;
+/* Espresso tabs (side panels, settings pages) */
+.es-tabs__indicator {
+	background: var(--al-accent);
 }
 
-/* grid (child tables) */
-.grid-heading-row {
-	background: var(--al-gradient-soft) !important;
+/* Switch: v16 checked track is near-black */
+.switch-control .input-area:has(input:checked) ~ .switch-visual {
+	background-color: var(--al-accent);
 }
-.grid-row-open .grid-form-heading,
-.grid-row .row-index:hover {
-	color: var(--al-green-700);
+.switch-control:hover .input-area:has(input:checked) ~ .switch-visual {
+	background-color: var(--al-accent-hover);
 }
-
-/* ---- List view ----------------------------------------------------------- */
-.list-row:hover,
-.list-row-container:hover .list-row {
-	background-color: var(--al-green-50);
-}
-.list-row .level-left .list-subject a:hover,
-.list-row .list-subject .bold a:hover {
-	color: var(--al-green-700);
-}
-.list-paging-area .btn-paging.btn-info,
-.list-paging-area .btn-group .btn.btn-info {
-	background: var(--al-green-50);
-	color: var(--al-green-700);
-}
-.filter-selector .filter-button.btn-primary-light,
-.filter-button.btn-primary-light {
-	background: var(--al-green-50) !important;
-	color: var(--al-green-700) !important;
+.switch-control .input-area:has(input:focus-visible) ~ .switch-visual {
+	box-shadow: var(--al-ring);
 }
 
-/* ---- Datepicker ---------------------------------------------------------- */
-.datepicker--cell.-selected-,
-.datepicker--cell.-selected-.-current- {
-	background: var(--al-green-600) !important;
-	color: #fff !important;
-}
-.datepicker--cell.-current- {
-	color: var(--al-green-700);
-}
-.datepicker--cell.-in-range- {
-	background: var(--al-green-50);
+/* Checkboxes in dark: v16 swaps to a black tick on a light box; on green
+   keep the tick in the button ink colour. */
+html[data-theme="dark"] input[type="checkbox"]:checked {
+	background-color: var(--al-accent);
+	background-image: url("data:image/svg+xml, <svg viewBox='0 0 8 7' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M1 4.00001L2.66667 5.80001L7 1.20001' stroke='%230f2a0b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>"),
+		var(--checkbox-gradient);
 }
 
-/* ---- Progress, pills, misc ---------------------------------------------- */
+/* ---- Lists & reports ----------------------------------------------------- */
+.list-row-container .list-row .list-subject a:hover,
+.list-row .level-left .list-subject a:hover {
+	color: var(--al-accent-ink);
+}
+.list-row-container:has(.list-row-checkbox:checked) .list-row {
+	background-color: var(--al-accent-subtle);
+}
+
+/* ---- Progress ------------------------------------------------------------ */
 .progress-bar,
-.es-progress [data-part="indicator"] {
-	background: var(--al-gradient);
-}
-.nav-pills .nav-link.active,
-.nav-pills .show > .nav-link {
-	background-color: var(--al-green-600);
-}
-.dropdown-item:active,
-.dropdown-item.active {
-	background-color: var(--al-green-50);
-	color: var(--al-green-700);
-}
-.awesomplete > ul > li[aria-selected="true"],
-.awesomplete > ul > li:hover {
-	background-color: var(--al-green-50) !important;
-}
-::selection {
-	background: rgba(91, 186, 71, 0.25);
+.es-progress__fill,
+.es-progress__segment[data-filled] {
+	background: var(--al-accent);
 }
 
-/* modal header accent */
-.modal-content {
-	border-radius: var(--al-radius-lg);
-	overflow: hidden;
-	position: relative;
+/* ---- Menus / awesomebar -------------------------------------------------- */
+.dropdown-item.active,
+.dropdown-item:active {
+	background-color: var(--al-accent-subtle);
+	color: var(--al-accent-ink);
 }
-.modal-content::before {
-	content: "";
-	position: absolute;
-	inset: 0 0 auto 0;
-	height: 3px;
-	background: var(--al-gradient);
-	z-index: 1;
+.awesomplete > ul > li[aria-selected="true"] {
+	background-color: var(--al-accent-subtle);
+}
+.navbar-modal-wrapper #navbar-search:focus {
+	box-shadow: none;
 }
 
-/* ---- Desk splash screen -------------------------------------------------- */
-.splash {
-	background: var(--bg-color);
+/* ---- Links inside content ------------------------------------------------ */
+.ql-editor a,
+.form-dashboard a.badge-link:hover,
+.timeline-content a:not(.btn):not(.es-button) {
+	color: var(--al-link);
 }
+
+/* ---- Splash screen ------------------------------------------------------- */
 .splash img {
-	max-width: 220px;
-	max-height: 120px;
+	max-width: 200px;
+	max-height: 96px;
 	object-fit: contain;
-}
-
-/* ---- Scrollbar ----------------------------------------------------------- */
-::-webkit-scrollbar-thumb:hover {
-	background-color: var(--al-green-200);
 }

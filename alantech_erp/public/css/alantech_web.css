@@ -1,217 +1,112 @@
 /* ==========================================================================
-   Alantech ERP — Login & website theme  (loaded via web_include_css)
-   Covers /login (sign-in, forgot password, signup, email-link),
-   /update-password and general portal/website pages.
-   The login card stays in Frappe's default position; only its look changes.
-   Requires alantech_tokens.css to be loaded first.
+   Alantech ERP — Login & website theme for Frappe v16  (web_include_css)
+   Requires alantech_tokens.css first.
+
+   v16 login markup (www/login.html):
+     body[data-path="login"] section.for-login|for-forgot|for-signup|
+       for-login-with-email-link > .login-content.page-card
+         .page-card-head > img.app-logo + .page-card-head-text > h4 + .page-card-subtitle
+         form .page-card-body (.form-group > label + .email-field|.password-field > input.form-control)
+         .page-card-actions > .es-button[data-variant="solid"], .btn-login-option
+   /update-password uses the same .page-card under .for-reset-password.
+   The card keeps v16's size, spacing and type; Alantech adds the logo,
+   a soft brand backdrop, green actions and brand focus rings.
    ========================================================================== */
 
 /* ---- General website pages ---------------------------------------------- */
-.web-footer {
-	border-top: 3px solid transparent;
-	border-image: var(--al-gradient) 1;
-}
 .navbar .navbar-brand img {
-	max-height: 36px;
+	max-height: 32px;
 	width: auto;
 }
 .navbar-light .navbar-nav .nav-link:hover,
 .navbar-light .navbar-nav .nav-link.active {
-	color: var(--al-green-700);
+	color: var(--al-accent-ink);
 }
-h1, h2, h3, .h1, .h2, .h3 {
-	font-family: var(--al-font-heading);
+.web-footer {
+	border-top: 2px solid var(--al-accent);
 }
 .web-form .form-control:focus,
 .portal-container .form-control:focus {
-	border-color: var(--al-green);
+	border-color: var(--al-accent-outline);
 	box-shadow: var(--al-ring);
 }
 
 /* ==========================================================================
-   LOGIN
+   LOGIN / UPDATE PASSWORD
    ========================================================================== */
 
 body[data-path="login"],
 body[data-path="update-password"] {
-	background-color: #f6faf8;
-	background-image:
-		radial-gradient(900px 500px at 100% 0%, rgba(35, 137, 177, 0.08), transparent 60%),
-		radial-gradient(700px 500px at 60% 100%, rgba(91, 186, 71, 0.10), transparent 60%);
+	background-color: var(--surface-base, #fff);
+	background-image: var(--al-brand-wash);
 	background-attachment: fixed;
-}
-[data-theme="dark"] body[data-path="login"],
-[data-theme="dark"] body[data-path="update-password"] {
-	background-color: var(--bg-color);
 }
 
 /* ---- Card ---------------------------------------------------------------- */
 body[data-path="login"] .page-card,
 body[data-path="update-password"] .page-card {
 	position: relative;
-	max-width: 440px !important;
-	width: 100%;
-	margin: 0 auto;
-	padding: 40px 36px 32px !important;
-	background: var(--surface-base, #fff) !important;
-	border: 1px solid rgba(35, 137, 177, 0.10) !important;
-	border-radius: var(--al-radius-lg) !important;
-	box-shadow: 0 2px 4px rgba(16, 40, 50, 0.04), 0 24px 48px -12px rgba(16, 40, 50, 0.14) !important;
+	background-color: var(--surface-base, #fff);
+	border: 1px solid var(--outline-gray-1, #ededed);
+	box-shadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.06));
 	overflow: hidden;
 }
-/* gradient strip on top of the card, like the website popup */
+/* thin brand rule along the top edge */
 body[data-path="login"] .page-card::before,
 body[data-path="update-password"] .page-card::before {
 	content: "";
 	position: absolute;
 	inset: 0 0 auto 0;
-	height: 5px;
-	background: var(--al-gradient);
+	height: 3px;
+	background: linear-gradient(90deg, var(--al-blue) 0%, var(--al-green) 100%);
 }
 
-body[data-path="login"] .page-card-head,
-body[data-path="update-password"] .page-card-head {
-	gap: 20px !important;
-	margin-bottom: 10px;
-}
 body[data-path="login"] .page-card-head .app-logo,
 body[data-path="update-password"] .page-card-head .app-logo {
-	height: 56px !important;
-	width: auto !important;
-	max-width: 220px !important;
+	height: 40px;
+	width: auto;
+	max-width: 180px;
 	object-fit: contain;
-	margin: 0;
-}
-body[data-path="login"] .page-card-head h4,
-body[data-path="update-password"] .page-card-head h4 {
-	font-family: var(--al-font-heading);
-	font-size: 28px !important;
-	font-weight: 700 !important;
-	line-height: 1.2;
-	color: var(--al-ink) !important;
-	letter-spacing: -0.01em;
-}
-body[data-path="login"] .page-card-subtitle {
-	color: #5b6b73 !important;
-	font-size: 14px;
+	object-position: left center;
 }
 
 /* ---- Inputs -------------------------------------------------------------- */
-body[data-path="login"] label,
-body[data-path="update-password"] label {
-	font-size: 13px !important;
-	font-weight: 500;
-	color: #3d4b52 !important;
-}
-body[data-path="login"] .form-control,
-body[data-path="update-password"] .form-control {
-	height: 44px;
-	padding: 10px 14px;
-	font-size: 14px;
-	color: var(--al-ink);
-	background: var(--surface-base, #fff) !important;
-	border: 1px solid #cfdde3 !important;
-	border-radius: var(--al-radius) !important;
-	box-shadow: none;
-	transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-body[data-path="login"] .form-control:hover,
-body[data-path="update-password"] .form-control:hover {
-	border-color: #a9c3cd !important;
-}
-body[data-path="login"] .form-control:focus,
-body[data-path="update-password"] .form-control:focus {
-	border-color: var(--al-green) !important;
-	box-shadow: var(--al-ring) !important;
+body[data-path="login"] .page-card-body .form-control:focus,
+body[data-path="update-password"] .page-card .form-control:focus {
+	border-color: var(--al-accent);
+	box-shadow: var(--al-ring);
 	outline: none;
 }
-body[data-path="login"] .email-field,
-body[data-path="login"] .password-field,
-body[data-path="update-password"] .password-field {
-	width: 100%;
-	position: relative;
-}
-body[data-path="login"] .toggle-password {
-	color: #6b7c84;
-}
 
-/* ---- Buttons ------------------------------------------------------------- */
-body[data-path="login"] .page-card .es-button[data-variant="solid"],
-body[data-path="login"] .page-card .btn-primary,
-body[data-path="login"] .page-card .btn-login,
-body[data-path="update-password"] .page-card .btn-primary,
-body[data-path="update-password"] .page-card .es-button[data-variant="solid"] {
-	height: 46px !important;
-	border: 0 !important;
-	border-radius: var(--al-radius) !important;
-	background: var(--al-gradient-strong) !important;
-	background-size: 140% 100% !important;
-	background-position: 0% 50% !important;
-	color: #fff !important;
-	font-family: var(--al-font-heading);
-	font-size: 15px !important;
-	font-weight: 600 !important;
-	letter-spacing: 0.01em;
-	box-shadow: 0 8px 18px -8px rgba(47, 138, 42, 0.55);
-	transition: background-position 0.35s ease, box-shadow 0.2s ease, transform 0.1s ease;
-}
-body[data-path="login"] .page-card .es-button[data-variant="solid"]:hover,
-body[data-path="login"] .page-card .btn-primary:hover,
-body[data-path="update-password"] .page-card .btn-primary:hover,
-body[data-path="update-password"] .page-card .es-button[data-variant="solid"]:hover {
-	background-position: 100% 50% !important;
-	box-shadow: 0 10px 22px -8px rgba(47, 138, 42, 0.65);
-}
-body[data-path="login"] .page-card .es-button[data-variant="solid"]:active,
-body[data-path="login"] .page-card .btn-primary:active {
-	transform: translateY(1px);
-}
-body[data-path="login"] .page-card .es-button[data-variant="solid"]:focus-visible,
-body[data-path="login"] .page-card .btn-primary:focus-visible {
-	outline: none;
-	box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--al-green);
-}
-
-/* secondary login options (email link, social, LDAP) */
-body[data-path="login"] .btn-login-option,
-body[data-path="login"] .page-card .es-button:not([data-variant="solid"]) {
-	height: 44px !important;
-	border-radius: var(--al-radius) !important;
-	background: var(--surface-base, #fff) !important;
-	border: 1px solid #cfdde3 !important;
-	color: var(--al-ink) !important;
-	font-weight: 500;
-}
-body[data-path="login"] .btn-login-option:hover,
-body[data-path="login"] .page-card .es-button:not([data-variant="solid"]):hover {
-	border-color: var(--al-green) !important;
-	background: var(--al-green-50) !important;
+/* ---- Actions ------------------------------------------------------------- */
+/* Solid buttons are branded via tokens; secondary options get a brand hover. */
+body[data-path="login"] .btn-login-option:hover {
+	background-color: var(--al-accent-subtle);
+	border-color: var(--al-accent-outline);
 }
 
 /* ---- Links --------------------------------------------------------------- */
 body[data-path="login"] .page-card a:not(.es-button):not(.btn),
 body[data-path="update-password"] .page-card a:not(.es-button):not(.btn) {
-	color: var(--al-blue-700) !important;
-	font-weight: 500;
+	color: var(--al-link);
 	text-decoration: none;
 }
-body[data-path="login"] .page-card a:not(.es-button):not(.btn):hover {
-	color: var(--al-green-700) !important;
+body[data-path="login"] .page-card a:not(.es-button):not(.btn):hover,
+body[data-path="update-password"] .page-card a:not(.es-button):not(.btn):hover {
+	color: var(--al-accent-ink);
 	text-decoration: underline;
 	text-underline-offset: 3px;
 }
-body[data-path="login"] .sign-up-message {
-	color: #5b6b73 !important;
-}
 
-/* ---- Mobile -------------------------------------------------------------- */
+/* ---- Mobile: v16 turns the card into a full-height sheet ----------------- */
 @media (max-width: 575.98px) {
+	body[data-path="login"],
+	body[data-path="update-password"] {
+		background-image: none;
+	}
 	body[data-path="login"] .page-card,
 	body[data-path="update-password"] .page-card {
-		max-width: 100% !important;
-		border-radius: 0 !important;
-		border: 0 !important;
-		box-shadow: none !important;
-		padding: 56px 24px 32px !important;
+		border: 0;
+		box-shadow: none;
 	}
 }

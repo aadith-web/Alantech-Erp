@@ -5,6 +5,11 @@ app_description = "ERP Platform"
 app_email = "jincy@tricta.com"
 app_license = "mit"
 app_logo_url = "/assets/alantech_erp/images/alantech-logo.png"
+
+# Frappe v16: desk lives under /desk (/app/* redirects there).
+# This app adds no modules of its own, so it is deliberately NOT placed on the
+# apps screen (add_to_apps_screen) and ships no Dock record.
+
 # Apps
 # ------------------
 
@@ -32,6 +37,7 @@ website_context = {
 # ------------------
 
 # include js, css files in header of desk.html
+# Brand layer on top of Frappe v16's Espresso design system. Tokens must load first.
 app_include_css = [
 	"/assets/alantech_erp/css/alantech_tokens.css",
 	"/assets/alantech_erp/css/alantech_desk.css",
