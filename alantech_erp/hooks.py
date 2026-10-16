@@ -35,9 +35,11 @@ website_context = {
 app_include_css = [
 	"/assets/alantech_erp/css/alantech_tokens.css",
 	"/assets/alantech_erp/css/alantech_desk.css",
-        "/assets/alantech_erp/js/alantech_documents.js",
 ]
-# app_include_js = "/assets/alantech_erp/js/alantech_erp.js"
+
+app_include_js = [
+    "/assets/alantech_erp/js/alantech_documents.js",
+]
 
 # include js, css files in header of web template
 web_include_css = [
@@ -57,7 +59,9 @@ web_include_css = [
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+    "Employee": "public/js/employee.js",
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -282,5 +286,6 @@ after_install = [
 after_migrate = [
     "alantech_erp.install.apply_branding",
      "alantech_erp.org_structure.setup_if_ready",
-     "alantech_erp.setup.employee_fields.execute",
+     "alantech_erp.setup.designations.execute",
+    "alantech_erp.setup.employee_fields.execute",
     ]
