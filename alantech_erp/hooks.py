@@ -43,6 +43,10 @@ app_include_css = [
 	"/assets/alantech_erp/css/alantech_desk.css",
 ]
 
+app_include_js = [
+    "/assets/alantech_erp/js/alantech_documents.js",
+]
+
 # include js, css files in header of web template
 web_include_css = [
 	"/assets/alantech_erp/css/alantech_tokens.css",
@@ -61,7 +65,9 @@ web_include_css = [
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+    "Employee": "public/js/employee.js",
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -141,14 +147,13 @@ web_include_css = [
 # -----------
 # Permissions evaluated in scripted ways
 
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
+permission_query_conditions = {
+    "Document": "alantech_erp.alantech.doctype.document.document.get_permission_query_conditions",
+}
 #
-# has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
-# }
-
+has_permission = {
+    "Document": "alantech_erp.alantech.doctype.document.document.has_permission",
+}
 # DocType Class
 # ---------------
 # Override standard doctype classes
@@ -168,27 +173,36 @@ web_include_css = [
 # 		"on_trash": "method"
 # 	}
 # }
+fixtures = [
+    {"dt": "Custom Field", "filters": [["fieldname", "like", "alt\\_%"]]},
+    {"dt": "Property Setter", "filters": [["name", "like", "%alt\\_%"]]},
+    {"dt": "Workflow"},
+    {"dt": "Workflow State"},
+    {"dt": "Workflow Action Master"},
+    {"dt": "Role", "filters": [["name", "in", ["Proposal Engineer", "Design Engineer"]]]},
+    {"dt": "Role Profile", "filters": [["name", "like", "ALT %"]]},
+    {"dt": "Designation"},
+    {"dt": "Department"},
+    {"dt": "Document Type Master"}
+]
+
+doc_events = {
+    "Employee": {
+        "validate": "alantech_erp.org_structure.apply_designation_defaults",
+        "on_update": "alantech_erp.org_structure.sync_user_role_profile",
+    }
+}
+
+ 
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"alantech_erp.tasks.all"
-# 	],
-# 	"daily": [
-# 		"alantech_erp.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"alantech_erp.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"alantech_erp.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"alantech_erp.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+    "daily": [
+        "alantech_erp.alantech.doctype.document.document.send_expiry_alerts",
+    ],
+}
 
 # Testing
 # -------
@@ -271,6 +285,13 @@ web_include_css = [
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
-# Branding: app name + logo on /login, /update-password and the v16 apps screen (/desk)
-after_install = "alantech_erp.install.apply_branding"
-after_migrate = "alantech_erp.install.apply_branding"
+# Login page branding ("Login to AlanTech" + logo)
+after_install = [
+    "alantech_erp.install.apply_branding"
+    ]
+after_migrate = [
+    "alantech_erp.install.apply_branding",
+     "alantech_erp.org_structure.setup_if_ready",
+     "alantech_erp.setup.designations.execute",
+    "alantech_erp.setup.employee_fields.execute",
+    ]
