@@ -35,6 +35,7 @@ website_context = {
 app_include_css = [
 	"/assets/alantech_erp/css/alantech_tokens.css",
 	"/assets/alantech_erp/css/alantech_desk.css",
+        "/assets/alantech_erp/js/alantech_documents.js",
 ]
 # app_include_js = "/assets/alantech_erp/js/alantech_erp.js"
 
@@ -136,14 +137,13 @@ web_include_css = [
 # -----------
 # Permissions evaluated in scripted ways
 
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
+permission_query_conditions = {
+    "Document": "alantech_erp.alantech.doctype.document.document.get_permission_query_conditions",
+}
 #
-# has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
-# }
-
+has_permission = {
+    "Document": "alantech_erp.alantech.doctype.document.document.has_permission",
+}
 # DocType Class
 # ---------------
 # Override standard doctype classes
@@ -173,6 +173,7 @@ fixtures = [
     {"dt": "Role Profile", "filters": [["name", "like", "ALT %"]]},
     {"dt": "Designation"},
     {"dt": "Department"},
+    {"dt": "Document Type Master"}
 ]
 
 doc_events = {
@@ -187,23 +188,11 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"alantech_erp.tasks.all"
-# 	],
-# 	"daily": [
-# 		"alantech_erp.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"alantech_erp.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"alantech_erp.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"alantech_erp.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+    "daily": [
+        "alantech_erp.alantech.doctype.document.document.send_expiry_alerts",
+    ],
+}
 
 # Testing
 # -------
