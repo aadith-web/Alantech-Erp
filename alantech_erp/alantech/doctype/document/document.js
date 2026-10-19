@@ -46,6 +46,22 @@ frappe.ui.form.on("Document", {
 			frappe.throw({ title: __("Nothing to save"), message: __("No changes to save."), indicator: "orange" });
 		}
 	},
+	issue_date(frm) {
+		const d = frm.doc.issue_date;
+		if (d && frappe.datetime.get_day_diff(d, frappe.datetime.get_today()) > 0) {
+			frappe.msgprint({
+				title: __("Invalid Issue Date"),
+				message: __("Issue Date cannot be in the future."),
+				indicator: "orange",
+			});
+			frm.set_value("issue_date", null);
+		}
+		alt_doc.check_expiry_after_issue(frm);
+	},
+
+	expiry_date(frm) {
+		alt_doc.check_expiry_after_issue(frm);
+	},
 });
 const ALT_DOC_STATUS = { PENDING: "Pending Approval", APPROVED: "Approved", REJECTED: "Rejected" };
 
@@ -60,6 +76,18 @@ const alt_doc = {
 	set_card_number_label(frm) {
 		const t = frm.doc.document_type;
 		frm.set_df_property("card_number", "label", t ? __("{0} Number", [__(t)]) : __("Card Number"));
+	},
+
+	check_expiry_after_issue(frm) {
+		const { issue_date, expiry_date } = frm.doc;
+		if (issue_date && expiry_date && frappe.datetime.get_day_diff(expiry_date, issue_date) <= 0) {
+			frappe.msgprint({
+				title: __("Invalid Expiry Date"),
+				message: __("Expiry Date must be after the Issue Date."),
+				indicator: "orange",
+			});
+			frm.set_value("expiry_date", null);
+		}
 	},
 
 	snapshot_of(frm) {

@@ -46,7 +46,7 @@ const alt_employee_docs = {
 		frappe.db
 			.get_list("Document", {
 				filters: { reference_doctype: "Employee", reference_name: frm.doc.name },
-				fields: ["name", "document_type", "card_number", "issue_date", "expiry_date", "approval_status", "attachment"],
+				fields: ["name", "document_type", "card_number", "issue_date", "expiry_date", "approval_status", "attachment", "submitted_by"],
 				order_by: "modified desc",
 				limit: 200,
 			})
@@ -65,6 +65,11 @@ const alt_employee_docs = {
 					e.preventDefault();
 					const $btn = $(e.currentTarget);
 					alt_employee_docs.preview($btn.attr("data-file"), $btn.attr("data-title"));
+				});
+				$list.find("[data-review]").on("click", (e) => {
+					e.preventDefault();
+					const $btn = $(e.currentTarget);
+					alt_employee_docs.review(frm, $list, $toolbar, $btn.attr("data-name"), $btn.attr("data-review"));
 				});
 			})
 			.catch(() => $list.html(`<p class="text-muted">${__("Could not load documents.")}</p>`));
@@ -98,16 +103,61 @@ const alt_employee_docs = {
 								data-title="${esc((r.document_type || "") + " - " + r.name)}">${__("View")}</button>`
 							: `<span class="text-muted">${__("No file")}</span>`
 					}</td>
+					<td style="white-space:nowrap;">${
+						alt_employee_docs.can_review(r)
+							? `<button class="btn btn-success btn-xs" data-review="approve" data-name="${esc(r.name)}">${__("Approve")}</button>
+							   <button class="btn btn-danger btn-xs" data-review="reject" data-name="${esc(r.name)}"
+								style="margin-left:4px;">${__("Reject")}</button>`
+							: ""
+					}</td>
 				</tr>`;
 			})
 			.join("");
 		return `<table class="table table-bordered table-hover" style="margin: 0;">
 			<thead><tr>
 				<th>${__("Document")}</th><th>${__("Document Type")}</th><th>${__("Number")}</th>
-				<th>${__("Issue Date")}</th><th>${__("Expiry Date")}</th><th>${__("Approval Status")}</th><th>${__("File")}</th>
+				<th>${__("Issue Date")}</th><th>${__("Expiry Date")}</th><th>${__("Approval Status")}</th><th>${__("File")}</th><th>${__("Action")}</th>
 			</tr></thead>
 			<tbody>${body}</tbody>
 		</table>`;
+	},
+
+	// HR Manager may approve/reject pending documents they did not submit themselves
+	// (the server checks the same rules again in check_can_review)
+	can_review(r) {
+		return (
+			r.approval_status === "Pending Approval" &&
+			frappe.user.has_role("HR Manager") &&
+			r.submitted_by !== frappe.session.user
+		);
+	},
+
+	review(frm, $list, $toolbar, name, action) {
+		const run = (reason) =>
+			frappe
+				.call({
+					method: "alantech_erp.alantech.doctype.document.document.review_document",
+					args: { name, action, reason },
+					freeze: true,
+				})
+				.then(() => {
+					frappe.show_alert({
+						message: action === "approve" ? __("Document approved") : __("Document rejected"),
+						indicator: action === "approve" ? "green" : "red",
+					});
+					alt_employee_docs.load(frm, $list, $toolbar);
+				});
+
+		if (action === "approve") {
+			frappe.confirm(__("Approve document {0}?", [name]), () => run());
+		} else {
+			frappe.prompt(
+				{ fieldname: "reason", fieldtype: "Small Text", label: __("Reason for rejection"), reqd: 1 },
+				(values) => run(values.reason),
+				__("Reject Document"),
+				__("Reject")
+			);
+		}
 	},
 
 	// Show the attached file: images and PDFs inline, anything else as a download link
