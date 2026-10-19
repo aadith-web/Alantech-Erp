@@ -170,7 +170,10 @@ has_permission = {
 # 	}
 # }
 fixtures = [
-    {"dt": "Custom Field", "filters": [["fieldname", "like", "alt\\_%"]]},
+    {"dt": "Custom Field", "or_filters": [
+        ["fieldname", "like", "alt\\_%"],
+        ["name", "in", ["Salary Detail-custom_overtime_hours", "Salary Detail-custom_ot_type"]],
+    ]},
     {"dt": "Property Setter", "filters": [["name", "like", "%alt\\_%"]]},
     {"dt": "Workflow"},
     {"dt": "Workflow State"},
@@ -193,7 +196,10 @@ doc_events = {
             "alantech_erp.org_structure.sync_user_role_profile",
             "alantech_erp.setup.access.employee_on_update",
         ],
-    }
+    },
+    "Salary Slip": {
+        "validate": "alantech_erp.overtime_utils.add_overtime_components",
+    },
 }
 
  

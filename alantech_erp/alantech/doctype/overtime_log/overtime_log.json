@@ -2,7 +2,7 @@
  "actions": [],
  "allow_import": 1,
  "autoname": "naming_series:",
- "creation": "2026-10-16 10:00:00.000000",
+ "creation": "2026-10-16 20:08:23.161786",
  "doctype": "DocType",
  "document_type": "Document",
  "engine": "InnoDB",
@@ -12,12 +12,13 @@
   "employee_name",
   "column_break_main",
   "overtime_date",
+  "ot_type",
   "project",
   "section_break_amount",
   "overtime_hours",
   "overtime_rate",
   "column_break_amount",
-  "set_amount_manually",
+  "enter_amount_manually",
   "overtime_amount",
   "amended_from"
  ],
@@ -82,35 +83,28 @@
    "fieldname": "overtime_hours",
    "fieldtype": "Float",
    "label": "Overtime Hours",
-   "non_negative": 1,
-   "mandatory_depends_on": "eval:!doc.set_amount_manually"
+   "mandatory_depends_on": "eval:!doc.enter_amount_manually",
+   "non_negative": 1
   },
   {
    "fieldname": "overtime_rate",
    "fieldtype": "Currency",
    "label": "Overtime Rate",
-   "non_negative": 1,
-   "mandatory_depends_on": "eval:!doc.set_amount_manually"
+   "mandatory_depends_on": "eval:!doc.enter_amount_manually",
+   "non_negative": 1
   },
   {
    "fieldname": "column_break_amount",
    "fieldtype": "Column Break"
   },
   {
-   "default": "0",
-   "fieldname": "set_amount_manually",
-   "fieldtype": "Check",
-   "label": "Enter Amount Manually",
-   "no_copy": 1
-  },
-  {
    "fieldname": "overtime_amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Overtime Amount",
+   "mandatory_depends_on": "eval:doc.enter_amount_manually",
    "non_negative": 1,
-   "read_only_depends_on": "eval:!doc.set_amount_manually",
-   "mandatory_depends_on": "eval:doc.set_amount_manually"
+   "read_only_depends_on": "eval:!doc.enter_amount_manually"
   },
   {
    "fieldname": "amended_from",
@@ -120,14 +114,29 @@
    "options": "Overtime Log",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "ot_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "OT Type",
+   "options": "Normal\nHoliday\nSpecial Holiday",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "enter_amount_manually",
+   "fieldtype": "Check",
+   "label": "Enter Amount Manually",
+   "no_copy": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-16 23:00:00.000000",
+ "modified": "2026-10-19 12:38:54.555344",
  "modified_by": "Administrator",
- "module": "alantech",
+ "module": "AlanTech",
  "name": "Overtime Log",
  "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
@@ -173,6 +182,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

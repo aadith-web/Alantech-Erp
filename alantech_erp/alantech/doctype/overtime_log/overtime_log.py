@@ -11,7 +11,7 @@ class OvertimeLog(Document):
 		self.calculate_amount()
 
 	def validate_values(self):
-		if self.set_amount_manually:
+		if self.enter_amount_manually:
 			if flt(self.overtime_amount) <= 0:
 				frappe.throw(_("Overtime Amount must be greater than zero."))
 			if flt(self.overtime_hours) < 0 or flt(self.overtime_rate) < 0:
@@ -45,7 +45,7 @@ class OvertimeLog(Document):
 			)
 
 	def calculate_amount(self):
-		if self.set_amount_manually:
+		if self.enter_amount_manually:
 			return
 		self.overtime_amount = flt(
 			flt(self.overtime_hours) * flt(self.overtime_rate),

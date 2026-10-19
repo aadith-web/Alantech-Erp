@@ -7,12 +7,12 @@ frappe.ui.form.on("Overtime Log", {
 		frm.trigger("calculate_amount");
 	},
 
-	set_amount_manually(frm) {
+	enter_amount_manually(frm) {
 		frm.trigger("calculate_amount");
 	},
 
 	calculate_amount(frm) {
-		if (frm.doc.set_amount_manually) return;
+		if (frm.doc.enter_amount_manually) return;
 		const amount = flt(frm.doc.overtime_hours) * flt(frm.doc.overtime_rate);
 		frm.set_value("overtime_amount", flt(amount, precision("overtime_amount")));
 	},

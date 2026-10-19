@@ -1,0 +1,716 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.169975",
+  "name": "ALT Managing Director",
+  "role_profile": "ALT Managing Director",
+  "roles": [
+   {
+    "role": "Accounts Manager"
+   },
+   {
+    "role": "Sales Manager"
+   },
+   {
+    "role": "Purchase Manager"
+   },
+   {
+    "role": "Stock Manager"
+   },
+   {
+    "role": "Manufacturing Manager"
+   },
+   {
+    "role": "Projects Manager"
+   },
+   {
+    "role": "HR Manager"
+   },
+   {
+    "role": "Quality Manager"
+   },
+   {
+    "role": "Auditor"
+   },
+   {
+    "role": "Report Manager"
+   },
+   {
+    "role": "Analytics"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Expense Approver"
+   },
+   {
+    "role": "Employee"
+   },
+   {
+    "role": "System Manager"
+   },
+   {
+    "role": "HR User"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.205732",
+  "name": "ALT Finance Manager",
+  "role_profile": "ALT Finance Manager",
+  "roles": [
+   {
+    "role": "Accounts Manager"
+   },
+   {
+    "role": "Accounts User"
+   },
+   {
+    "role": "Purchase Manager"
+   },
+   {
+    "role": "Auditor"
+   },
+   {
+    "role": "Report Manager"
+   },
+   {
+    "role": "Analytics"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Expense Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.214541",
+  "name": "ALT Accounts Head",
+  "role_profile": "ALT Accounts Head",
+  "roles": [
+   {
+    "role": "Accounts Manager"
+   },
+   {
+    "role": "Accounts User"
+   },
+   {
+    "role": "Report Manager"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.220114",
+  "name": "ALT Accounts Executive",
+  "role_profile": "ALT Accounts Executive",
+  "roles": [
+   {
+    "role": "Accounts User"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.227264",
+  "name": "ALT Internal Auditor",
+  "role_profile": "ALT Internal Auditor",
+  "roles": [
+   {
+    "role": "Auditor"
+   },
+   {
+    "role": "Report Manager"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.232979",
+  "name": "ALT Audit Executive",
+  "role_profile": "ALT Audit Executive",
+  "roles": [
+   {
+    "role": "Auditor"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.239223",
+  "name": "ALT Purchase Manager",
+  "role_profile": "ALT Purchase Manager",
+  "roles": [
+   {
+    "role": "Purchase Manager"
+   },
+   {
+    "role": "Purchase Master Manager"
+   },
+   {
+    "role": "Purchase User"
+   },
+   {
+    "role": "Stock User"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.247197",
+  "name": "ALT Purchase Executive",
+  "role_profile": "ALT Purchase Executive",
+  "roles": [
+   {
+    "role": "Purchase User"
+   },
+   {
+    "role": "Stock User"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.254919",
+  "name": "ALT Sales Head",
+  "role_profile": "ALT Sales Head",
+  "roles": [
+   {
+    "role": "Sales Manager"
+   },
+   {
+    "role": "Sales Master Manager"
+   },
+   {
+    "role": "Sales User"
+   },
+   {
+    "role": "Projects User"
+   },
+   {
+    "role": "Report Manager"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Expense Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.267874",
+  "name": "ALT Sales Manager",
+  "role_profile": "ALT Sales Manager",
+  "roles": [
+   {
+    "role": "Sales Manager"
+   },
+   {
+    "role": "Sales User"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.275134",
+  "name": "ALT Sales Engineer",
+  "role_profile": "ALT Sales Engineer",
+  "roles": [
+   {
+    "role": "Sales User"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.280039",
+  "name": "ALT Proposal Engineer",
+  "role_profile": "ALT Proposal Engineer",
+  "roles": [
+   {
+    "role": "Sales User"
+   },
+   {
+    "role": "Proposal Engineer"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.287907",
+  "name": "ALT Marketing Manager",
+  "role_profile": "ALT Marketing Manager",
+  "roles": [
+   {
+    "role": "Sales Manager"
+   },
+   {
+    "role": "Sales User"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.294412",
+  "name": "ALT Marketing Executive",
+  "role_profile": "ALT Marketing Executive",
+  "roles": [
+   {
+    "role": "Sales User"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.301188",
+  "name": "ALT HR Manager",
+  "role_profile": "ALT HR Manager",
+  "roles": [
+   {
+    "role": "HR Manager"
+   },
+   {
+    "role": "HR User"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Expense Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.308101",
+  "name": "ALT HR Executive",
+  "role_profile": "ALT HR Executive",
+  "roles": [
+   {
+    "role": "HR User"
+   },
+   {
+    "role": "Employee"
+   },
+   {
+    "role": "HR Manager"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.316506",
+  "name": "ALT Operations Manager",
+  "role_profile": "ALT Operations Manager",
+  "roles": [
+   {
+    "role": "Manufacturing Manager"
+   },
+   {
+    "role": "Projects Manager"
+   },
+   {
+    "role": "Stock Manager"
+   },
+   {
+    "role": "Quality Manager"
+   },
+   {
+    "role": "Maintenance Manager"
+   },
+   {
+    "role": "Item Manager"
+   },
+   {
+    "role": "Purchase User"
+   },
+   {
+    "role": "Report Manager"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Expense Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.325896",
+  "name": "ALT Design Head",
+  "role_profile": "ALT Design Head",
+  "roles": [
+   {
+    "role": "Manufacturing User"
+   },
+   {
+    "role": "Item Manager"
+   },
+   {
+    "role": "Projects User"
+   },
+   {
+    "role": "Design Engineer"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.334368",
+  "name": "ALT Design Engineer",
+  "role_profile": "ALT Design Engineer",
+  "roles": [
+   {
+    "role": "Manufacturing User"
+   },
+   {
+    "role": "Projects User"
+   },
+   {
+    "role": "Design Engineer"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.339948",
+  "name": "ALT Engineering Lead",
+  "role_profile": "ALT Engineering Lead",
+  "roles": [
+   {
+    "role": "Manufacturing User"
+   },
+   {
+    "role": "Projects User"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.346569",
+  "name": "ALT Engineer",
+  "role_profile": "ALT Engineer",
+  "roles": [
+   {
+    "role": "Manufacturing User"
+   },
+   {
+    "role": "Projects User"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.354078",
+  "name": "ALT Quality Controller",
+  "role_profile": "ALT Quality Controller",
+  "roles": [
+   {
+    "role": "Quality Manager"
+   },
+   {
+    "role": "Stock User"
+   },
+   {
+    "role": "Manufacturing User"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.362557",
+  "name": "ALT Jr Quality Controller",
+  "role_profile": "ALT Jr Quality Controller",
+  "roles": [
+   {
+    "role": "Stock User"
+   },
+   {
+    "role": "Manufacturing User"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.370612",
+  "name": "ALT Aftersales Coordinator",
+  "role_profile": "ALT Aftersales Coordinator",
+  "roles": [
+   {
+    "role": "Maintenance Manager"
+   },
+   {
+    "role": "Maintenance User"
+   },
+   {
+    "role": "Support Team"
+   },
+   {
+    "role": "Sales User"
+   },
+   {
+    "role": "Projects User"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.379477",
+  "name": "ALT Service Engineer",
+  "role_profile": "ALT Service Engineer",
+  "roles": [
+   {
+    "role": "Maintenance User"
+   },
+   {
+    "role": "Support Team"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.387584",
+  "name": "ALT Production Manager",
+  "role_profile": "ALT Production Manager",
+  "roles": [
+   {
+    "role": "Manufacturing Manager"
+   },
+   {
+    "role": "Manufacturing User"
+   },
+   {
+    "role": "Stock User"
+   },
+   {
+    "role": "Projects User"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Expense Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.396677",
+  "name": "ALT Production Supervisor",
+  "role_profile": "ALT Production Supervisor",
+  "roles": [
+   {
+    "role": "Manufacturing User"
+   },
+   {
+    "role": "Stock User"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.402391",
+  "name": "ALT Store Keeper",
+  "role_profile": "ALT Store Keeper",
+  "roles": [
+   {
+    "role": "Stock Manager"
+   },
+   {
+    "role": "Stock User"
+   },
+   {
+    "role": "Leave Approver"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.409034",
+  "name": "ALT Store Assistant",
+  "role_profile": "ALT Store Assistant",
+  "roles": [
+   {
+    "role": "Stock User"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.414407",
+  "name": "ALT Logistics Executive",
+  "role_profile": "ALT Logistics Executive",
+  "roles": [
+   {
+    "role": "Stock User"
+   },
+   {
+    "role": "Delivery User"
+   },
+   {
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-19 15:46:35.419232",
+  "name": "ALT Shop Floor",
+  "role_profile": "ALT Shop Floor",
+  "roles": [
+   {
+    "role": "Employee"
+   }
+  ]
+ }
+]
