@@ -1,0 +1,108 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "creation": "2026-10-16 18:50:52.797574",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "column_break_rtbv",
+  "enable_multiple_ot",
+  "overtime_rules_section",
+  "overtime_type_rules",
+  "calculation_settings_section",
+  "base_component_method",
+  "applicable_overtime_component",
+  "column_break_hryn",
+  "working_days_base",
+  "working_hours_per_day"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "fieldname": "enable_multiple_ot",
+   "fieldtype": "Check",
+   "label": "Enable Multiple OT"
+  },
+  {
+   "depends_on": "enable_multiple_ot",
+   "fieldname": "overtime_rules_section",
+   "fieldtype": "Section Break",
+   "label": "Overtime Rules"
+  },
+  {
+   "fieldname": "overtime_type_rules",
+   "fieldtype": "Table",
+   "label": "Overtime Type Rules",
+   "options": "Overtime Type Rule"
+  },
+  {
+   "fieldname": "calculation_settings_section",
+   "fieldtype": "Section Break",
+   "label": "Calculation Settings"
+  },
+  {
+   "fieldname": "base_component_method",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Base Component Method",
+   "options": "Custom\nAll",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.base_component_method==\"Custom\"",
+   "fieldname": "applicable_overtime_component",
+   "fieldtype": "Table MultiSelect",
+   "label": "Applicable Overtime Component",
+   "mandatory_depends_on": "eval:doc.base_component_method==\"Custom\"",
+   "options": "Overtime Applicable Component"
+  },
+  {
+   "fieldname": "column_break_hryn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "working_days_base",
+   "fieldtype": "Select",
+   "label": "\tWorking Days Base",
+   "options": "Year Average\nMonth Days\nFixed 30",
+   "reqd": 1
+  },
+  {
+   "fieldname": "working_hours_per_day",
+   "fieldtype": "Float",
+   "label": "\tWorking Hours Per Day",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "column_break_rtbv",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-16 19:05:52.858925",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Overtime Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

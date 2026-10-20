@@ -1,0 +1,181 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-10-16 10:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "employee",
+  "employee_name",
+  "column_break_main",
+  "overtime_date",
+  "project",
+  "section_break_amount",
+  "overtime_hours",
+  "overtime_rate",
+  "column_break_amount",
+  "set_amount_manually",
+  "overtime_amount",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "default": "HR-OTLOG-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Series",
+   "no_copy": 1,
+   "options": "HR-OTLOG-.YYYY.-.#####",
+   "print_hide": 1,
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "overtime_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Overtime Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Project",
+   "options": "Project",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_amount",
+   "fieldtype": "Section Break",
+   "label": "Overtime Calculation"
+  },
+  {
+   "fieldname": "overtime_hours",
+   "fieldtype": "Float",
+   "label": "Overtime Hours",
+   "non_negative": 1,
+   "mandatory_depends_on": "eval:!doc.set_amount_manually"
+  },
+  {
+   "fieldname": "overtime_rate",
+   "fieldtype": "Currency",
+   "label": "Overtime Rate",
+   "non_negative": 1,
+   "mandatory_depends_on": "eval:!doc.set_amount_manually"
+  },
+  {
+   "fieldname": "column_break_amount",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "set_amount_manually",
+   "fieldtype": "Check",
+   "label": "Enter Amount Manually",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "overtime_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Overtime Amount",
+   "non_negative": 1,
+   "read_only_depends_on": "eval:!doc.set_amount_manually",
+   "mandatory_depends_on": "eval:doc.set_amount_manually"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Overtime Log",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-10-16 23:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "alantech",
+ "name": "Overtime Log",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "track_changes": 1
+}
