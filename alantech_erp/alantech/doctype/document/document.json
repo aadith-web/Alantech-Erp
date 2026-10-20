@@ -185,7 +185,7 @@
    "read_only": 1
   },
   {
-   "depends_on": "doc.approval_status == 'Rejected'",
+   "eval": "doc.approval_status == 'Rejected'",
    "fieldname": "rejection_reason",
    "fieldtype": "Small Text",
    "label": "Rejection Reason",

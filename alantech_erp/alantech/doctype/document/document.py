@@ -50,8 +50,16 @@ class Document(Document):
 			             frappe.PermissionError)
 
 	def validate_dates(self):
-		if self.issue_date and self.expiry_date and getdate(self.expiry_date) < getdate(self.issue_date):
-			frappe.throw(_("Expiry Date cannot be before Issue Date"))
+		if self.issue_date and getdate(self.issue_date) > getdate(today()):
+			frappe.throw(
+				_("Issue Date {0} cannot be in the future.").format(frappe.format(self.issue_date, "Date")),
+				title=_("Invalid Issue Date"),
+			)
+		if self.issue_date and self.expiry_date and getdate(self.expiry_date) <= getdate(self.issue_date):
+			frappe.throw(
+				_("Expiry Date must be after the Issue Date."),
+				title=_("Invalid Expiry Date"),
+			)
 
 	def get_linked_user(self):
 		if not self.employee:
@@ -180,6 +188,14 @@ def get_hr_managers():
 	                      pluck="name")
 
 
+def email_configured():
+	"""True when Frappe has somewhere to send email from."""
+	return bool(
+		frappe.conf.get("mail_server")
+		or frappe.db.exists("Email Account", {"enable_outgoing": 1, "default_outgoing": 1})
+	)
+
+
 def send_notification(users, subject, message, doc):
 	users = sorted({u for u in users if u and u not in ("Administrator", "Guest")})
 	if not users:
@@ -190,9 +206,10 @@ def send_notification(users, subject, message, doc):
 			"type": "Alert", "document_type": doc.doctype, "document_name": doc.name,
 			"subject": subject, "email_content": message,
 		}).insert(ignore_permissions=True)
-	# "Alert" notifications never email by themselves in v16, so send the email here
+	# "Alert" notifications never email by themselves in v16, so send the email here,
+	# but only when an outgoing email account exists (otherwise saving the document would fail)
 	emails = [e for e in frappe.get_all("User", filters={"name": ["in", users]}, pluck="email") if e]
-	if emails:
+	if emails and email_configured():
 		frappe.sendmail(recipients=emails, subject=frappe.utils.strip_html(subject),
 		                message=f"<p>{message}</p><p>{get_link_to_form(doc.doctype, doc.name)}</p>",
 		                reference_doctype=doc.doctype, reference_name=doc.name)
@@ -286,3 +303,16 @@ def send_expiry_alerts():
 				doc.document_type, doc.card_number or doc.name, doc.reference_title,
 				frappe.utils.formatdate(doc.expiry_date))
 			send_notification([*hr_managers, doc.get_linked_user()], subject, message, doc)
+
+# --- approve / reject from other pages (Employee Documents section) -------
+@frappe.whitelist()
+def review_document(name, action, reason=None):
+	doc = frappe.get_doc(DOCTYPE, name)
+	doc.check_permission("write")
+	if action == "approve":
+		doc.approve()
+	elif action == "reject":
+		doc.reject(reason)
+	else:
+		frappe.throw(_("Invalid action."))
+	return doc.approval_status
