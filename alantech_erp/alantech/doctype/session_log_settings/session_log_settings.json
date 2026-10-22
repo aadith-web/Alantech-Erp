@@ -1,0 +1,97 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "creation": "2026-10-22 17:07:04.844803",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "require_log_approval",
+  "log_creation_trigger",
+  "approver_role",
+  "hold_missing_checkout",
+  "auto_submit_attendance",
+  "auto_submit_overtime",
+  "lock_after_processing"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "fieldname": "require_log_approval",
+   "fieldtype": "Check",
+   "label": "Require Log Approval"
+  },
+  {
+   "default": "On Check-out",
+   "fieldname": "log_creation_trigger",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Log Creation Trigger",
+   "options": "On Check-out\nDaily Scheduler",
+   "reqd": 1
+  },
+  {
+   "default": "HR Manager",
+   "fieldname": "approver_role",
+   "fieldtype": "Link",
+   "label": "Approver Role",
+   "options": "Role"
+  },
+  {
+   "default": "1",
+   "fieldname": "hold_missing_checkout",
+   "fieldtype": "Check",
+   "label": "Hold Missing Check-out for Review"
+  },
+  {
+   "default": "1",
+   "fieldname": "auto_submit_attendance",
+   "fieldtype": "Check",
+   "label": "Auto-submit Attendance"
+  },
+  {
+   "default": "1",
+   "fieldname": "auto_submit_overtime",
+   "fieldtype": "Check",
+   "label": "Auto-submit Overtime"
+  },
+  {
+   "default": "1",
+   "fieldname": "lock_after_processing",
+   "fieldtype": "Check",
+   "label": "Lock"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-22 18:51:07.932071",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Session Log Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

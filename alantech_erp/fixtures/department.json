@@ -1,22 +1,5 @@
 [
  {
-  "company": null,
-  "department_name": "All Departments",
-  "disabled": 0,
-  "docstatus": 0,
-  "doctype": "Department",
-  "expense_approvers": [],
-  "is_group": 1,
-  "leave_approvers": [],
-  "leave_block_list": null,
-  "modified": "2026-10-12 10:32:43.123865",
-  "name": "All Departments",
-  "old_parent": null,
-  "parent_department": "",
-  "payroll_cost_center": null,
-  "shift_request_approver": []
- },
- {
   "company": "Erp",
   "department_name": "Accounts",
   "disabled": 0,

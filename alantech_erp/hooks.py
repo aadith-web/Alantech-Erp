@@ -144,11 +144,12 @@ doctype_list_js = {
 # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
-    "Document": "alantech_erp.alantech.doctype.document.document.get_permission_query_conditions",
+	"Document": "alantech_erp.alantech.doctype.document.document.get_permission_query_conditions",
+	"Session Log": "alantech_erp.alantech.doctype.session_log.session_log.get_permission_query_conditions",
 }
-#
 has_permission = {
-    "Document": "alantech_erp.alantech.doctype.document.document.has_permission",
+	"Document": "alantech_erp.alantech.doctype.document.document.has_permission",
+	"Session Log": "alantech_erp.alantech.doctype.session_log.session_log.has_permission",
 }
 # DocType Class
 # ---------------
@@ -179,9 +180,8 @@ fixtures = [
     {"dt": "Workflow State"},
     {"dt": "Workflow Action Master"},
     {"dt": "Role", "filters": [["name", "in", ["Proposal Engineer", "Design Engineer"]]]},
-    {"dt": "Role Profile", "filters": [["name", "like", "ALT %"]]},
     {"dt": "Designation"},
-    {"dt": "Department"},
+    {"dt": "Department", "filters": [["name", "!=", "All Departments"]]},
     {"dt": "Document Type Master"}
 ]
 
@@ -200,6 +200,9 @@ doc_events = {
     "Salary Slip": {
         "validate": "alantech_erp.overtime_utils.add_overtime_components",
     },
+    "Employee Checkin": {
+        "after_insert": "alantech_erp.alantech.doctype.session_log.builder.on_checkin",  # "On Check-out"
+    },
 }
 
  
@@ -210,6 +213,7 @@ doc_events = {
 scheduler_events = {
     "daily": [
         "alantech_erp.alantech.doctype.document.document.send_expiry_alerts",
+        "alantech_erp.alantech.doctype.session_log.builder.build_yesterday_logs",  # "Daily Scheduler"
     ],
 }
 
@@ -305,4 +309,5 @@ after_migrate = [
     "alantech_erp.setup.designations.execute",
     "alantech_erp.setup.access.execute",
     "alantech_erp.setup.employee_fields.execute",
+    "alantech_erp.setup.session_log_fields.execute",
 ]

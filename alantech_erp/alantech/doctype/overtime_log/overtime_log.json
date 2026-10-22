@@ -20,7 +20,8 @@
   "column_break_amount",
   "enter_amount_manually",
   "overtime_amount",
-  "amended_from"
+  "amended_from",
+  "attendance_log"
  ],
  "fields": [
   {
@@ -71,8 +72,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Project",
-   "options": "Project",
-   "reqd": 1
+   "options": "Project"
   },
   {
    "fieldname": "section_break_amount",
@@ -129,12 +129,20 @@
    "fieldtype": "Check",
    "label": "Enter Amount Manually",
    "no_copy": 1
+  },
+  {
+   "fieldname": "attendance_log",
+   "fieldtype": "Link",
+   "label": "Session Log",
+   "no_copy": 1,
+   "options": "Session Log",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-19 12:38:54.555344",
+ "modified": "2026-10-22 17:35:27.853333",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Overtime Log",
