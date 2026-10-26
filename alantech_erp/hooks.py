@@ -203,6 +203,12 @@ doc_events = {
     "Employee Checkin": {
         "after_insert": "alantech_erp.alantech.doctype.session_log.builder.on_checkin",  # "On Check-out"
     },
+    "Leave Application": {
+		"validate": "alantech_erp.setup.leave_validation.validate_leave_application",
+	},
+	"Leave Allocation": {
+		"validate": "alantech_erp.setup.leave_validation.validate_leave_allocation",
+	},
 }
 
  
@@ -215,6 +221,7 @@ scheduler_events = {
         "alantech_erp.alantech.doctype.document.document.send_expiry_alerts",
         "alantech_erp.alantech.doctype.session_log.builder.build_yesterday_logs",  # "Daily Scheduler"
     ],
+    "monthly": ["alantech_erp.setup.shifts.ensure_holiday_lists"],
 }
 
 # Testing
@@ -225,9 +232,9 @@ scheduler_events = {
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "alantech_erp.event.get_events"
-# }
+override_whitelisted_methods = {
+	"erpnext.setup.doctype.employee.employee.create_user": "alantech_erp.setup.employee_user.create_user",
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
@@ -254,6 +261,7 @@ scheduler_events = {
 # ----------
 # before_job = ["alantech_erp.utils.before_job"]
 # after_job = ["alantech_erp.utils.after_job"]
+
 
 # User Data Protection
 # --------------------
@@ -310,4 +318,6 @@ after_migrate = [
     "alantech_erp.setup.access.execute",
     "alantech_erp.setup.employee_fields.execute",
     "alantech_erp.setup.session_log_fields.execute",
+    "alantech_erp.setup.shifts.execute",
+    "alantech_erp.setup.leave_fields.execute",
 ]

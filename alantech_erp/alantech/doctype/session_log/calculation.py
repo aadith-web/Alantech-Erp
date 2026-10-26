@@ -66,6 +66,8 @@ def get_shift_window(log_date, shift):
 	end = day + to_timedelta(shift.end_time)
 	if end <= start:
 		end += timedelta(days=1)
+	if end - start >= timedelta(hours=23, minutes=59):
+		end = start + timedelta(days=1)  # 24-hour shift, stored as 09:00-08:59 because HRMS forbids equal times
 	return frappe._dict(
 		start=start,
 		end=end,
@@ -126,16 +128,31 @@ def set_times(doc, logs, shift, window):
 
 
 # ---------------------------------------------------------------- holiday / leave
+HOLIDAY_LIST_PREFIX = "Alantech Holidays"
+
+
 def get_holiday_list(employee, log_date, shift):
-	"""Shift's holiday list first, then the employee's (Employee, else Company default)."""
-	if shift and shift.holiday_list:
-		return shift.holiday_list
+	"""First list that covers the date: shift's, employee's / company's, then 'Alantech Holidays <year>'."""
+	date = getdate(log_date)
+	for name in (shift.holiday_list if shift else None, employee_holiday_list(employee, date),
+			f"{HOLIDAY_LIST_PREFIX} {date.year}"):
+		if name and covers(name, date):
+			return name
+	return None
+
+
+def employee_holiday_list(employee, date):
 	from erpnext.setup.doctype.employee.employee import get_holiday_list_for_employee
 
 	try:
-		return get_holiday_list_for_employee(employee, raise_exception=False, as_on=getdate(log_date))
+		return get_holiday_list_for_employee(employee, raise_exception=False, as_on=date)
 	except TypeError:  # older signature without as_on
 		return get_holiday_list_for_employee(employee, raise_exception=False)
+
+
+def covers(name, date):
+	r = frappe.db.get_value("Holiday List", name, ["from_date", "to_date"], as_dict=True)
+	return bool(r and getdate(r.from_date) <= date <= getdate(r.to_date))
 
 
 def get_day_type(employee, log_date, shift):
