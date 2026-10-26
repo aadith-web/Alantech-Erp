@@ -1,0 +1,75 @@
+{
+ "actions": [],
+ "creation": "2026-10-26 13:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_title",
+  "sub_assembly",
+  "page_break",
+  "section_text_section",
+  "description",
+  "specs",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_title",
+   "fieldtype": "Data",
+   "label": "Section",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 4
+  },
+  {
+   "fieldname": "sub_assembly",
+   "fieldtype": "Link",
+   "label": "Sub Assembly",
+   "options": "Sub Assembly",
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "page_break",
+   "fieldtype": "Check",
+   "label": "New Page",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "section_text_section",
+   "fieldtype": "Section Break",
+   "label": "Text"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Introduction",
+   "description": "Use [[ ]] for values to fill in per project, e.g. [[160]] m³/h."
+  },
+  {
+   "fieldname": "specs",
+   "fieldtype": "Small Text",
+   "label": "Design Data Table",
+   "description": "One row per line: Parameter | Value | Unit. A line without | prints as a bold group row; an empty line starts a new table. Put values the engineer must confirm in [[ ]], e.g. [[105]]."
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text Editor",
+   "label": "Text After Design Data"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-26 13:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Technical Offer Section",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1
+}

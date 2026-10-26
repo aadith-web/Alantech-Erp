@@ -1,0 +1,178 @@
+{
+ "actions": [],
+ "creation": "2026-10-26 13:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company_section",
+  "letter_head",
+  "place",
+  "column_break_company",
+  "signatory_name",
+  "signatory_contact",
+  "texts_section",
+  "intro_text",
+  "water_analysis_intro",
+  "water_analysis_remarks",
+  "commercial_section",
+  "scope_of_supply_terms",
+  "commercial_terms",
+  "column_break_commercial",
+  "bank_details",
+  "price_notes",
+  "bought_out_items",
+  "library_section",
+  "library_loaded",
+  "load_library"
+ ],
+ "fields": [
+  {
+   "fieldname": "company_section",
+   "fieldtype": "Section Break",
+   "label": "Letter"
+  },
+  {
+   "fieldname": "letter_head",
+   "fieldtype": "Link",
+   "label": "Letter Head",
+   "options": "Letter Head"
+  },
+  {
+   "fieldname": "place",
+   "fieldtype": "Data",
+   "label": "Place",
+   "default": "Kerala",
+   "description": "Printed under the date of the cover letter"
+  },
+  {
+   "fieldname": "column_break_company",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "signatory_name",
+   "fieldtype": "Data",
+   "label": "Signatory"
+  },
+  {
+   "fieldname": "signatory_contact",
+   "fieldtype": "Data",
+   "label": "Signatory Contact"
+  },
+  {
+   "fieldname": "texts_section",
+   "fieldtype": "Section Break",
+   "label": "Standard Texts"
+  },
+  {
+   "fieldname": "intro_text",
+   "fieldtype": "Text Editor",
+   "label": "Cover Letter Text",
+   "description": "Use [[ ]] for values to fill in per project, e.g. [[160]] m³/h."
+  },
+  {
+   "fieldname": "water_analysis_intro",
+   "fieldtype": "Text Editor",
+   "label": "Raw Water Analysis - Introduction"
+  },
+  {
+   "fieldname": "water_analysis_remarks",
+   "fieldtype": "Text Editor",
+   "label": "Raw Water Analysis - Important Remark"
+  },
+  {
+   "fieldname": "commercial_section",
+   "fieldtype": "Section Break",
+   "label": "Commercial"
+  },
+  {
+   "fieldname": "scope_of_supply_terms",
+   "fieldtype": "Link",
+   "label": "Scope of Supply",
+   "options": "Terms and Conditions"
+  },
+  {
+   "fieldname": "commercial_terms",
+   "fieldtype": "Link",
+   "label": "Commercial Conditions",
+   "options": "Terms and Conditions"
+  },
+  {
+   "fieldname": "column_break_commercial",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bank_details",
+   "fieldtype": "Small Text",
+   "label": "Bank Details"
+  },
+  {
+   "fieldname": "price_notes",
+   "fieldtype": "Text Editor",
+   "label": "Notes below Price Schedule"
+  },
+  {
+   "fieldname": "bought_out_items",
+   "fieldtype": "Table",
+   "label": "Standard Bought Out Items",
+   "options": "Offer Bought Out Item"
+  },
+  {
+   "fieldname": "library_section",
+   "fieldtype": "Section Break",
+   "label": "Standard Library"
+  },
+  {
+   "fieldname": "library_loaded",
+   "fieldtype": "Check",
+   "label": "Standard Library Loaded",
+   "read_only": 1,
+   "description": "Set when the water treatment library (sub assemblies, plant assemblies, terms) was loaded"
+  },
+  {
+   "fieldname": "load_library",
+   "fieldtype": "Button",
+   "label": "Load Standard Library",
+   "description": "Adds the standard water treatment sub assemblies, plant assemblies and terms. Existing records are left untouched."
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-26 13:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Proposal Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Proposal Engineer",
+   "read": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "issingle": 1,
+ "track_changes": 1
+}

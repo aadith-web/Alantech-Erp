@@ -1,0 +1,353 @@
+{
+ "actions": [],
+ "creation": "2026-10-26 13:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "assembly_section",
+  "assembly_name",
+  "offer_format",
+  "column_break_assembly",
+  "disabled",
+  "plant_section",
+  "plant_type",
+  "capacity",
+  "capacity_uom",
+  "column_break_plant",
+  "no_of_trains",
+  "quote_item",
+  "sections_section",
+  "sections",
+  "pricing_section",
+  "default_addon_pct",
+  "contingency_pct",
+  "financing_pct",
+  "include_financing",
+  "column_break_pricing",
+  "margin_basis",
+  "profit_pct",
+  "sales_commission_pct",
+  "round_to",
+  "offer_tab",
+  "subject",
+  "intro_text",
+  "guarantees",
+  "images_section",
+  "cover_image",
+  "column_break_images",
+  "flow_diagram",
+  "design_basis_section",
+  "project_data",
+  "water_analysis",
+  "commercial_section",
+  "scope_of_supply_terms",
+  "column_break_commercial",
+  "commercial_terms",
+  "price_notes_section",
+  "price_notes",
+  "bought_out_items"
+ ],
+ "fields": [
+  {
+   "fieldname": "assembly_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "assembly_name",
+   "fieldtype": "Data",
+   "label": "Assembly Name",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1,
+   "description": "Plant type, e.g. UF + RO + EDI - UPW Plant"
+  },
+  {
+   "fieldname": "offer_format",
+   "fieldtype": "Select",
+   "label": "Offer Format",
+   "options": "Detailed Proposal\nSingle Page Offer",
+   "default": "Detailed Proposal",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "column_break_assembly",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled"
+  },
+  {
+   "fieldname": "plant_section",
+   "fieldtype": "Section Break",
+   "label": "Plant"
+  },
+  {
+   "fieldname": "plant_type",
+   "fieldtype": "Data",
+   "label": "Type"
+  },
+  {
+   "fieldname": "capacity",
+   "fieldtype": "Float",
+   "label": "Capacity"
+  },
+  {
+   "fieldname": "capacity_uom",
+   "fieldtype": "Data",
+   "label": "Capacity Unit",
+   "default": "m³/h"
+  },
+  {
+   "fieldname": "column_break_plant",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "no_of_trains",
+   "fieldtype": "Int",
+   "label": "No. of Trains",
+   "default": "1"
+  },
+  {
+   "fieldname": "quote_item",
+   "fieldtype": "Link",
+   "label": "Quotation Item",
+   "options": "Item",
+   "description": "Item quoted to the client for the plant"
+  },
+  {
+   "fieldname": "sections_section",
+   "fieldtype": "Section Break",
+   "label": "Sub Assemblies"
+  },
+  {
+   "fieldname": "sections",
+   "fieldtype": "Table",
+   "label": "Sub Assemblies",
+   "options": "Plant Assembly Section"
+  },
+  {
+   "fieldname": "pricing_section",
+   "fieldtype": "Section Break",
+   "label": "Costing Defaults"
+  },
+  {
+   "fieldname": "default_addon_pct",
+   "fieldtype": "Percent",
+   "label": "Default Transport %",
+   "default": "2"
+  },
+  {
+   "fieldname": "contingency_pct",
+   "fieldtype": "Percent",
+   "label": "Contingencies %"
+  },
+  {
+   "fieldname": "financing_pct",
+   "fieldtype": "Percent",
+   "label": "Financing Cost %"
+  },
+  {
+   "fieldname": "include_financing",
+   "fieldtype": "Check",
+   "label": "Add Financing Cost to Total Cost"
+  },
+  {
+   "fieldname": "column_break_pricing",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "margin_basis",
+   "fieldtype": "Select",
+   "label": "Margin Basis",
+   "options": "Markup on Cost\nMargin on Selling Price",
+   "default": "Markup on Cost"
+  },
+  {
+   "fieldname": "profit_pct",
+   "fieldtype": "Percent",
+   "label": "Margin %"
+  },
+  {
+   "fieldname": "sales_commission_pct",
+   "fieldtype": "Percent",
+   "label": "Sales Commission %"
+  },
+  {
+   "fieldname": "round_to",
+   "fieldtype": "Select",
+   "label": "Round Section Prices To",
+   "options": "\n100\n1000\n10000\n100000"
+  },
+  {
+   "fieldname": "offer_tab",
+   "fieldtype": "Tab Break",
+   "label": "Offer Defaults"
+  },
+  {
+   "fieldname": "subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "default": "Offer for Water Treatment Plant"
+  },
+  {
+   "fieldname": "intro_text",
+   "fieldtype": "Text Editor",
+   "label": "Cover Letter Text",
+   "description": "Use [[ ]] for values to fill in per project, e.g. [[160]] m³/h. Blank = Proposal Settings."
+  },
+  {
+   "fieldname": "guarantees",
+   "fieldtype": "Table",
+   "label": "Project Guarantees",
+   "options": "Estimation Technical Data"
+  },
+  {
+   "fieldname": "images_section",
+   "fieldtype": "Section Break",
+   "label": "Images"
+  },
+  {
+   "fieldname": "cover_image",
+   "fieldtype": "Attach Image",
+   "label": "Cover Image"
+  },
+  {
+   "fieldname": "column_break_images",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "flow_diagram",
+   "fieldtype": "Attach Image",
+   "label": "Process Flow Diagram"
+  },
+  {
+   "fieldname": "design_basis_section",
+   "fieldtype": "Section Break",
+   "label": "Design Basis"
+  },
+  {
+   "fieldname": "project_data",
+   "fieldtype": "Table",
+   "label": "Project Data",
+   "options": "Estimation Technical Data"
+  },
+  {
+   "fieldname": "water_analysis",
+   "fieldtype": "Table",
+   "label": "Raw Water Analysis",
+   "options": "Estimation Technical Data"
+  },
+  {
+   "fieldname": "commercial_section",
+   "fieldtype": "Section Break",
+   "label": "Commercial"
+  },
+  {
+   "fieldname": "scope_of_supply_terms",
+   "fieldtype": "Link",
+   "label": "Scope of Supply",
+   "options": "Terms and Conditions"
+  },
+  {
+   "fieldname": "column_break_commercial",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "commercial_terms",
+   "fieldtype": "Link",
+   "label": "Commercial Conditions",
+   "options": "Terms and Conditions"
+  },
+  {
+   "fieldname": "price_notes_section",
+   "fieldtype": "Section Break",
+   "label": "Pricing Notes"
+  },
+  {
+   "fieldname": "price_notes",
+   "fieldtype": "Text Editor",
+   "label": "Notes below Price Schedule"
+  },
+  {
+   "fieldname": "bought_out_items",
+   "fieldtype": "Table",
+   "label": "Standard Bought Out Items",
+   "options": "Offer Bought Out Item"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-26 13:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Plant Assembly",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1,
+   "create": 1,
+   "write": 1,
+   "share": 1,
+   "delete": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1,
+   "create": 1,
+   "write": 1,
+   "share": 1,
+   "delete": 1
+  },
+  {
+   "role": "Proposal Engineer",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1,
+   "create": 1,
+   "write": 1,
+   "share": 1,
+   "delete": 1
+  },
+  {
+   "role": "Design Engineer",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1,
+   "create": 1,
+   "write": 1,
+   "share": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "field:assembly_name",
+ "naming_rule": "By fieldname",
+ "title_field": "assembly_name",
+ "search_fields": "plant_type,offer_format",
+ "track_changes": 1
+}

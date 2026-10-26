@@ -1,0 +1,219 @@
+{
+ "actions": [],
+ "creation": "2026-10-26 13:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "sub_assembly_section",
+  "sub_assembly_name",
+  "cost_type",
+  "column_break_sub_assembly",
+  "default_pricing_mode",
+  "include_in_offer",
+  "disabled",
+  "offer_text_head_section",
+  "offer_title",
+  "column_break_offer_text_head",
+  "price_description",
+  "costing_tab",
+  "items",
+  "total_cost",
+  "offer_tab",
+  "description",
+  "specs",
+  "notes",
+  "components_section",
+  "components"
+ ],
+ "fields": [
+  {
+   "fieldname": "sub_assembly_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "sub_assembly_name",
+   "fieldtype": "Data",
+   "label": "Sub Assembly Name",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cost_type",
+   "fieldtype": "Select",
+   "label": "Cost Type",
+   "options": "Equipment\nManpower\nGeneral\nServices",
+   "default": "Equipment",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Equipment and General rows carry transport; Manpower rows default to none"
+  },
+  {
+   "fieldname": "column_break_sub_assembly",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_pricing_mode",
+   "fieldtype": "Select",
+   "label": "Pricing",
+   "options": "Included\nSeparate Line\nOptional",
+   "default": "Included"
+  },
+  {
+   "fieldname": "include_in_offer",
+   "fieldtype": "Check",
+   "label": "Describe in Technical Offer",
+   "default": "1"
+  },
+  {
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled"
+  },
+  {
+   "fieldname": "offer_text_head_section",
+   "fieldtype": "Section Break",
+   "label": "Offer"
+  },
+  {
+   "fieldname": "offer_title",
+   "fieldtype": "Data",
+   "label": "Offer Heading",
+   "description": "Section heading in the technical offer. Blank = the name."
+  },
+  {
+   "fieldname": "column_break_offer_text_head",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "price_description",
+   "fieldtype": "Data",
+   "label": "Price Schedule Line",
+   "description": "Line for this sub assembly in the offer's price schedule. Blank = not listed (its cost is still in the price)."
+  },
+  {
+   "fieldname": "costing_tab",
+   "fieldtype": "Tab Break",
+   "label": "Costing Items"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Sub Assembly Item"
+  },
+  {
+   "fieldname": "total_cost",
+   "fieldtype": "Currency",
+   "label": "Standard Cost incl. Transport",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "offer_tab",
+   "fieldtype": "Tab Break",
+   "label": "Offer Text"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Introduction",
+   "description": "Use [[ ]] for values to fill in per project, e.g. [[160]] m³/h."
+  },
+  {
+   "fieldname": "specs",
+   "fieldtype": "Small Text",
+   "label": "Design Data Table",
+   "description": "One row per line: Parameter | Value | Unit. A line without | prints as a bold group row; an empty line starts a new table. Put values the engineer must confirm in [[ ]], e.g. [[105]]."
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text Editor",
+   "label": "Text After Design Data"
+  },
+  {
+   "fieldname": "components_section",
+   "fieldtype": "Section Break",
+   "label": "Components"
+  },
+  {
+   "fieldname": "components",
+   "fieldtype": "Table",
+   "label": "Components",
+   "options": "Offer Component"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-26 13:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Sub Assembly",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1,
+   "create": 1,
+   "write": 1,
+   "share": 1,
+   "delete": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1,
+   "create": 1,
+   "write": 1,
+   "share": 1,
+   "delete": 1
+  },
+  {
+   "role": "Proposal Engineer",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1,
+   "create": 1,
+   "write": 1,
+   "share": 1,
+   "delete": 1
+  },
+  {
+   "role": "Design Engineer",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1,
+   "create": 1,
+   "write": 1,
+   "share": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "field:sub_assembly_name",
+ "naming_rule": "By fieldname",
+ "title_field": "sub_assembly_name",
+ "search_fields": "cost_type,offer_title",
+ "show_title_field_in_link": 0,
+ "track_changes": 1
+}
