@@ -1,0 +1,76 @@
+{#- Estimation cost sheet in the layout of the water treatment costing workbook (internal document). -#}
+{%- set cs = get_cost_sheet_context(doc) -%}
+{%- set t = cs.totals -%}
+<style>
+	.alt-cs { font-size: 7.5pt; color: #1f2328; }
+	.alt-cs h2 { text-align: center; font-size: 12pt; text-decoration: underline; margin: 0 0 8px; }
+	.alt-cs table { border-collapse: collapse; width: 100%; }
+	.alt-cs .alt-cs-head td { border: 1px solid #555; padding: 2px 6px; }
+	.alt-cs .alt-cs-head td.v { background: #fff35c; width: 40%; }
+	.alt-cs .alt-cs-sheet th { border: 1px solid #555; padding: 3px 4px; font-weight: 600; text-align: center; }
+	.alt-cs .alt-cs-sheet td { border: 1px dotted #777; padding: 2px 4px; vertical-align: top; }
+	.alt-cs .num { text-align: right; white-space: nowrap; }
+	.alt-cs tr.sec td { background: #f4b183; font-weight: 600; color: #2f6b1c; padding-left: 90px; }
+	.alt-cs tr.sub td { background: #9dc3e6; font-weight: 600; }
+	.alt-cs tr.tot td { background: #a9d18e; font-weight: 600; }
+	.alt-cs .alt-cs-sum { width: 55%; margin: 10px 0 0 auto; font-size: 8.5pt; }
+	.alt-cs .alt-cs-sum td { border: 1px solid #999; padding: 3px 6px; }
+	.alt-cs .alt-cs-sum tr.b td { font-weight: 600; }
+	.alt-cs .alt-cs-sec { margin-top: 10px; font-size: 8.5pt; }
+	.alt-cs .alt-cs-sec td, .alt-cs .alt-cs-sec th { border: 1px solid #999; padding: 3px 6px; }
+</style>
+<div class="alt-cs">
+	<h2>{{ _("WATER TREATMENT COSTING MODULE") }}</h2>
+	<table class="alt-cs-head" style="margin-bottom: 8px">
+		<tr><td>{{ _("CAPACITY") }}</td><td class="v">{{ doc.plant_type or "" }}{% if doc.capacity %} {{ doc.get_formatted("capacity") }} {{ doc.capacity_uom or "" }}{% endif %}{% if doc.no_of_trains and doc.no_of_trains > 1 %} x {{ doc.no_of_trains }} {{ _("trains") }}{% endif %}</td>
+			<td style="border: none; width: 10%"></td><td>{{ _("DATE") }}</td><td class="v" style="text-align:center">{{ doc.get_formatted("estimation_date") }}</td></tr>
+		<tr><td>{{ _("CUSTOMER") }}</td><td class="v">{{ doc.customer_name or "" }}</td>
+			<td style="border: none"></td><td>{{ _("ESTIMATION") }}</td><td class="v" style="text-align:center">{{ doc.name }}</td></tr>
+	</table>
+
+	<table class="alt-cs-sheet">
+		<thead><tr>
+			<th>{{ _("SL NO") }}</th><th>{{ _("ITEM") }}</th><th>{{ _("TYPE & MODEL") }}</th><th>{{ _("MOC") }}</th><th>{{ _("Vendor") }}</th>
+			<th>{{ _("QTY") }}</th><th>{{ _("UNIT PRICE") }}</th><th>{{ _("TOTAL") }}</th><th>{{ _("TRANSPORT") }}</th><th>{{ _("TOTAL PRICE") }}</th>
+		</tr></thead>
+		<tbody>
+		{%- for g in cs.groups %}
+			<tr class="sec"><td colspan="10">{{ g.title }}{% if g.mode != "Included" %} ({{ _(g.mode) }}){% endif %}</td></tr>
+			{%- for r in g["items"] %}
+			<tr>
+				<td class="num">{{ r.sl }}</td><td>{{ r.item }}</td><td>{{ r.type_model }}</td><td>{{ r.moc }}</td><td>{{ r.make }}</td>
+				<td class="num">{{ r.qty }}</td><td class="num">{{ r.unit_cost }}</td><td class="num">{{ r.amount }}</td>
+				<td class="num">{{ r.transport }}</td><td class="num">{{ r.total }}</td>
+			</tr>
+			{%- endfor %}
+			<tr class="sub"><td></td><td colspan="6">{{ _("Sub Total") }}</td><td class="num">{{ g.amount }}</td><td class="num">{{ g.transport }}</td><td class="num">{{ g.total }}</td></tr>
+		{%- endfor %}
+			<tr class="tot"><td></td><td colspan="6">{{ _("TOTAL COST") }}</td><td class="num">{{ t.total_amount }}</td><td class="num">{{ t.total_addon }}</td><td class="num">{{ t.total_cost }}</td></tr>
+		</tbody>
+	</table>
+
+	<table class="alt-cs-sum">
+		<tr><td>{{ _("Equipment") }}</td><td class="num">{{ t.equipment_cost }}</td></tr>
+		<tr><td>{{ _("Manpower") }}</td><td class="num">{{ t.manpower_cost }}</td></tr>
+		<tr><td>{{ _("General & Services") }}</td><td class="num">{{ t.general_cost }}</td></tr>
+		<tr class="b"><td>{{ _("Total Cost") }}</td><td class="num">{{ t.total_cost }}</td></tr>
+		<tr><td>{{ _("Contingencies") }} ({{ doc.get_formatted("contingency_pct") }})</td><td class="num">{{ t.contingency_amount }}</td></tr>
+		<tr><td>{{ _("Financing Cost") }} ({{ doc.get_formatted("financing_pct") }}){% if not doc.include_financing %} - {{ _("not added") }}{% endif %}</td><td class="num">{{ t.financing_amount }}</td></tr>
+		<tr class="b"><td>{{ _("Total Cost incl. Contingencies") }}</td><td class="num">{{ t.cost_price }}</td></tr>
+		<tr><td>{{ _(doc.margin_basis or "Markup on Cost") }} ({{ doc.get_formatted("profit_pct") }})</td><td></td></tr>
+		<tr><td>{{ _("Main Plant Price per Train") }}</td><td class="num">{{ t.main_price }}</td></tr>
+		<tr class="b"><td>{{ _("SELLING PRICE per Train") }}</td><td class="num">{{ t.selling_price }}</td></tr>
+		{%- if doc.optional_price %}<tr><td>{{ _("Optional Items per Train") }}</td><td class="num">{{ t.optional_price }}</td></tr>{% endif %}
+		<tr><td>{{ _("Sales Commission") }} ({{ doc.get_formatted("sales_commission_pct") }})</td><td class="num">{{ t.sales_commission_amount }}</td></tr>
+		<tr><td>{{ _("Profit Margin") }} ({{ doc.get_formatted("profit_on_cost_pct") }} {{ _("of cost") }})</td><td class="num">{{ t.profit_amount }}</td></tr>
+		<tr class="b"><td>{{ _("Selling Price, all Trains") }}</td><td class="num">{{ t.grand_selling_price }}</td></tr>
+	</table>
+
+	<table class="alt-cs-sec">
+		<tr><th style="text-align:left">{{ _("Section") }}</th><th>{{ _("Cost Type") }}</th><th>{{ _("Pricing") }}</th><th class="num">{{ _("Cost") }}</th><th class="num">{{ _("Selling Price") }}</th></tr>
+		{%- for g in cs.groups %}
+		<tr><td>{{ g.title }}</td><td>{{ _(g.cost_type or "") }}</td><td>{{ _(g.mode or "") }}</td><td class="num">{{ g.total }}</td><td class="num">{{ g.selling }}</td></tr>
+		{%- endfor %}
+	</table>
+	{%- if doc.remarks %}<p style="margin-top: 8px"><b>{{ _("Remarks") }}:</b> {{ doc.remarks }}</p>{% endif %}
+</div>

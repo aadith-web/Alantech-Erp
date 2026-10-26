@@ -1,0 +1,55 @@
+{#- Quotation printed as the proposal: the linked Technical Offer when there is one
+    (layout in alantech_erp/templates/print/technical_offer.html), otherwise a plain commercial offer. -#}
+{%- if doc.alt_technical_offer -%}
+{%- set ctx = get_offer_context(doc.alt_technical_offer) -%}
+{% include "alantech_erp/templates/print/technical_offer.html" %}
+{%- else -%}
+{%- set est = frappe.get_doc("Estimation", doc.alt_estimation) if doc.alt_estimation else None -%}
+<style>
+	.alt-proposal { font-size: 10.5pt; color: #1f2328; }
+	.alt-proposal h2 { font-size: 15pt; margin: 0 0 4px; color: #1c7396; }
+	.alt-proposal h3 { font-size: 12pt; margin: 18px 0 6px; color: #1c7396; }
+	.alt-meta td { padding: 2px 12px 2px 0; vertical-align: top; }
+	.alt-items { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+	.alt-items td, .alt-items th { border: 1px solid #c4c9cc; padding: 4px 8px; vertical-align: top; }
+	.alt-items th { background: #6cbf4a; color: #fff; text-align: left; }
+	.alt-items .num { text-align: right; white-space: nowrap; }
+</style>
+<div class="alt-proposal">
+	<h2>{{ _("Commercial Offer") }}</h2>
+	<table class="alt-meta">
+		<tr><td>{{ _("Offer No.") }}</td><td><b>{{ doc.name }}</b></td></tr>
+		<tr><td>{{ _("Date") }}</td><td>{{ doc.get_formatted("transaction_date") }}</td></tr>
+		<tr><td>{{ _("Client") }}</td><td>{{ doc.customer_name or doc.party_name }}</td></tr>
+		{%- if doc.valid_till %}<tr><td>{{ _("Valid Till") }}</td><td>{{ doc.get_formatted("valid_till") }}</td></tr>{% endif %}
+		{%- if est and est.plant_type %}<tr><td>{{ _("Plant") }}</td><td>{{ est.plant_type }}{% if est.capacity %}, {{ est.get_formatted("capacity") }} {{ est.capacity_uom or "" }}{% endif %}{% if est.no_of_trains and est.no_of_trains > 1 %} x {{ est.no_of_trains }} {{ _("Trains") }}{% endif %}</td></tr>{% endif %}
+	</table>
+
+	<table class="alt-items" style="margin-top: 14px">
+		<tr><th>#</th><th>{{ _("Description") }}</th><th class="num">{{ _("Qty") }}</th><th class="num">{{ _("Rate") }}</th><th class="num">{{ _("Amount") }}</th></tr>
+		{%- for item in doc.items %}
+		<tr>
+			<td>{{ item.idx }}</td>
+			<td><b>{{ item.item_name }}</b>{% if item.description and item.description != item.item_name %}<br>{{ item.description }}{% endif %}</td>
+			<td class="num">{{ item.get_formatted("qty") }} {{ item.uom or "" }}</td>
+			<td class="num">{{ item.get_formatted("rate", doc) }}</td>
+			<td class="num">{{ item.get_formatted("amount", doc) }}</td>
+		</tr>
+		{%- endfor %}
+		<tr><td colspan="4" class="num">{{ _("Net Total") }}</td><td class="num">{{ doc.get_formatted("net_total") }}</td></tr>
+		{%- for tax in doc.taxes %}{% if tax.tax_amount %}
+		<tr><td colspan="4" class="num">{{ tax.description }}</td><td class="num">{{ tax.get_formatted("tax_amount", doc) }}</td></tr>
+		{%- endif %}{% endfor %}
+		{%- if doc.discount_amount %}
+		<tr><td colspan="4" class="num">{{ _("Discount") }}</td><td class="num">- {{ doc.get_formatted("discount_amount") }}</td></tr>
+		{%- endif %}
+		<tr><td colspan="4" class="num"><b>{{ _("Grand Total") }}</b></td><td class="num"><b>{{ doc.get_formatted("rounded_total" if doc.rounded_total else "grand_total") }}</b></td></tr>
+	</table>
+	{%- if doc.in_words %}<p><b>{{ _("In Words") }}:</b> {{ doc.in_words }}</p>{% endif %}
+
+	{%- if doc.terms %}
+	<h3>{{ _("Terms and Conditions") }}</h3>
+	<div>{{ doc.terms }}</div>
+	{%- endif %}
+</div>
+{%- endif -%}

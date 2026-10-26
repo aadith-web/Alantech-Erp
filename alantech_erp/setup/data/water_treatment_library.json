@@ -1,0 +1,6341 @@
+{
+ "_source": "Water Treatment costing template 2026 + UF/RO/EDI 160 m3/h proposal (AIS/260829/IN/Rev0)",
+ "terms": [
+  {
+   "title": "Alantech - Scope of Supply (Water Treatment)",
+   "terms": "<p>Included are, in addition to the scope of supply mentioned in our quotation:</p><ul><li>Maximum possible pre-assembly of the plant in our works</li><li>General assembly plan, flow sheet</li><li>Operating instructions and maintenance instructions, 2 printed copies</li><li>Suppliers operating instructions, maintenance instructions and spare part lists</li><li>Spare part lists, 2 printed copies.</li><li>Painting material for external painting of tanks resp. patching-up</li><li>Supervision of unloading, transportation and placing of the equipment,</li></ul><p>If the installation is made by Alantech, not included are all items unless stated in our above offer, particularly:</p><ul><li>Freight and insurance, customs clearing and duties</li><li>Work of unloading on site, transport within the site and placing</li><li>Civil works, masonry, foundations, flooring, works</li><li>All feed/discharge piping, drains, lighting systems</li><li>Cranes, forklifts, scaffolds for erection</li><li>Cables and electrical installation to be executed by a licensed local company.</li><li>Compressed control air supply</li><li>Installation tools and welding equipment incl. welding gases</li><li>Steam- or hot water supply pipes and insulation</li><li>Local work- and operating permissions</li><li>Special certifications, inspections/tests, equipment passports required in buyer´s country</li><li>Passivation of pipelines, the required chemicals and their disposal</li><li>Costs of water, power and chemicals for testing and plant start-up</li><li>Any taxes or duties payable in customers country, especially on the costs of installation, start-up, training and other local works carried out by Alantech.</li></ul><p>We draw your attention to the fact that treatment plants are consuming own water (partially treated water), for example for:</p><ul><li>Filter-backwash incl. filtrate to drain</li><li>Regeneration</li><li>Sterilization and cooling down</li><li>Cleaning</li><li>Reject water of membrane filtration plants</li><li>Measuring water</li></ul><p>During the backwash, cleaning, sterilization etc. of plant units, the related treatment capacity is not available, unless we are expressively offering stand by-units or double alternating plants.</p>"
+  },
+  {
+   "title": "Alantech - Commercial Conditions (Water Treatment)",
+   "terms": "<h4>Time of ex works delivery</h4><p>Approx. [[24]] weeks after acceptance of the P&amp;ID, layout by customer and after receipt of down payment. A later change of the plant execution by the customer may result in a prolongation of the time of delivery and to additional charges.</p><h4>Price basis is the {{ frappe.utils.formatdate(offer_date) }}</h4><p>The validity of the offer is [[3]] months, subject stainless steel material prices being unchanged. In case of substantial changes, we reserve the right to adjust the prices for stainless steel items accordingly.</p><h4>Terms of delivery</h4><p>Ex-works Cochin, India, according to Inco-terms 2010. Costs of freight, packing, installation and commissioning are stated separately. Costs for taking back and disposal of packing material are not included in the price.</p><h4>Plant execution</h4><p>Alantech components/plants are offered according to our latest state of design and technology. We reserve to make minor changes in design upon execution of the order. Major changes will be agreed upon.</p><h4>Terms of payment</h4><p>[[50]]% Advance along with order.</p><p>[[45]]% before shipment, After FAT.</p><p>[[5]]% - after successful commissioning</p><p>All payment are to be effected net without deduction.</p><p>The payments are to be made by Bank Transfer.</p><h4>Guarantees</h4><p>We warrant that the workmanship, equipment and materials are of full merchantable quality. Alantech provide [[12]] months warranty for the equipments for workmanship and design. All wear and tear parts as well as all consumables are excluded from our guarantee.</p>"
+  },
+  {
+   "title": "Alantech - Single Page Offer Terms",
+   "terms": "<ul><li><b>Price basis:</b> Ex-works Cochin. GST extra as applicable.</li><li><b>Delivery:</b> [[4 - 6]] weeks from receipt of order with advance.</li><li><b>Payment:</b> [[50]]% advance with order, balance before dispatch.</li><li><b>Installation:</b> as per the price schedule; civil works, power and raw water supply by customer.</li><li><b>Validity:</b> [[30]] days from the date of offer.</li><li><b>Warranty:</b> [[12]] months from commissioning against manufacturing defects; consumables excluded.</li></ul>"
+  }
+ ],
+ "settings": {
+  "place": "Kerala",
+  "intro_text": "<p>We thank you for the interest you have shown for our product. We take pleasure in quoting for the same.</p><p><u>Below you will find offer for automated water treatment plant for the [[canal water and municipal water]] with [[pre filters, Clarifier, UF, RO, RO, EDI and NRMB]].</u></p><p>Capacity of the water treatment plant is [[160,000]] Ltr / hour of RO permeate ([[1,824,000]] Ltr per day total), with [[93.0]]% overall recovery rate.</p>",
+  "water_analysis_intro": "<p>The following raw water analysis will be the basis for the plant design. In addition to these parameters thresholds for the offered treatment plant design are given below. Any parameters not mentioned are expected to be in compliance with client’s specifications for treated water, the WHO guidelines for drinking water or local standards for drinking water, whichever is more strict. Any parameters that exceed below mentioned thresholds must be noted to Alantech since it may effect the offered plant design.</p><p>Any damage to Alantech plant or non-compliant treated water quality resulting from a deviating raw water quality is excluded from warranty.</p>",
+  "water_analysis_remarks": "<ul><li>Please study the raw water analysis stated above very carefully, as it is the basis for the plant design. Kindly inform us, if you do not agree with this analysis, especially if you experienced larger fluctuations of the stated data in the past.</li><li>The analysis only shows the situation at the time the samples have been taken. Therefore please provide as many \"historical\" water data as available, at least of the past year. Otherwise we will consider the stated analysis as typical for your raw water quality.</li><li>Substances which are not stated in the analysis are deemed not to be detected/able or to be within the permissible limits upon treatment by the offered water treatment technology.</li></ul>",
+  "scope_of_supply_terms": "Alantech - Scope of Supply (Water Treatment)",
+  "commercial_terms": "Alantech - Commercial Conditions (Water Treatment)",
+  "price_notes": "<ol><li>GST will be extra as actual</li><li>All civil works are customer scope</li><li>Transportation to pay basis from cochin to site</li></ol>",
+  "bought_out_items": [
+   {
+    "item_group": "Pumps",
+    "manufacturer": "GRUNDFOS"
+   },
+   {
+    "item_group": "Valves",
+    "manufacturer": "Bray / FESTO / INOXPA"
+   },
+   {
+    "item_group": "Membranes",
+    "manufacturer": "DuPont"
+   },
+   {
+    "item_group": "Instruments",
+    "manufacturer": "E+H / HACH"
+   },
+   {
+    "item_group": "Dosing pumps",
+    "manufacturer": "GRUNDFOS"
+   },
+   {
+    "item_group": "Pneumatic Components",
+    "manufacturer": "FESTO"
+   },
+   {
+    "item_group": "PLC & HMI",
+    "manufacturer": "SIEMENS"
+   },
+   {
+    "item_group": "Flow meters",
+    "manufacturer": "E+H / Krohne"
+   },
+   {
+    "item_group": "Electricals",
+    "manufacturer": "Schneider / SIEMENS"
+   },
+   {
+    "item_group": "UV system",
+    "manufacturer": "Atlantium / UltraAqua"
+   },
+   {
+    "item_group": "Membrane housing",
+    "manufacturer": "PENTAIR"
+   },
+   {
+    "item_group": "SS Piping",
+    "manufacturer": "INOXPA"
+   },
+   {
+    "item_group": "Micron Filter",
+    "manufacturer": "Alantech"
+   },
+   {
+    "item_group": "Panel enclosure",
+    "manufacturer": "RITTAL"
+   }
+  ]
+ },
+ "sub_assemblies": [
+  {
+   "sub_assembly_name": "Clarifier System",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "Raw Water pump",
+     "type_model": "NB 100-200",
+     "moc": "SS 316",
+     "make": "Grundfos",
+     "qty": 2.0,
+     "unit_cost": 673062.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "VFD",
+     "type_model": "22 KW",
+     "moc": "FC051",
+     "make": "Grundfos",
+     "qty": 2.0,
+     "unit_cost": 78627.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": "VA481-770652100 / V9121-9004065",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 4.0,
+     "unit_cost": 9500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Clarifier drive mechanism",
+     "type_model": null,
+     "moc": null,
+     "make": "Alantech",
+     "qty": 1.0,
+     "unit_cost": 685400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pipe flocculators",
+     "type_model": null,
+     "moc": null,
+     "make": "Alantech",
+     "qty": 1.0,
+     "unit_cost": 295000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Non Return valve",
+     "type_model": "V7201-000650100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 2.0,
+     "unit_cost": 19500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pump Skid",
+     "type_model": "Base frame for pump",
+     "moc": "SS 304",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 85000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Level sensor",
+     "type_model": "91427146",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 2.0,
+     "unit_cost": 55000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Flow meter",
+     "type_model": "Optiflux 1000, DN 100",
+     "moc": "SS 316",
+     "make": "Krohne",
+     "qty": 1.0,
+     "unit_cost": 284380.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": "0-10 Bar, 4-20 mA",
+     "moc": "SS 316",
+     "make": "Danfoss",
+     "qty": 2.0,
+     "unit_cost": 6500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": "0-10 Bar",
+     "moc": "SS 316",
+     "make": "WIKA",
+     "qty": 2.0,
+     "unit_cost": 3140.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "[[1]] X",
+     "title": "Clarifier Feed pump - Grundfos",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Rotation speed | 2900 | 1/min\nConnection voltage | 400/690 | V\nMains frequency | 50 | Hz\nProtection class | IP55\nMaterial of pump Impeller | stainless steel\nFlow - Q | [[105]] | m³/hour\nHead - H | [[3.5]] | Bar\nElectric power P | [[15]] | KW",
+     "notes": "<p>Positive suction, modular designed pump with directly coupled electric motor.</p><p>1 Set of suction side connections as pump connection module with shutoff valve and manometer.</p><p>1 Set of pressure side connections as pump connection module with shutoff valve, non-return valve and manometer.</p><p>1 Pump mounting frame Stainless steel frame with height adjustable calotte feet, allowing an easy installation of the pump group without concrete base.</p>"
+    },
+    {
+     "qty_label": "1 X",
+     "title": "Water metering device - E+H",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>to measure/indicate and totalize the water flow</p><p>Magnetic inductive water meter with local 7-digit display and remote indication of the flow rate at the switch board. Electronic microprocessor signal converter with programmable functions.</p>",
+     "specs": "Nominal diameter | [[DN 100 PN10]]\nConductivity min | >20 | µS/cm\nSignal out | 0/4-20 | mA\nVoltage | 24 | V\nElectrode material | stainless steel\nOperation temperature | <80 | °C",
+     "notes": null
+    },
+    {
+     "qty_label": "1 X",
+     "title": "ALANTECH Pipe Flocculator",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Operation pressure max. | 4 | bar\nNumber of turns | [[8]]\nPipe Size | [[150]] | mm\nNumber of dosing points | 3 | Nos\nNumber of static mixers | 3 | Nos\nTotal length approx. | [[48]] | m\nMaterial | GI",
+     "notes": null
+    },
+    {
+     "qty_label": null,
+     "title": "Dosing of coagulant, Flocculant & Oxidant",
+     "is_heading": 1,
+     "page_break": 0,
+     "description": null,
+     "specs": null,
+     "notes": null
+    },
+    {
+     "qty_label": "3 X",
+     "title": "Dosing tank 250 L",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Contents | 250 | l\nMaterial of tank | PE\nTank diameter | ø 120 | mm\nCylindrical height | 200 | mm",
+     "notes": null
+    },
+    {
+     "qty_label": "3 X",
+     "title": "Suction lance for tanks",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Material | PP",
+     "notes": null
+    },
+    {
+     "qty_label": "3 X",
+     "title": "Dosing Pump - Grundfos DMX AR",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Delivery capacity | [[100]] | l/h\nOperation pressure max. | 4 | bar\nHousing material | PVDF\nSealing material | PTFE\nVoltage | 100-240 | V\nCurrent intake | 25 (2 mS) | A\nMotor power | 19 | W\nFrequency | 50 - 60 | Hz\nProtection class | IP 65\nAmbient temperature | 0 - 45 | °C\nTemperature medium | -10 - 45 | °C",
+     "notes": null
+    },
+    {
+     "qty_label": "3 X",
+     "title": "Injection fitting",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>1 Level control</p>",
+     "specs": null,
+     "notes": null
+    },
+    {
+     "qty_label": "1 X",
+     "title": "ALANTECH Clarifier Assembly",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>Alantech Clarifier assembly with drive head - consist of worm gear, worm shaft, worm wheel, housing, cover with direct flange on extended hub of wheel including lubrication fittings.</p><p>Mechanical overload alarm</p><p>Slow moving Rake assembly with plow blades and squeegees</p>",
+     "specs": "Drive head assembly | IndoFab\nDrive head model | IFI A 300\nRatio | 50:1\nClarifier Diameter | [[6000]] | mm\nCylindrical height | [[3.65 m SWD + 0.5 m]]\nGear Type | Worm gear\nMotor Power | [[2.2]] | KW\nMechanical overload | Spring loaded with sensor",
+     "notes": "<p>Note : Civil works to be done by client as per Alantech indicative drawings.</p>"
+    }
+   ],
+   "offer_title": "Clarifier system",
+   "price_description": "Clarifier with pipe flocculator and coagulation system",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Multimedia Filter",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "Sand filter vessel",
+     "type_model": "Ø2000*2400*4.0",
+     "moc": "MS",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 455000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": "VA481-000652100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 10.0,
+     "unit_cost": 21800.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": "9VAA9-0000000 / VA940-0004002",
+     "moc": null,
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": "9VAA9-8000000 / V9D00-1184000",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Piping",
+     "type_model": "Valve Tree",
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 1.0,
+     "unit_cost": 255000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Media",
+     "type_model": "5 Layer multi media + Activated Carbon",
+     "moc": null,
+     "make": "Norit",
+     "qty": 22500.0,
+     "unit_cost": 10.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Air Vent",
+     "type_model": "Solenoid valve, 1\"",
+     "moc": "SS 316",
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 3500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Isolation Valve",
+     "type_model": "Manual Butterfly Valve, DN25",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 3300.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Distributor Assembly",
+     "type_model": null,
+     "moc": "SS 304",
+     "make": "Sheen",
+     "qty": 1.0,
+     "unit_cost": 5400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sample Valve",
+     "type_model": "Sample Valve 1'' TC SS316",
+     "moc": "SS 316",
+     "make": "Max Steel",
+     "qty": 2.0,
+     "unit_cost": 1200.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Drain Valve",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 3940.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": "0-10 Bar, 4-20 mA",
+     "moc": "SS 316",
+     "make": "Danfoss",
+     "qty": 2.0,
+     "unit_cost": 6500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": "0-10 Bar",
+     "moc": "SS 316",
+     "make": "WIKA",
+     "qty": 2.0,
+     "unit_cost": 3140.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "1 X",
+     "title": "Filter Feed pump - Grundfos",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Rotation speed | 2900 | 1/min\nConnection voltage | 400/690 | V\nMains frequency | 50 | Hz\nProtection class | IP55\nMaterial of pump Impeller | stainless steel\nFlow - Q | [[185]] | m³/hour\nHead - H | [[3.5]] | Bar\nElectric power P | [[22]] | KW",
+     "notes": "<p>Positive suction, modular designed pump with directly coupled electric motor.</p><p>1 Set of suction side connections as pump connection module with shutoff valve and manometer.</p><p>1 Set of pressure side connections as pump connection module with shutoff valve, non-return valve and manometer.</p><p>1 Pump mounting frame Stainless steel frame with height adjustable calotte feet, allowing an easy installation of the pump group without concrete base.</p>"
+    },
+    {
+     "qty_label": "[[2]] X",
+     "title": "ALANTECH high capacity filter",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Operation pressure max. | 4 | bar\nFilter bed differential pressure max. | 0.6 | bar\nMax. operation temperature | 40 | °C\nDiameter | [[2200]] | mm\nCyl. skirt height | [[4000]] | mm\nTotal height approx. | [[4500]] | mm\nMaterial | MSRL\nPreparation | Alantech Green",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Set of front piping at the filter",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>to connect the filter as complete set starting at the inlet valves and ending at the outlet valves. With shut-off valves, incl. supports, connections and accessories.</p>",
+     "specs": "Operation mode | Automatic\nConfiguration | Valve Tree\nProduct contacted parts | SS 316L\nValve type | Automatic",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Filter charge",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>fire-dried special quartz sand.</p><p>Including a supporting layer of quartz gravel.</p>",
+     "specs": "Filter material | QUARTZ SAND / SILICA\nMass of filter material | [[6500]] | kg\nMass of supporting bed | [[200]] | kg",
+     "notes": null
+    },
+    {
+     "qty_label": "1 X",
+     "title": "Automatic Valve System",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>to control the filter and indicate the pressures and for sampling.</p><p>1 water pressure gauge with test cock</p><p>1 water sampling valve</p><p>2 pressure transmitter</p>",
+     "specs": null,
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Polishing filter",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Capacity | [[100]] | m³/h\nFiltration grade | 20 | µm\nOperation pressure max. | 10 | bar\nMax. operation temperature | 95 | °C\nHousing material | AISI 316L\nCandle material | PP\nNumber of candles | [[40]]",
+     "notes": null
+    }
+   ],
+   "offer_title": "Multi media Filter",
+   "price_description": "Multimedia filter - MSRL",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Feed Sensors",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "pH Sensor",
+     "type_model": "CPS11D-7BA21",
+     "moc": null,
+     "make": "E+H",
+     "qty": 3.0,
+     "unit_cost": 51975.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Holder / Flow through",
+     "type_model": "CPA640-E211",
+     "moc": null,
+     "make": "E+H",
+     "qty": 3.0,
+     "unit_cost": 13100.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Cable",
+     "type_model": "CYK10-A101 (pH/ORP)",
+     "moc": null,
+     "make": "E+H",
+     "qty": 3.0,
+     "unit_cost": 13964.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Conductivity Sensor",
+     "type_model": "CLS21D-C1N1",
+     "moc": null,
+     "make": "E+H",
+     "qty": 3.0,
+     "unit_cost": 61721.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Cable",
+     "type_model": "CYK10-A101 (conductivity)",
+     "moc": null,
+     "make": "E+H",
+     "qty": 3.0,
+     "unit_cost": 13964.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "ORP Sensor",
+     "type_model": "CPS12D-7NA21",
+     "moc": null,
+     "make": "E+H",
+     "qty": 2.0,
+     "unit_cost": 53480.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Holder / Flow through",
+     "type_model": "CPA640-E211",
+     "moc": null,
+     "make": "E+H",
+     "qty": 2.0,
+     "unit_cost": 13100.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Cable",
+     "type_model": "CYK10-A101 (pH/ORP)",
+     "moc": null,
+     "make": "E+H",
+     "qty": 2.0,
+     "unit_cost": 13964.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Multichannel Controller",
+     "type_model": "CM448R-AA16A86+PK",
+     "moc": null,
+     "make": "E+H",
+     "qty": 3.0,
+     "unit_cost": 240287.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "3 X",
+     "title": "Sample water point",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>with connecting pipe to the metering device.</p>",
+     "specs": null,
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Combined flow valve",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for the installation of the electrode.</p>",
+     "specs": "Pressure range max. | 6 | bar\nMeasuring water connection | 1/2 | \"\nMeasuring water temperature max. | 45 | °C",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "pH, Conductivity, ORP-electrode",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>to control the pH, ORP and Conductivity-value of the water.</p>",
+     "specs": "Design | special electrode for water treatment industry\nPressure range max. | 6 | bar\nMeasuring range - pH | 1-12\nMeasuring range - Conductivity | 0 - 10,000\nMeasuring range - ORP | -1500 to +1500\nMeasuring water temperature max. | -15 - +80 | °C",
+     "notes": "<p>1 pH, ORP and conductivity - sensor connection cable as special cabling material including installation connectors.</p>"
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Multi measuring transmitter 24 V",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Connection data | 24 | V",
+     "notes": null
+    }
+   ],
+   "offer_title": "pH, conductivity, ORP - monitoring",
+   "price_description": "Instruments and controllers",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Ultrafiltration",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "UF Feed Pump",
+     "type_model": "NB100-200",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 673062.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "VFD",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 78627.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 2.0,
+     "unit_cost": 9500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Non Return valve",
+     "type_model": null,
+     "moc": null,
+     "make": "BDK",
+     "qty": 1.0,
+     "unit_cost": 19500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pump Skid",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": null,
+     "moc": null,
+     "make": "Danfoss",
+     "qty": 2.0,
+     "unit_cost": 6500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure Transmitter",
+     "type_model": null,
+     "moc": null,
+     "make": "Baumer",
+     "qty": 2.0,
+     "unit_cost": 3140.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Flow meter",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 284380.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Filter housing",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 285000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Filter cartridges / Bags",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 3.0,
+     "unit_cost": 24500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Air Vent",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 3450.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Isolation Valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 3450.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Drain Valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 3450.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure Transmitter",
+     "type_model": null,
+     "moc": null,
+     "make": "Danfoss",
+     "qty": 1.0,
+     "unit_cost": 6500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": null,
+     "moc": null,
+     "make": "Baumer",
+     "qty": 1.0,
+     "unit_cost": 3140.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "UF Membranes",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 46.0,
+     "unit_cost": 155000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valves for UF Plant",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 14.0,
+     "unit_cost": 20500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "UF Permeate Break tank",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 1240000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Level sensor",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 2.0,
+     "unit_cost": 55400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sample Valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 5.0,
+     "unit_cost": 2250.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Air Vent",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 2.0,
+     "unit_cost": 3350.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "UF Backwash pump",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 673062.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "VFD",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 78627.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 2.0,
+     "unit_cost": 20500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 2.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 2.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Non Return valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 19500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Static Mixer",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "UF CIP pump",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 450000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "VFD",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 62400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 2.0,
+     "unit_cost": 20500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Non Return valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 19500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CIP Tank",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 275400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CIP Heater",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 12400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Heater Controller",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 14500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Temperature sensor",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Level sensor",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "CEB 1 Dosing pump",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 225000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CEB 1 Dosing tank",
+     "type_model": null,
+     "moc": null,
+     "make": "Alantech",
+     "qty": 1.0,
+     "unit_cost": 7600.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing pump connectors",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 11800.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Agitator / Mixer",
+     "type_model": null,
+     "moc": null,
+     "make": "Alantech",
+     "qty": 1.0,
+     "unit_cost": 41500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Back pressure valve",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 18216.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog input cable",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 3450.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog output cable",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 3450.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Relay output cable",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 3450.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Level sensor",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "CEB 2 Dosing pump",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 225000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CEB 2 Dosing tank",
+     "type_model": null,
+     "moc": null,
+     "make": "Alantech",
+     "qty": 1.0,
+     "unit_cost": 7600.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing pump connectors",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 11800.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Agitator / Mixer",
+     "type_model": null,
+     "moc": null,
+     "make": "Alantech",
+     "qty": 1.0,
+     "unit_cost": 41500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Back pressure valve",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 18216.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog input cable",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 3450.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog output cable",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 3450.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Relay output cable",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 3450.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Level sensor",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "CEB 3 Dosing pump",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 2.0,
+     "unit_cost": 225000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CEB 3 Dosing tank",
+     "type_model": null,
+     "moc": null,
+     "make": "Alantech",
+     "qty": 1.0,
+     "unit_cost": 7600.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing pump connectors",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 11800.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Agitator / Mixer",
+     "type_model": null,
+     "moc": null,
+     "make": "Alantech",
+     "qty": 1.0,
+     "unit_cost": 41500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Back pressure valve",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 18216.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog input cable",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 3450.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog output cable",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 3450.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Relay output cable",
+     "type_model": null,
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 3450.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Level sensor",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Air Blower",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 2.0,
+     "unit_cost": 385600.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "VFD",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 2.0,
+     "unit_cost": 62400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 2.0,
+     "unit_cost": 20500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Non Return valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 19500.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "[[2]] X",
+     "title": "UF Feed pump - Grundfos NB",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for generating of the required membrane operation pressure.</p>",
+     "specs": "Delivery capacity | [[212]] | m³/h\nDelivery height | [[30]] | m WS / m WC\nMotor power | [[22 X 2]] | kW\nRotation speed | 2900 | 1/min\nNominal diameter pressure | DN100 PN10\nConnection voltage | 415 | V\nFrequency | 50 | Hz\nProtection class | IP55\nMaterial of pump housing | stainless steel",
+     "notes": "<p>Designed as centrifugal pump with three-phase electric motor.</p>"
+    },
+    {
+     "qty_label": "[[2]] X",
+     "title": "UF back flush / RO feed pump - Grundfos NB",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for generating of the required membrane operation pressure.</p>",
+     "specs": "Delivery capacity | [[425]] | m³/h\nDelivery height | [[30]] | m WS / m WC\nMotor power | [[30 X 2]] | kW\nRotation speed | 2900 | 1/min\nNominal diameter pressure | DN100 PN10\nConnection voltage | 415 | V\nFrequency | 50 | Hz\nProtection class | IP55\nMaterial of pump housing | stainless steel",
+     "notes": "<p>Designed as centrifugal pump with three-phase electric motor.</p>"
+    },
+    {
+     "qty_label": "1 X",
+     "title": "UF CIP pump - Grundfos NB",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for generating of the required membrane operation pressure.</p>",
+     "specs": "Delivery capacity | [[69]] | m³/h\nDelivery height | [[25]] | m WS / m WC\nMotor power | [[11]] | kW\nRotation speed | 2900 | 1/min\nNominal diameter pressure | DN80 PN10\nConnection voltage | 415 | V\nFrequency | 50 | Hz\nProtection class | IP55\nMaterial of pump housing | stainless steel",
+     "notes": "<p>Designed as centrifugal pump with three-phase electric motor.</p>"
+    },
+    {
+     "qty_label": "[[46]]",
+     "title": "Set of UF membrane",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Type | DuPont | [[INTEGRATEC XP 77 IG]]",
+     "notes": null
+    },
+    {
+     "qty_label": "1",
+     "title": "Frame construction",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>on which the fully wired membrane plant units are mounted for instant operation.</p>",
+     "specs": "Material | MSEP",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Feed piping",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>within the membrane plant skid.</p>",
+     "specs": "Material | HDPE White\nNominal diameter | [[DN 150 PN16]]",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Permeate piping",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>within the membrane plant skid.</p>",
+     "specs": "Material | HDPE White\nNominal diameter | [[DN 100 PN16]]",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Concentrate piping",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>within the membrane plant skid.</p>",
+     "specs": "Material | HDPE White\nNominal diameter | [[DN 100 PN16]]",
+     "notes": null
+    }
+   ],
+   "offer_title": "UF Membrane filtration",
+   "price_description": "Ultra Filtration module",
+   "description": null,
+   "specs": "Capacity\nPermeate | [[194]] | m³/h\nInfeed | [[212.9]] | m³/h\nRecirculation | [[0]] | m³/h\nRecovery | > [[91.6]] | %\nFlux | [[65]] | LMH\n\nMembrane type | DuPont\nRaw water\nDesign temp. | 25-44 °C\nTransmembrane pressure | 0.1 - 1.5 bar\nMolecular weight cut off | 10,000\nDesign basis\nMembrane filtration area | [[77 m² X 46 nos]]\nCapillaries per fibre | 7\nPore size | 0.02\nMode of operation | in - out, full automatic",
+   "notes": "<p>At lower temperatures the capacity reduces by approx. 3% per °C, at higher temperatures it increases by 3% per °C (max. deviation from design temp. +/-5°C)</p>"
+  },
+  {
+   "sub_assembly_name": "CEB Dosing - Caustic",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [],
+   "components": [
+    {
+     "qty_label": "2 X",
+     "title": "Safety collecting tray",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Contents | 33 / 60 | l\nWidth | 485\nMaterial | PE blue",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Suction lance for package",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Material | PP",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Dosing Pump CEB - DDA AR",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Delivery capacity | [[330]] | l/h\nOperation pressure max. | 4 | bar\n\nHousing material | PP\nSealing material | EPDM\nVoltage | 100-240 | V\nCurrent intake | 25 (2 mS) | A\nMotor power | 24 | W\nFrequency | 50 - 60 | Hz\nProtection class | IP 65\nAmbient temperature | 0 - 45 | °C\nTemperature medium | -10 - 45 | °C",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Injection fitting",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": null,
+     "notes": null
+    }
+   ],
+   "offer_title": "Dosing of Chemically Enhanced Backwash (CEB - A - Caustic)",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "CEB Dosing - Acid",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [],
+   "components": [
+    {
+     "qty_label": "2 X",
+     "title": "Safety collecting tray",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Contents | 33 / 60 | l\nWidth | 485\nMaterial | PE blue",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Suction lance for package",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Material | PP",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Dosing Pump CEB - DDA AR",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Delivery capacity | [[330]] | l/h\nOperation pressure max. | 4 | bar\n\nHousing material | PP\nSealing material | EPDM\nVoltage | 100-240 | V\nCurrent intake | 25 (2 mS) | A\nMotor power | 24 | W\nFrequency | 50 - 60 | Hz\nProtection class | IP 65\nAmbient temperature | 0 - 45 | °C\nTemperature medium | -10 - 45 | °C",
+     "notes": null
+    }
+   ],
+   "offer_title": "Dosing of Chemically Enhanced Backwash (CEB - B - Acid)",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "CEB Dosing - Hypochlorite",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [],
+   "components": [
+    {
+     "qty_label": "2 X",
+     "title": "Safety collecting tray",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Contents | 33 / 60 | l\nWidth | 485\nMaterial | PE blue",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Suction lance for package",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Material | PP",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Dosing Pump CEB - DDA AR",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Delivery capacity | [[330]] | l/h\nOperation pressure max. | 4 | bar\n\nHousing material | PP\nSealing material | EPDM\nVoltage | 100-240 | V\nCurrent intake | 25 (2 mS) | A\nMotor power | 24 | W\nFrequency | 50 - 60 | Hz\nProtection class | IP 65\nAmbient temperature | 0 - 45 | °C\nTemperature medium | -10 - 45 | °C",
+     "notes": null
+    }
+   ],
+   "offer_title": "Dosing of Chemically Enhanced Backwash (CEB - C - Hypo Chlorite)",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "RO System - Pass 1",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": "0-10 Bar, 4-20 mA",
+     "moc": "SS 316",
+     "make": "Danfoss",
+     "qty": 1.0,
+     "unit_cost": 6500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": "0-10 Bar",
+     "moc": "SS 316",
+     "make": "WIKA",
+     "qty": 1.0,
+     "unit_cost": 3140.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "5 micron filter housing",
+     "type_model": "60 m3/hour, 26 cartridges of 40\"",
+     "moc": "SS 316",
+     "make": "Sheen",
+     "qty": 1.0,
+     "unit_cost": 285000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Filter cartridges / Bags",
+     "type_model": "5 Micron, 40\"",
+     "moc": "PP",
+     "make": null,
+     "qty": 3.0,
+     "unit_cost": 24000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Isolation Valve",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 8560.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Drain Valve",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 3940.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": "0-10 Bar, 4-20 mA",
+     "moc": "SS 316",
+     "make": "Danfoss",
+     "qty": 1.0,
+     "unit_cost": 6500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": "0-10 Bar",
+     "moc": "SS 316",
+     "make": "WIKA",
+     "qty": 1.0,
+     "unit_cost": 1400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dump Valves",
+     "type_model": "VA481-000652100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 20500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": "9VAA9-0000000 / VA940-0004002",
+     "moc": null,
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": "9VAA9-8000000 / V9D00-1184000",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Antiscalant Dosing pump",
+     "type_model": "DDA 7.5-16 FCM-PP/V/C-F-31I001FG",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 75400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Antiscalant Dosing tank",
+     "type_model": "125 Ltr",
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 1.0,
+     "unit_cost": 7600.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing pump connectors",
+     "type_model": "Install. Kit I011 PP/V/C-4/6mm-2L",
+     "moc": "PP",
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 11084.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Agitator / Mixer",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Back Pressure Valve",
+     "type_model": "95730741",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 18216.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog Input Cable",
+     "type_model": "96609016",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 3540.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Relay Output Cable",
+     "type_model": "96632922",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 3540.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog Output Cable",
+     "type_model": "96609019",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 3540.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Acid Dosing pump",
+     "type_model": "DDC 6-10",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 75400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Acid Dosing tank",
+     "type_model": "125 Ltr",
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 1.0,
+     "unit_cost": 7600.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing pump connectors",
+     "type_model": "Install. Kit I011 PP/V/C-4/6mm-2L",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 11084.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Agitator / Mixer",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Back Pressure Valve",
+     "type_model": "95730741",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 18216.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog Input Cable",
+     "type_model": "96609016",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 3540.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Relay Output Cable",
+     "type_model": "96632922",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 3540.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog Output Cable",
+     "type_model": "96609019",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 3540.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sample valves",
+     "type_model": "Sample Valve 1'' TC SS316",
+     "moc": "SS 316",
+     "make": "Max Steel",
+     "qty": 2.0,
+     "unit_cost": 1800.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Drain Valve - Feed line",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 3940.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CIP Valve - Feed line",
+     "type_model": "VA481-000652100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 20500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": "9VAA9-0000000 / VA940-0004002",
+     "moc": null,
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": "9VAA9-8000000 / V9D00-1184000",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "High pressure pump",
+     "type_model": "CRN 95-7 A-F-A-V-HQQV",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 2.0,
+     "unit_cost": 1008410.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "VFD",
+     "type_model": "55 KW",
+     "moc": null,
+     "make": "Danfoss",
+     "qty": 2.0,
+     "unit_cost": 285000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "High pressure pump -2",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "VFD",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Non return valves",
+     "type_model": "NRV, PN 40 Disc Type,Size : 4 Inch",
+     "moc": "SS 316",
+     "make": "Salim exp",
+     "qty": 2.0,
+     "unit_cost": 48500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": "0-40 Bar, 4-20 mA",
+     "moc": "SS 316",
+     "make": "Danfoss",
+     "qty": 2.0,
+     "unit_cost": 6500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": "0-40 Bar",
+     "moc": "SS 316",
+     "make": "WIKA",
+     "qty": 2.0,
+     "unit_cost": 3140.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "RO membrane housing",
+     "type_model": "Codeline, Side port, 600 PSI",
+     "moc": "FRP",
+     "make": "PENTAIR",
+     "qty": 34.0,
+     "unit_cost": 98400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "RO membranes",
+     "type_model": "SW30 HRLE",
+     "moc": null,
+     "make": "Dupont",
+     "qty": 204.0,
+     "unit_cost": 38500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sample valves",
+     "type_model": "Sample Valve 1'' TC SS316",
+     "moc": "SS 316",
+     "make": "Max Steel",
+     "qty": 34.0,
+     "unit_cost": 1800.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": "0-40 Bar, 4-20 mA",
+     "moc": "SS 316",
+     "make": "Danfoss",
+     "qty": 2.0,
+     "unit_cost": 6500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": "0-40 Bar",
+     "moc": "SS 316",
+     "make": "WIKA",
+     "qty": 2.0,
+     "unit_cost": 1400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Brine control valve",
+     "type_model": "Gate Valve 4\" SS316",
+     "moc": "SS 316",
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 64950.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Brine Flush Valve",
+     "type_model": "Ball Valve, PN 25, DN 100",
+     "moc": "SS 316",
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 64300.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": "Pneumatic actuator",
+     "moc": null,
+     "make": "Festo / Flowtec",
+     "qty": 1.0,
+     "unit_cost": 12400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": "NO& NC feed back",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 1400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Drain Valve - Reject line",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 3940.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Non Return valve - Circulation",
+     "type_model": "1\" NRV, PN 25",
+     "moc": null,
+     "make": "Festo",
+     "qty": 1.0,
+     "unit_cost": 38500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Flow control valve",
+     "type_model": "1\" Ball valve, PN 25",
+     "moc": null,
+     "make": "Festo",
+     "qty": 1.0,
+     "unit_cost": 12400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Isolation Valve",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 8540.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CIP Valve - Brine line",
+     "type_model": "Ball Valve, PN 25, DN 100",
+     "moc": "SS 316",
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 64950.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": "Pneumatic actuator",
+     "moc": null,
+     "make": "Festo / Flowtec",
+     "qty": 1.0,
+     "unit_cost": 12400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": "NO& NC feed back",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 1400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Reject Flow meter",
+     "type_model": "Optiflux 1000, DN 100",
+     "moc": "SS 316",
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 286500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Permeate Conductivity Sensor",
+     "type_model": "CLS21D-C1N1",
+     "moc": null,
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 61721.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Holder / Flow through",
+     "type_model": "CPA640-E211",
+     "moc": null,
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 13100.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Cable",
+     "type_model": "CYK10-A101 (conductivity)",
+     "moc": null,
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 13005.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": "0-10 Bar, 4-20 mA",
+     "moc": "SS 316",
+     "make": "Danfoss",
+     "qty": 1.0,
+     "unit_cost": 6500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": "0-10 Bar",
+     "moc": "SS 316",
+     "make": "WIKA",
+     "qty": 1.0,
+     "unit_cost": 1400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Product flow meter",
+     "type_model": "Optiflux 1000, DN 100",
+     "moc": "SS 316",
+     "make": "Krohne",
+     "qty": 1.0,
+     "unit_cost": 286500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CIP Valve - Permeate line",
+     "type_model": "VA481-000652100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 48500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": "9VAA9-0000000 / VA940-0004002",
+     "moc": null,
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": "9VAA9-8000000 / V9D00-1184000",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "CIP Valve - Permeate line",
+     "type_model": "VA481-000652100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 48500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": "9VAA9-0000000 / VA940-0004002",
+     "moc": null,
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": "9VAA9-8000000 / V9D00-1184000",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Drain Valve - Permeate line",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 8540.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sample valves",
+     "type_model": "Sample Valve 1'' TC SS316",
+     "moc": "SS 316",
+     "make": "Max Steel",
+     "qty": 2.0,
+     "unit_cost": 1600.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Non Return valve",
+     "type_model": "V7201-000650100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 42500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Isolation Valve",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 8540.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Level Transmitter",
+     "type_model": "Hydrostatic Level",
+     "moc": "SS 316",
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 55400.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "[[2]] X",
+     "title": "Frame construction",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>on which the fully wired membrane plant units are mounted for instant operation.</p>",
+     "specs": "Material | MSEP",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Feed piping",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>within the membrane plant skid.</p>",
+     "specs": "Material | HDPE White\nNominal diameter | [[DN100]]",
+     "notes": null
+    },
+    {
+     "qty_label": "[[2]] X",
+     "title": "High pressure pump - Grundfos",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for generating of the required membrane operation pressure.</p>",
+     "specs": "Delivery capacity | [[222.4]] | m³/h\nDelivery height | [[120]] | m WS / m WC\nMotor power | [[55 X 2]] | kW\nRotation speed | 2900 | 1/min\nNominal diameter pressure | DN100 PN25\nConnection voltage | 415 | V\nFrequency | 50 | Hz\nProtection class | IP55\nMaterial of pump housing | stainless steel",
+     "notes": "<p>Designed as multistage centrifugal pump with three-phase electric motor.</p>"
+    },
+    {
+     "qty_label": "[[34]]",
+     "title": "Pressure vessel set - code-line 5 membrane side port vessel",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>inclusive saddle pieces for installation in the skid construction.</p><p>For the inclusion of the required membrane elements.</p>",
+     "specs": "Number of membrane elements per pressure vessel | [[6]]\nDiameter | 8\"\nPressure stage | PN40\nMaterial | Fibre glass reinforced | Codeline",
+     "notes": null
+    },
+    {
+     "qty_label": "[[204]]",
+     "title": "Set of membrane elements",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Type | spiral wound element | [[DuPont BW30 PRO 400/34]]",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Permeate piping",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>within the membrane plant skid.</p>",
+     "specs": "Material | SS316L\nNominal diameter | [[DN 100]]",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Concentrate piping",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>within the membrane plant skid.</p>",
+     "specs": "Material | SS316L\nNominal diameter | [[DN 100]]",
+     "notes": null
+    },
+    {
+     "qty_label": null,
+     "title": "Conductivity-monitoring",
+     "is_heading": 1,
+     "page_break": 0,
+     "description": null,
+     "specs": null,
+     "notes": null
+    },
+    {
+     "qty_label": null,
+     "title": "Conductivity measuring cell",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for monitoring the quality of the water.</p>",
+     "specs": "Measuring range | 0,04- 1000 | µS/cm",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Multi measuring transmitter 24 V",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Connection data | 24 | V",
+     "notes": null
+    }
+   ],
+   "offer_title": "Membrane filtration - RO pass 1",
+   "price_description": "RO Pass 1 system",
+   "description": null,
+   "specs": "Capacity\nPermeate | [[188.9]] | m³/h\nInfeed | [[222.3]] | m³/h\nRecirculation | [[14]] | m³/h\nBlending | [[0]] | m³/h\nTotal product @ 100 ppm TDS | [[188.9]] | m³/h\n\nRecovery | > [[85]] %\nRaw water\nDesign temp. | 25-44 °C\nInfeed press. | 2-3 bar\nSilt density index (SDI) | to be tested, assumed < 3\nDesign basis\nDesign period | 3 years\nFouling rate | 15 % in 3 years\nOperation temperature | 5 - 35 °C, max. 40 °C\nCounterpressure (abs) | at plant standstill max. 5 mWC",
+   "notes": "<p>At lower temperatures the capacity reduces by approx. 3% per °C, at higher temperatures it increases by 3% per °C (max. deviation from design temp. +/-5°C)</p>"
+  },
+  {
+   "sub_assembly_name": "RO System - Pass 2",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "RO Feed pump",
+     "type_model": "CRN 95-2-2 A-P-A-V-HQQV",
+     "moc": "SS 316",
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 640000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "VFD",
+     "type_model": "15 KW",
+     "moc": "FC051",
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 42500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": "VA481-000652100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 38500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": "9VAA9-0000000 / VA940-0004002",
+     "moc": null,
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": "9VAA9-8000000 / V9D00-1184000",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Non Return valve",
+     "type_model": "V7201-000650100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 42500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Flow meter",
+     "type_model": "Optiflux 1000, DN 100",
+     "moc": "SS 316",
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 286500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": "0-10 Bar, 4-20 mA",
+     "moc": "SS 316",
+     "make": "Danfoss",
+     "qty": 1.0,
+     "unit_cost": 55400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": "0-10 Bar",
+     "moc": "SS 316",
+     "make": "WIKA",
+     "qty": 1.0,
+     "unit_cost": 1400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "5 micron filter housing",
+     "type_model": "60 m3/hour, 26 cartridges of 40\"",
+     "moc": "SS 316",
+     "make": "Sheen",
+     "qty": 1.0,
+     "unit_cost": 295000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Filter cartridges / Bags",
+     "type_model": "5 Micron, 40\"",
+     "moc": "PP",
+     "make": null,
+     "qty": 3.0,
+     "unit_cost": 24500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Isolation Valve",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 8540.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Drain Valve",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 3940.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": "0-10 Bar, 4-20 mA",
+     "moc": "SS 316",
+     "make": "Danfoss",
+     "qty": 2.0,
+     "unit_cost": 6500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": "0-10 Bar",
+     "moc": "SS 316",
+     "make": "WIKA",
+     "qty": 2.0,
+     "unit_cost": 3140.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dump Valves",
+     "type_model": "VA481-000652100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 24500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": "9VAA9-0000000 / VA940-0004002",
+     "moc": null,
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": "9VAA9-8000000 / V9D00-1184000",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Antiscalant Dosing pump",
+     "type_model": "DDA 7.5-16 FCM-PP/V/C-F-31I001FG",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 72500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Antiscalant Dosing tank",
+     "type_model": "250 Ltr",
+     "moc": "SS 316",
+     "make": "Sintex",
+     "qty": 1.0,
+     "unit_cost": 7600.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing pump connectors",
+     "type_model": "Install. Kit I011 PP/V/C-4/6mm-2L",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 11084.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Back Pressure Valve",
+     "type_model": "95730741",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 18216.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog Input Cable",
+     "type_model": "96609016",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 2580.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Relay Output Cable",
+     "type_model": "96632922",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 2815.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog Output Cable",
+     "type_model": "96609019",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 2815.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sample valves",
+     "type_model": "Sample Valve 1'' TC SS316",
+     "moc": "SS 316",
+     "make": "Max Steel",
+     "qty": 2.0,
+     "unit_cost": 1200.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Drain Valve - Feed line",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 3940.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CIP Valve - Feed line",
+     "type_model": "VA481-000652100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 2.0,
+     "unit_cost": 24500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": "9VAA9-0000000 / VA940-0004002",
+     "moc": null,
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": "9VAA9-8000000 / V9D00-1184000",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "High pressure pump",
+     "type_model": "CRN 95-6",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 2.0,
+     "unit_cost": 1004130.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "VFD",
+     "type_model": "45 KW",
+     "moc": null,
+     "make": "Danfoss",
+     "qty": 2.0,
+     "unit_cost": 175750.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Non return valves",
+     "type_model": "V7201-000650100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 2.0,
+     "unit_cost": 48500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": "0-40 Bar, 4-20 mA",
+     "moc": "SS 316",
+     "make": "Danfoss",
+     "qty": 2.0,
+     "unit_cost": 6500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": "0-40 Bar",
+     "moc": "SS 316",
+     "make": "WIKA",
+     "qty": 2.0,
+     "unit_cost": 3140.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "RO membrane housing",
+     "type_model": "Codeline, Side port, 450 PSI",
+     "moc": "SS 316",
+     "make": "Sheen",
+     "qty": 25.0,
+     "unit_cost": 98500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "RO membranes",
+     "type_model": "SOAR 7000i",
+     "moc": null,
+     "make": "Dupont",
+     "qty": 150.0,
+     "unit_cost": 43500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Feed Spacer",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Sample valves",
+     "type_model": "Sample Valve 1'' TC SS316",
+     "moc": "SS 316",
+     "make": "Max Steel",
+     "qty": 25.0,
+     "unit_cost": 1200.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Reject Circulation pump",
+     "type_model": "CRNE 125-2-2",
+     "moc": "SS 316",
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Non return valves",
+     "type_model": "V7201-000650100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 2.0,
+     "unit_cost": 48500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": "0-40 Bar, 4-20 mA",
+     "moc": "SS 316",
+     "make": "Danfoss",
+     "qty": 2.0,
+     "unit_cost": 6500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": "0-40 Bar",
+     "moc": "SS 316",
+     "make": "WIKA",
+     "qty": 2.0,
+     "unit_cost": 1400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Brine control valve",
+     "type_model": "Gate Valve 4\" SS316",
+     "moc": "SS 316",
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 64950.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Brine Flush Valve",
+     "type_model": "Ball Valve, PN 25, DN 100",
+     "moc": "SS 316",
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 64500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": "Pneumatic actuator",
+     "moc": null,
+     "make": "Festo / Flowtec",
+     "qty": 1.0,
+     "unit_cost": 12400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": "NO& NC feed back",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 1400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Drain Valve - Reject line",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 8560.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Non Return valve - Circulation",
+     "type_model": "V7201-000650100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 48500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Flow control valve",
+     "type_model": "1\" Ball valve, PN 25",
+     "moc": null,
+     "make": "Festo",
+     "qty": 1.0,
+     "unit_cost": 35600.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CIP Valve - Brine line",
+     "type_model": "VA481-000652100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 64950.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": "9VAA9-0000000 / VA940-0004002",
+     "moc": null,
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": "9VAA9-8000000 / V9D00-1184000",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Brine Conductivity Sensor",
+     "type_model": "CLS21D-C1N1",
+     "moc": null,
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 61721.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Holder / Flow through",
+     "type_model": "CPA640-E211",
+     "moc": null,
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 13100.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Cable",
+     "type_model": "CYK10-A101 (conductivity)",
+     "moc": null,
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 13960.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Reject Flow meter",
+     "type_model": "Optiflux 1000, DN 100",
+     "moc": "SS 316",
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 286500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Permeate Conductivity Sensor",
+     "type_model": "CLS21D-C1N1",
+     "moc": null,
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 67000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Cable",
+     "type_model": "CYK10-A101 (conductivity)",
+     "moc": null,
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 13964.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "pH Sensor",
+     "type_model": "CPS11D-7BA21",
+     "moc": null,
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 51975.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Holder / Flow through",
+     "type_model": "CPA640-E211",
+     "moc": null,
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 13100.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Cable",
+     "type_model": "CYK10-A101 (pH/ORP)",
+     "moc": null,
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 13964.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": "0-10 Bar, 4-20 mA",
+     "moc": "SS 316",
+     "make": "Danfoss",
+     "qty": 1.0,
+     "unit_cost": 6500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": "0-10 Bar",
+     "moc": "SS 316",
+     "make": "WIKA",
+     "qty": 1.0,
+     "unit_cost": 1400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Product flow meter",
+     "type_model": "Optiflux 4000, DN 100, Vortex",
+     "moc": "SS 316",
+     "make": "E+H",
+     "qty": 1.0,
+     "unit_cost": 286000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Product Valve",
+     "type_model": "VA481-000652100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 41300.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": "9VAA9-0000000 / VA940-0004002",
+     "moc": null,
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": "9VAA9-8000000 / V9D00-1184000",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "CIP Valve - Permeate line",
+     "type_model": "VA481-000652100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 41300.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": "9VAA9-0000000 / VA940-0004002",
+     "moc": null,
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": "9VAA9-8000000 / V9D00-1184000",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Drain Valve - Permeate line",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 8540.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sample valves",
+     "type_model": "Sample Valve 1'' TC SS316",
+     "moc": "SS 316",
+     "make": "Max Steel",
+     "qty": 2.0,
+     "unit_cost": 1600.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Non Return valve",
+     "type_model": "V7201-000650100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 48300.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure relief valve",
+     "type_model": null,
+     "moc": "SS 316",
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 28500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Level Transmitter",
+     "type_model": "Hydrostatic Level",
+     "moc": "SS 316",
+     "make": "JUMO",
+     "qty": 1.0,
+     "unit_cost": 55400.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "[[2]]",
+     "title": "Frame construction",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>on which the fully wired membrane plant units are mounted for instant operation.</p>",
+     "specs": "Material | MSEP",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Feed piping",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>within the membrane plant skid.</p>",
+     "specs": "Material | SS316L\nNominal diameter | [[DN100]]",
+     "notes": null
+    },
+    {
+     "qty_label": "[[1]] X",
+     "title": "High pressure pump - Grundfos",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for generating of the required membrane operation pressure.</p>",
+     "specs": "Delivery capacity | [[190]] | m³/h\nDelivery height | [[120]] | m WS / m WC\nMotor power | [[45 X 2]] | kW\nRotation speed | 2900 | 1/min\nNominal diameter pressure | DN100 PN25\nConnection voltage | 415 | V\nFrequency | 50 | Hz\nProtection class | IP55\nMaterial of pump housing | stainless steel",
+     "notes": "<p>Designed as multistage centrifugal pump with three-phase electric motor.</p>"
+    },
+    {
+     "qty_label": "[[25]]",
+     "title": "Pressure vessel set - code-line 5 membrane side port vessel",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>inclusive saddle pieces for installation in the skid construction.</p><p>For the inclusion of the required membrane elements.</p>",
+     "specs": "Number of membrane elements per pressure vessel | [[6]]\nDiameter | 8\"\nPressure stage | PN40\nMaterial | Fibre glass reinforced | Codeline",
+     "notes": null
+    },
+    {
+     "qty_label": "[[150]]",
+     "title": "Set of membrane elements",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Type | spiral wound element | [[DuPont BW30 PRO 400/34]]",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Permeate piping",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>within the membrane plant skid.</p>",
+     "specs": "Material | SS316L\nNominal diameter | [[DN 100]]",
+     "notes": null
+    },
+    {
+     "qty_label": "2 X",
+     "title": "Concentrate piping",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>within the membrane plant skid.</p>",
+     "specs": "Material | SS316L\nNominal diameter | [[DN 100]]",
+     "notes": null
+    },
+    {
+     "qty_label": null,
+     "title": "Conductivity-monitoring",
+     "is_heading": 1,
+     "page_break": 0,
+     "description": null,
+     "specs": null,
+     "notes": null
+    },
+    {
+     "qty_label": null,
+     "title": "Conductivity measuring cell",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for monitoring the quality of the water.</p>",
+     "specs": "Measuring range | 0,04- 1000 | µS/cm",
+     "notes": null
+    },
+    {
+     "qty_label": "1",
+     "title": "Multi measuring transmitter 24 V",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Connection data | 24 | V",
+     "notes": null
+    }
+   ],
+   "offer_title": "Membrane filtration - RO pass 2",
+   "price_description": "RO Pass 2 System",
+   "description": null,
+   "specs": "Capacity\nPermeate | [[170.0]] | m³/h\nInfeed | [[188.9]] | m³/h\nRecirculation | [[10]] | m³/h\nBlending | [[0]] | m³/h\nTotal product @ 100 ppm TDS | [[170.0]] | m³/h\n\nRecovery | > [[90]] %\nRaw water\nDesign temp. | 25-44 °C\nInfeed press. | 2-3 bar\nSilt density index (SDI) | to be tested, assumed < 3\nDesign basis\nDesign period | 3 years\nFouling rate | 15 % in 3 years\nOperation temperature | 5 - 35 °C, max. 40 °C\nCounterpressure (abs) | at plant standstill max. 5 mWC",
+   "notes": "<p>At lower temperatures the capacity reduces by approx. 3% per °C, at higher temperatures it increases by 3% per °C (max. deviation from design temp. +/-5°C)</p>"
+  },
+  {
+   "sub_assembly_name": "Recovery RO",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "RO3",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 4250000.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "1",
+     "title": "Frame construction",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>on which the fully wired membrane plant units are mounted for instant operation.</p>",
+     "specs": "Material | MSEP",
+     "notes": null
+    },
+    {
+     "qty_label": "1 X",
+     "title": "Feed piping",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>within the membrane plant skid.</p>",
+     "specs": "Material | SS316L\nNominal diameter | [[DN65]]",
+     "notes": null
+    },
+    {
+     "qty_label": "1 X",
+     "title": "High pressure pump - Grundfos",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for generating of the required membrane operation pressure.</p>",
+     "specs": "Delivery capacity | [[32]] | m³/h\nDelivery height | [[140]] | m WS / m WC\nMotor power | [[30]] | kW\nRotation speed | 2900 | 1/min\nNominal diameter pressure | DN65 PN25\nConnection voltage | 415 | V\nFrequency | 50 | Hz\nProtection class | IP55\nMaterial of pump housing | stainless steel",
+     "notes": "<p>Designed as multistage centrifugal pump with three-phase electric motor.</p>"
+    },
+    {
+     "qty_label": "[[5]]",
+     "title": "Pressure vessel set - code-line 5 membrane side port vessel",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>inclusive saddle pieces for installation in the skid construction.</p><p>For the inclusion of the required membrane elements.</p>",
+     "specs": "Number of membrane elements per pressure vessel | [[6]]\nDiameter | 8\"\nPressure stage | PN40\nMaterial | Fibre glass reinforced | Codeline",
+     "notes": null
+    },
+    {
+     "qty_label": "[[30]]",
+     "title": "Set of membrane elements",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Type | spiral wound element | [[Fortilife CR50]]",
+     "notes": null
+    },
+    {
+     "qty_label": "1",
+     "title": "Permeate piping",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>within the membrane plant skid.</p>",
+     "specs": "Material | HDPE White\nNominal diameter | [[DN 65]]",
+     "notes": null
+    },
+    {
+     "qty_label": "1",
+     "title": "Concentrate piping",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>within the membrane plant skid.</p>",
+     "specs": "Material | SS316L\nNominal diameter | [[DN 65]]",
+     "notes": null
+    },
+    {
+     "qty_label": null,
+     "title": "Conductivity-monitoring",
+     "is_heading": 1,
+     "page_break": 0,
+     "description": null,
+     "specs": null,
+     "notes": null
+    },
+    {
+     "qty_label": null,
+     "title": "Conductivity measuring cell",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for monitoring the quality of the water.</p>",
+     "specs": "Measuring range | 0,04- 1000 | µS/cm",
+     "notes": null
+    },
+    {
+     "qty_label": "1",
+     "title": "Multi measuring transmitter 24 V",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Connection data | 24 | V",
+     "notes": null
+    }
+   ],
+   "offer_title": "Membrane filtration - recovery RO",
+   "price_description": "Recovery RO system",
+   "description": null,
+   "specs": "Capacity\nPermeate | [[20.8]] | m³/h\nInfeed | [[32.0]] | m³/h\nRecirculation | [[0]] | m³/h\nBlending | [[0]] | m³/h\nTotal product @ 100 ppm TDS | [[20.8]] | m³/h\n\nRecovery | > [[65]] %\nRaw water\nDesign temp. | 25-44 °C\nInfeed press. | 2-3 bar\nSilt density index (SDI) | to be tested, assumed < 3\nDesign basis\nDesign period | 3 years\nFouling rate | 15 % in 3 years\nOperation temperature | 5 - 35 °C, max. 40 °C\nCounterpressure (abs) | at plant standstill max. 5 mWC",
+   "notes": "<p>At lower temperatures the capacity reduces by approx. 3% per °C, at higher temperatures it increases by 3% per °C (max. deviation from design temp. +/-5°C)</p>"
+  },
+  {
+   "sub_assembly_name": "UV System",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "UV System",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 8536000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Intensity monitoring",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 800000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 3.0,
+     "unit_cost": 31500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Auto Wiper",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "1",
+     "title": "HOD UV system",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Application | [[TOC Reduction]]\nWater Treatment to UV | [[RO 2 permeate]]\nHyd. flow | Peak Flow [[170]] m³/hour\nSystem design flow | [[160]] m³/hour\nDesign UV transmittance (1 cm) | > 95%\nUV Dosage | [[120]] mj/cm²\nLamp type | Medium pressure high intensity\nLamp power | [[66]] KW\nHousing material | SS 316L",
+     "notes": "<p>Fully automated UV system with lamp monitoring and intensity monitoring</p>"
+    }
+   ],
+   "offer_title": "Hydro Optic Disinfection system for TOC reduction",
+   "price_description": "TOC UV system",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "De-Gasifier Column",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "De-gasifier column",
+     "type_model": null,
+     "moc": null,
+     "make": "Alantech",
+     "qty": 1.0,
+     "unit_cost": 0.0,
+     "addon_pct": 2.0
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "1 X",
+     "title": "De-gasifier column",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for removal of dissolved carbon dioxide from the RO permeate.</p>",
+     "specs": "Capacity | [[ ]] | m³/h\nDiameter | [[ ]] | mm\nHeight | [[ ]] | mm\nMaterial | [[ ]]\nBlower | [[ ]] | kW",
+     "notes": null
+    }
+   ],
+   "offer_title": "De-Gasifier column",
+   "price_description": "De - Gasifier column",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "EDI System",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "EDI Module",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 20739208.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "[[ ]] X",
+     "title": "EDI module",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Make | [[ ]]\nProduct flow | [[ ]] | m³/h\nRecovery | [[95]] | %\nProduct resistivity | [[ ]] | MΩ.cm",
+     "notes": null
+    },
+    {
+     "qty_label": "1 X",
+     "title": "EDI power supply / rectifier panel",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Power | [[ ]] | kW",
+     "notes": null
+    }
+   ],
+   "offer_title": "Electro-deionisation system",
+   "price_description": "Electro-deionisation system",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "NRMB System",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "Carbon Filter Vessel",
+     "type_model": "Ø2000*2400*4.0",
+     "moc": "SS 304",
+     "make": "Sheen",
+     "qty": 2.0,
+     "unit_cost": 955000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": "VA481-000652100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 10.0,
+     "unit_cost": 31400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": "9VAA9-0000000 / VA940-0004002",
+     "moc": null,
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": "9VAA9-8000000 / V9D00-1184000",
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Piping",
+     "type_model": "Valve Tree",
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 145000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Media",
+     "type_model": "5 Layer multi media + Activated Carbon",
+     "moc": null,
+     "make": "Norit",
+     "qty": 4000.0,
+     "unit_cost": 1795.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Air Vent",
+     "type_model": "Solenoid valve, 1\"",
+     "moc": "SS 316",
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 3500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Isolation Valve",
+     "type_model": "Manual Butterfly Valve, DN25",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 3300.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Distributor Assembly",
+     "type_model": null,
+     "moc": "SS 304",
+     "make": "Sheen",
+     "qty": 1.0,
+     "unit_cost": 5400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sample Valve",
+     "type_model": "Sample Valve 1'' TC SS316",
+     "moc": "SS 316",
+     "make": "Max Steel",
+     "qty": 2.0,
+     "unit_cost": 1200.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Drain Valve",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 3940.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": "0-10 Bar, 4-20 mA",
+     "moc": "SS 316",
+     "make": "Danfoss",
+     "qty": 2.0,
+     "unit_cost": 6500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": "0-10 Bar",
+     "moc": "SS 316",
+     "make": "WIKA",
+     "qty": 2.0,
+     "unit_cost": 3140.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "1 X",
+     "title": "Filter Feed pump - Grundfos",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Rotation speed | 2900 | 1/min\nConnection voltage | 400/690 | V\nMains frequency | 50 | Hz\nProtection class | IP55\nMaterial of pump Impeller | stainless steel\nFlow - Q | [[162]] | m³/hour\nHead - H | [[3.5]] | Bar\nElectric power P | [[22]] | KW",
+     "notes": "<p>Positive suction, modular designed pump with directly coupled electric motor.</p><p>1 Set of suction side connections as pump connection module with shutoff valve and manometer.</p><p>1 Set of pressure side connections as pump connection module with shutoff valve, non-return valve and manometer.</p><p>1 Pump mounting frame Stainless steel frame with height adjustable calotte feet, allowing an easy installation of the pump group without concrete base.</p>"
+    },
+    {
+     "qty_label": "[[1]] X",
+     "title": "ALANTECH Non regenerative MB filter",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Operation pressure max. | 4 | bar\nFilter bed differential pressure max. | 0.6 | bar\nMax. operation temperature | 40 | °C\nDiameter | [[1800]] | mm\nCyl. skirt height | [[2200]] | mm\nTotal height approx. | [[2600]] | mm\nMaterial | SS316\nPreparation | 0.8 micron",
+     "notes": null
+    },
+    {
+     "qty_label": "1 X",
+     "title": "Set of front piping at the filter",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>to connect the filter as complete set starting at the inlet valves and ending at the outlet valves. With shut-off valves, incl. supports, connections and accessories.</p>",
+     "specs": "Operation mode | Automatic\nConfiguration | Valve Tree\nProduct contacted parts | SS 316L\nValve type | Automatic",
+     "notes": null
+    },
+    {
+     "qty_label": "1 X",
+     "title": "Filter charge resin",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>Including a supporting layer of quartz gravel.</p>",
+     "specs": "Filter material | [[AmberTec UP6150 H/OH]]\nMass of filter material | [[4000]] | kg\nMass of supporting bed | [[180]] | kg",
+     "notes": null
+    },
+    {
+     "qty_label": "1 X",
+     "title": "Automatic Valve System",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>to control the filter and indicate the pressures and for sampling.</p><p>1 water pressure gauge with test cock</p><p>1 water sampling valve</p><p>2 pressure transmitter</p>",
+     "specs": null,
+     "notes": null
+    }
+   ],
+   "offer_title": "Non Regenerative Mixed bed system",
+   "price_description": "Non regenerative MB system",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Piping Connection",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "RO 1 Frame",
+     "type_model": null,
+     "moc": "MSEP",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 285000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CCRO Frame",
+     "type_model": null,
+     "moc": "MSEP",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 320000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "MMF Frame",
+     "type_model": null,
+     "moc": "MSEP",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 85000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "UF Frame",
+     "type_model": null,
+     "moc": "MSEP",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 185000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CIP Skid",
+     "type_model": null,
+     "moc": "MSEP",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 85000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Post Dosing Skid",
+     "type_model": null,
+     "moc": "SS 304",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 95000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "RO Feed piping",
+     "type_model": null,
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 462000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "RO HP piping",
+     "type_model": null,
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 471000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "RO Reject piping",
+     "type_model": null,
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 495000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "RO Permeate piping",
+     "type_model": null,
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 428000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Ozone system piping",
+     "type_model": null,
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 182000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "UV system piping",
+     "type_model": null,
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 185000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CIP system piping",
+     "type_model": null,
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 2.0,
+     "unit_cost": 232000.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "1",
+     "title": "Piping connection",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for the connection of the a. m. plant components, under the provision that the plant will be installed compact according to our proposed layout. Raw- and treated water piping included within max. [[5]] m of plant position.</p>",
+     "specs": "Material | HDPE White | In-feed\n | SS316L | product & Reject",
+     "notes": null
+    }
+   ],
+   "offer_title": "Piping connection (budget only until final layout is known)",
+   "price_description": "Piping connection (budget only, final against known layout)",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Electric and Control",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "PLC & Cards",
+     "type_model": "ET200SP",
+     "moc": null,
+     "make": "Siemens",
+     "qty": 2.0,
+     "unit_cost": 1120500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "HMI",
+     "type_model": "15\"",
+     "moc": null,
+     "make": "Siemens",
+     "qty": 2.0,
+     "unit_cost": 283000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Enclosure - RO 1 - Power",
+     "type_model": "800Wx1200Hx300D",
+     "moc": "SS 304",
+     "make": "Rittal",
+     "qty": 2.0,
+     "unit_cost": 88745.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Enclosure - RO 1 - Control",
+     "type_model": "800Wx1200Hx300D",
+     "moc": "SS 304",
+     "make": "Rittal",
+     "qty": 2.0,
+     "unit_cost": 88745.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Enclosure - RO 2 - Power",
+     "type_model": "800Wx1200Hx300D",
+     "moc": "SS 304",
+     "make": "Rittal",
+     "qty": 2.0,
+     "unit_cost": 88745.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Enclosure - RO 2 - Control",
+     "type_model": "800Wx1200Hx300D",
+     "moc": "SS 304",
+     "make": "Rittal",
+     "qty": 2.0,
+     "unit_cost": 88745.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Communication",
+     "type_model": null,
+     "moc": null,
+     "make": "eWon",
+     "qty": 2.0,
+     "unit_cost": 91400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Switch gears",
+     "type_model": null,
+     "moc": null,
+     "make": "Siemens / Schneider",
+     "qty": 1.0,
+     "unit_cost": 680000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Cable Tray",
+     "type_model": "SS CT75*75",
+     "moc": "SS 316",
+     "make": "MDM",
+     "qty": 180.0,
+     "unit_cost": 675.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Cables & Wires",
+     "type_model": null,
+     "moc": null,
+     "make": "Polycab",
+     "qty": 1.0,
+     "unit_cost": 1450000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "PLC & Cards",
+     "type_model": "S7 1200",
+     "moc": null,
+     "make": "Siemens",
+     "qty": 2.0,
+     "unit_cost": 125000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "HMI",
+     "type_model": "7\"",
+     "moc": null,
+     "make": "TRIO",
+     "qty": 2.0,
+     "unit_cost": 13500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Ethernet switch",
+     "type_model": null,
+     "moc": null,
+     "make": "Siemens",
+     "qty": 2.0,
+     "unit_cost": 25400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Enclosure - Pneumatic",
+     "type_model": "400W*500H*210D SS",
+     "moc": null,
+     "make": "Rittal",
+     "qty": 2.0,
+     "unit_cost": 10770.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "FRL",
+     "type_model": null,
+     "moc": null,
+     "make": "FESTO",
+     "qty": 2.0,
+     "unit_cost": 4300.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Air pressure sensor",
+     "type_model": null,
+     "moc": null,
+     "make": "FESTO",
+     "qty": 2.0,
+     "unit_cost": 4800.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valve manifold",
+     "type_model": null,
+     "moc": null,
+     "make": "FESTO",
+     "qty": 3.0,
+     "unit_cost": 5400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Solenoid valve",
+     "type_model": null,
+     "moc": null,
+     "make": "FESTO",
+     "qty": 3.0,
+     "unit_cost": 17490.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "One touch fittings",
+     "type_model": null,
+     "moc": null,
+     "make": "FESTO",
+     "qty": 2.0,
+     "unit_cost": 5800.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "PU Tube",
+     "type_model": null,
+     "moc": null,
+     "make": "FESTO",
+     "qty": 2.0,
+     "unit_cost": 7800.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "1",
+     "title": "Electrical central switch board",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>Internally fully wired up to terminal clamp strips, according to VDE-standards.</p>",
+     "specs": "Design | floor mounted\nMaterial | stainless steel\nProtection class | IP 54\nPLC & HMI | [[Siemens S7 1500 + 15\" + eWon]]",
+     "notes": "<p>Power in feed cable connection clamps are provided for a single copper cable.</p><p>Internals:</p><ul><li>Power in feed cable connection clamps; main switch</li><li>All power modules required for the scope of supply</li><li>All control modules required for the scope of supply</li><li>All required relays, motor protection relays, auxiliary relays, signal lamps, measuring devices and displays</li><li>Operator interface as separately offered for PLC-controlled plants</li><li>SCADA with [[2]] PC's</li></ul>"
+    },
+    {
+     "qty_label": "1",
+     "title": "Simatic PLC S7-1500",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>with the necessary output and input modules for all automatically operating aggregates and armatures. If measuring instruments and measuring data registration are included in the scope of delivery the measuring data will also be processed via the PLC.</p>",
+     "specs": "Manufacturer | SIEMENS\nDesign | PROFIBUS-DP\nHMI | [[15\" TRIO]]\nNumber of systems | [[1]]",
+     "notes": null
+    },
+    {
+     "qty_label": "1",
+     "title": "ALANTECH PLC-Software",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for the automatic operation of the plant.</p>",
+     "specs": null,
+     "notes": null
+    },
+    {
+     "qty_label": "1",
+     "title": "Comfort Panel with PLC automation",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>Process control panel, with LCD display for control of plant schemes with dynamic indication of the operation status, measuring values, disturbances etc. Plant operation parameters like min./max.-values, times etc. can be changed.</p><p>Common one no. Non Redundant PLC</p><ul><li>PLC system (Modular Type) with</li><li>PLC: - Modular Type: DI/DO – 24 VDC with relay modules, AI/AO modules – 12 bit 4-20 mA type</li><li>Comm: RS 232 / 485, Ethernet Module</li><li>10% Spare IO's</li><li>MS Powder Coated panel, IP54</li><li>UPS with 30 Minutes battery back-up</li><li>10% Spare racks</li></ul>",
+     "specs": "Type | Basic Panel\nScreen size | [[15]]\" monitor\nDesign | 16 Mio. colours\nResolution | 1280 x 800 | pixels",
+     "notes": null
+    },
+    {
+     "qty_label": "1",
+     "title": "Set of electric cables and glands",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for the internal cabling of the offered plant within the water treatment room. The main power infeed cable and power/control cables (if required) to other equipment outside of the water treatment room - for example remote raw water pump stations - are to be supplied and installed by others.</p>",
+     "specs": null,
+     "notes": null
+    },
+    {
+     "qty_label": "1",
+     "title": "Set of grid-typed cable ducts",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for installation with brackets on a load-bearing wall or on existing trusses. If special supports for the cable tray are required, these can be additionally offered.</p>",
+     "specs": "Material | stainless steel",
+     "notes": null
+    }
+   ],
+   "offer_title": "Electric and control",
+   "price_description": "Electric and control - Panel, PLC, HMI - [[Siemens S7 1518H with DCS]]",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Remote Connectivity",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "Remote connectivity gateway with cloud access",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 0.0,
+     "addon_pct": 2.0
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "1",
+     "title": "Remote connectivity gateway",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>for remote monitoring of the plant through the cloud.</p>",
+     "specs": "Make | [[eWon]]\nSubscription | [[ ]] | years",
+     "notes": null
+    }
+   ],
+   "offer_title": "Remote connectivity with cloud",
+   "price_description": "Remote connectivity with cloud",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Iron Removal Filter",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "Iron Filter Vessel",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Piping",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Media",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Air Vent",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Isolation Valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Distributor Assembly",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Sample Valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Drain Valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "[[ ]] X",
+     "title": "ALANTECH Iron removal filter",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Operation pressure max. | 4 | bar\nDiameter | [[ ]] | mm\nCyl. skirt height | [[ ]] | mm\nMaterial | [[ ]]",
+     "notes": null
+    },
+    {
+     "qty_label": "[[ ]] X",
+     "title": "Filter charge",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Filter material | [[ ]]\nMass of filter material | [[ ]] | kg",
+     "notes": null
+    },
+    {
+     "qty_label": "1 X",
+     "title": "Automatic Valve System",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>to control the filter and indicate the pressures and for sampling.</p>",
+     "specs": null,
+     "notes": null
+    }
+   ],
+   "offer_title": "Iron removal filter",
+   "price_description": "Iron removal filter",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Softener",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "Softener Vessel",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Actuators",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Limit Switches",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Piping",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Media",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Air Vent",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Isolation Valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Distributor Assembly",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Sample Valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Drain Valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Brine Tank",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Brine connector",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "[[ ]] X",
+     "title": "ALANTECH Softener vessel",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Operation pressure max. | 4 | bar\nDiameter | [[ ]] | mm\nCyl. skirt height | [[ ]] | mm\nMaterial | [[ ]]",
+     "notes": null
+    },
+    {
+     "qty_label": "[[ ]] X",
+     "title": "Resin charge",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Resin | [[ ]]\nVolume of resin | [[ ]] | l",
+     "notes": null
+    },
+    {
+     "qty_label": "1 X",
+     "title": "Brine tank",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Contents | [[ ]] | l\nMaterial | [[PE]]",
+     "notes": null
+    }
+   ],
+   "offer_title": "Softener",
+   "price_description": "Softener",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Dosing System - Chlorine",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "Chlorine dosing tank",
+     "type_model": "PP 250 Ltr",
+     "moc": "PP",
+     "make": "Thaha",
+     "qty": 3.0,
+     "unit_cost": 7800.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Chlorine dosing pump",
+     "type_model": "DDA 50-4 B-PVC/V/C-X-31U2U2FG",
+     "moc": "PVC",
+     "make": "Grundfos",
+     "qty": 3.0,
+     "unit_cost": 71300.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing pump connectors",
+     "type_model": "4-6 mm connection kit",
+     "moc": "PP",
+     "make": "Grundfos",
+     "qty": 3.0,
+     "unit_cost": 11400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Agitator / Mixer",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 3.0,
+     "unit_cost": 45000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Back pressure valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 3.0,
+     "unit_cost": 8750.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog input cable",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 3.0,
+     "unit_cost": 3500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog output cable",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 3.0,
+     "unit_cost": 3500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Relay output cable",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 3.0,
+     "unit_cost": 3500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Static Mixer",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 3.0,
+     "unit_cost": 8500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Drain Valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Level sensor",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 3.0,
+     "unit_cost": 4500.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "[[3]] X",
+     "title": "Dosing tank",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Contents | [[250]] | l\nMaterial of tank | PP",
+     "notes": null
+    },
+    {
+     "qty_label": "[[3]] X",
+     "title": "Dosing Pump - Grundfos DDA",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Delivery capacity | [[ ]] | l/h\nOperation pressure max. | [[ ]] | bar",
+     "notes": null
+    },
+    {
+     "qty_label": "[[3]] X",
+     "title": "Agitator / Mixer",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": null,
+     "notes": null
+    },
+    {
+     "qty_label": "[[3]] X",
+     "title": "Static mixer",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": null,
+     "notes": null
+    }
+   ],
+   "offer_title": "Dosing system - Chlorine",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Dosing System - pH Correction",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "Dosing tank",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Dosing pump",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Dosing pump connectors",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Agitator / Mixer",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Back pressure valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Analog input cable",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Analog output cable",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Relay output cable",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Static Mixer",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Drain Valve",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Level sensor",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "[[1]] X",
+     "title": "Dosing tank",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Contents | [[ ]] | l",
+     "notes": null
+    },
+    {
+     "qty_label": "[[1]] X",
+     "title": "Dosing Pump - Grundfos DDA",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Delivery capacity | [[ ]] | l/h",
+     "notes": null
+    },
+    {
+     "qty_label": "[[1]] X",
+     "title": "Static mixer",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": null,
+     "notes": null
+    }
+   ],
+   "offer_title": "Dosing system - pH correction",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Disinfection System",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "UV System",
+     "type_model": "60 m3/hour",
+     "moc": null,
+     "make": "Alfaa",
+     "qty": 0,
+     "unit_cost": 850000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Intensity monitoring",
+     "type_model": null,
+     "moc": null,
+     "make": "Alfaa",
+     "qty": 0,
+     "unit_cost": 125000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": "VA481-770652100 / V9121-9004065",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 0,
+     "unit_cost": 8540.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Ozone Generator",
+     "type_model": "60 Grams, dual chamber",
+     "moc": "SS 316",
+     "make": "Alpha ozonics",
+     "qty": 0,
+     "unit_cost": 145000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Oxygen concentrator",
+     "type_model": "5 LPM",
+     "moc": null,
+     "make": "Alpha ozonics",
+     "qty": 0,
+     "unit_cost": 12000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Ventury",
+     "type_model": "2\"",
+     "moc": "SS 316",
+     "make": null,
+     "qty": 0,
+     "unit_cost": 2500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Control Valve",
+     "type_model": "VA641-000652050 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 0,
+     "unit_cost": 8563.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Ozone circulation pump",
+     "type_model": "CRN10-5 A-FGJ-A-E-HQQE",
+     "moc": "SS 316",
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 80451.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": "VA641-000652050 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 0,
+     "unit_cost": 8563.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Ozone Sensor",
+     "type_model": "9900101181",
+     "moc": null,
+     "make": "SEKO",
+     "qty": 0,
+     "unit_cost": 157906.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Holder / Flow through",
+     "type_model": "9900103089",
+     "moc": null,
+     "make": "SEKO",
+     "qty": 0,
+     "unit_cost": 13050.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Cable",
+     "type_model": "RIC0151138",
+     "moc": null,
+     "make": "SEKO",
+     "qty": 0,
+     "unit_cost": 3820.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Ozone Controller",
+     "type_model": "K065MPWH0000",
+     "moc": null,
+     "make": "SEKO",
+     "qty": 0,
+     "unit_cost": 47595.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sample valves",
+     "type_model": "Sample Valve 1'' TC SS316",
+     "moc": "SS 316",
+     "make": "Max Steel",
+     "qty": 0,
+     "unit_cost": 1200.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Isolation Valve",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 0,
+     "unit_cost": 8540.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Non Return valve",
+     "type_model": "V7201-000650100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 0,
+     "unit_cost": 28400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Drain Valve",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 0,
+     "unit_cost": 3940.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Permeate transfer pump",
+     "type_model": "HYGINOX SE 36 01.011.12.0025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 0,
+     "unit_cost": 476500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "VFD",
+     "type_model": "15 KW",
+     "moc": null,
+     "make": "Danfoss",
+     "qty": 0,
+     "unit_cost": 78627.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": "VA481-770652100 / V9121-9004065",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 0,
+     "unit_cost": 9652.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Non Return valve",
+     "type_model": "V7201-000650100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 0,
+     "unit_cost": 13448.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "[[1]] X",
+     "title": "UV system",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Flow | [[60]] | m³/h",
+     "notes": null
+    },
+    {
+     "qty_label": "[[1]] X",
+     "title": "Ozone generator",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Ozone output | [[60]] | g/h\nOxygen concentrator | [[5]] | LPM",
+     "notes": null
+    },
+    {
+     "qty_label": "[[1]] X",
+     "title": "Ozone controller with sensor",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": null,
+     "notes": null
+    }
+   ],
+   "offer_title": "Disinfection system",
+   "price_description": "Disinfection system",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "CIP System",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "CIP System Tank CCRO",
+     "type_model": "10000 Ltr",
+     "moc": "SS 304",
+     "make": "Sheen",
+     "qty": 1.0,
+     "unit_cost": 520000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CIP System Tank RO 1",
+     "type_model": "5000 ltr",
+     "moc": "SS 304",
+     "make": "Sheen",
+     "qty": 1.0,
+     "unit_cost": 390000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Drain Valve",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 8540.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Level Transmitter",
+     "type_model": "Hydrostatic Level",
+     "moc": null,
+     "make": "JUMO",
+     "qty": 1.0,
+     "unit_cost": 55400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CIP Pump - CCRO",
+     "type_model": "CRN 95-2-2 A-P-A-V-HQQV",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 673062.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "VFD",
+     "type_model": "11 KW",
+     "moc": null,
+     "make": "Danfoss",
+     "qty": 1.0,
+     "unit_cost": 78627.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": "VA481-770652100 / V9121-9004065",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 2.0,
+     "unit_cost": 9652.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Non Return valve",
+     "type_model": "V7201-000650100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 13448.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Circulation Valve",
+     "type_model": "VA481-770652100 / V9121-9004065",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 9652.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CIP Pump - RO 1",
+     "type_model": "CRN45-2-2 A-F-A-V-HQQV",
+     "moc": "SS 316",
+     "make": "Grundfos",
+     "qty": 1.0,
+     "unit_cost": 673062.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sample valves",
+     "type_model": "Sample Valve 1'' TC SS316",
+     "moc": "SS 316",
+     "make": "Max Steel",
+     "qty": 2.0,
+     "unit_cost": 1200.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Isolation Valve",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 9652.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Flow meter",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 286500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure transmitter",
+     "type_model": "0-10 Bar, 4-20 mA",
+     "moc": "SS 316",
+     "make": "Danfoss",
+     "qty": 1.0,
+     "unit_cost": 55400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": "0-10 Bar",
+     "moc": "SS 316",
+     "make": "WIKA",
+     "qty": 1.0,
+     "unit_cost": 1400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Heater controller",
+     "type_model": "DITECOMULTPTC-1202",
+     "moc": null,
+     "make": "Multispan",
+     "qty": 1.0,
+     "unit_cost": 8540.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Thermocouple",
+     "type_model": "RTDPT100 TCS-1\" SKT",
+     "moc": null,
+     "make": "Accurate",
+     "qty": 1.0,
+     "unit_cost": 3450.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "CIP Heater",
+     "type_model": "6 KW, HC6KW",
+     "moc": "SS 316",
+     "make": "Elmec",
+     "qty": 2.0,
+     "unit_cost": 25400.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "1 X",
+     "title": "CIP tank",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Contents | [[10000]] | l\nMaterial | SS 304",
+     "notes": null
+    },
+    {
+     "qty_label": "1 X",
+     "title": "CIP pump - Grundfos",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Delivery capacity | [[ ]] | m³/h\nDelivery height | [[ ]] | m WS / m WC\nMotor power | [[11]] | kW",
+     "notes": null
+    },
+    {
+     "qty_label": "1 X",
+     "title": "CIP heater with controller",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Power | [[6]] | kW",
+     "notes": null
+    }
+   ],
+   "offer_title": "CIP system",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Post Dosing System",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "Dosing 1 pump",
+     "type_model": "DDA 30-7",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 50800.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing tank",
+     "type_model": "200 Ltr",
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 0,
+     "unit_cost": 76500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing pump connectors",
+     "type_model": "Install. Kit I011 PP/V/C-4/6mm-2L",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 11084.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Agitator / Mixer",
+     "type_model": null,
+     "moc": "PVDF coated",
+     "make": "SEKO",
+     "qty": 0,
+     "unit_cost": 33495.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Back Pressure Valve",
+     "type_model": "95730741",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 18216.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog Input Cable",
+     "type_model": "96609016",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 2580.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Relay Output Cable",
+     "type_model": "96632922",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 2815.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog Output Cable",
+     "type_model": "96609019",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 2815.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing 2 pump",
+     "type_model": "DDA 30-7",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 50800.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing tank",
+     "type_model": "200 Ltr",
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 0,
+     "unit_cost": 76500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing pump connectors",
+     "type_model": "Install. Kit I011 PP/V/C-4/6mm-2L",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 11084.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Agitator / Mixer",
+     "type_model": null,
+     "moc": "PVDF coated",
+     "make": "SEKO",
+     "qty": 0,
+     "unit_cost": 33495.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Back Pressure Valve",
+     "type_model": "95730741",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 18216.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog Input Cable",
+     "type_model": "96609016",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 2580.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Relay Output Cable",
+     "type_model": "96632922",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 2815.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog Output Cable",
+     "type_model": "96609019",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 2815.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing 3 pump",
+     "type_model": "DDA 30-7",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 50800.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing tank",
+     "type_model": "200 Ltr",
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 0,
+     "unit_cost": 76500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing pump connectors",
+     "type_model": "Install. Kit I011 PP/V/C-4/6mm-2L",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 11084.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Agitator / Mixer",
+     "type_model": null,
+     "moc": "PVDF coated",
+     "make": "SEKO",
+     "qty": 0,
+     "unit_cost": 33495.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Back Pressure Valve",
+     "type_model": "95730741",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 18216.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog Input Cable",
+     "type_model": "96609016",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 2580.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Relay Output Cable",
+     "type_model": "96632922",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 2815.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Analog Output Cable",
+     "type_model": "96609019",
+     "moc": null,
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 2815.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Mineral Transfer pump",
+     "type_model": "CM 1-3 ARGV",
+     "moc": "SS 316",
+     "make": "Grundfos",
+     "qty": 0,
+     "unit_cost": 28756.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Dosing tank",
+     "type_model": "200 Ltr",
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 0,
+     "unit_cost": 76500.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Agitator / Mixer",
+     "type_model": null,
+     "moc": "PVDF coated",
+     "make": "SEKO",
+     "qty": 0,
+     "unit_cost": 33495.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Feed pump - Dosing",
+     "type_model": "CRN45-2 A-F-A-V-HQQV",
+     "moc": "SS 316",
+     "make": "Grundfos",
+     "qty": 2.0,
+     "unit_cost": 673062.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "VFD",
+     "type_model": "11 KW",
+     "moc": "FC051",
+     "make": "Danfoss",
+     "qty": 2.0,
+     "unit_cost": 78627.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Valves",
+     "type_model": "VA481-770652100 / V9121-9004065",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 2.0,
+     "unit_cost": 9652.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Non Return valve",
+     "type_model": "V7201-000650100",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 1.0,
+     "unit_cost": 13448.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Permeate Conductivity Sensor",
+     "type_model": "CLS21D-C1N1",
+     "moc": null,
+     "make": "E+H",
+     "qty": 2.0,
+     "unit_cost": 61721.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Cable",
+     "type_model": "CYK10-A101 (conductivity)",
+     "moc": null,
+     "make": "E+H",
+     "qty": 2.0,
+     "unit_cost": 13964.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "pH Sensor",
+     "type_model": "CPS11D-7BA21",
+     "moc": null,
+     "make": "E+H",
+     "qty": 2.0,
+     "unit_cost": 51975.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Holder / Flow through",
+     "type_model": "CPA640-E211",
+     "moc": null,
+     "make": "E+H",
+     "qty": 2.0,
+     "unit_cost": 13100.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sensor Cable",
+     "type_model": "CYK10-A101 (pH/ORP)",
+     "moc": null,
+     "make": "E+H",
+     "qty": 2.0,
+     "unit_cost": 13964.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Zig Zag line",
+     "type_model": null,
+     "moc": "SS 316",
+     "make": "Alantech",
+     "qty": 0,
+     "unit_cost": 75400.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Sample valves",
+     "type_model": "Sample Valve 1'' TC SS316",
+     "moc": "SS 316",
+     "make": "Max Steel",
+     "qty": 0,
+     "unit_cost": 1200.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure Transmitter",
+     "type_model": "0-10 Bar, 4-20 mA",
+     "moc": "SS 316",
+     "make": "Danfoss",
+     "qty": 2.0,
+     "unit_cost": 78627.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Pressure gauges",
+     "type_model": "0-10 Bar",
+     "moc": "SS 316",
+     "make": "WIKA",
+     "qty": 2.0,
+     "unit_cost": 9652.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Drain Valve",
+     "type_model": "VA481-770652025 / V9121-9004025",
+     "moc": "SS 316",
+     "make": "Inoxpa",
+     "qty": 2.0,
+     "unit_cost": 3940.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "[[3]] X",
+     "title": "Dosing pump - Grundfos DDA",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Delivery capacity | [[ ]] | l/h",
+     "notes": null
+    },
+    {
+     "qty_label": "[[3]] X",
+     "title": "Dosing tank",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Contents | [[200]] | l",
+     "notes": null
+    }
+   ],
+   "offer_title": "Post dosing system",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Delivery and Packing",
+   "cost_type": "Services",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [],
+   "components": [],
+   "offer_title": "Delivery and packing (CFR)",
+   "description": "<p>According to Incoterms 2010, packing suitable for shipment in containers or on flats. The costs for taking back or disposal of used packing materials are not included in the price.</p>",
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Installation and Commissioning",
+   "cost_type": "Services",
+   "default_pricing_mode": "Separate Line",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "Installation, start-up and commissioning",
+     "type_model": null,
+     "moc": null,
+     "make": "Alantech",
+     "qty": 1.0,
+     "unit_cost": 0.0,
+     "addon_pct": 0.0
+    }
+   ],
+   "components": [
+    {
+     "qty_label": null,
+     "title": "Internal plant electric installation",
+     "is_heading": 1,
+     "page_break": 0,
+     "description": "<p>Installation of the offered cable material as electrical connection of the Alantech equipment within the plant limits.</p><p>By customer:</p><p>1 Main power supply to switchboard</p><p>1 local electrician</p><p>Other conditions for installation as before.</p>",
+     "specs": null,
+     "notes": null
+    }
+   ],
+   "offer_title": "Installation, start up and commissioning",
+   "price_description": "Installation, start up and commissioning",
+   "description": "<p>Alantech equipment specified in our quotation, incl. internal plant piping. We are presupposing a continuous, undisturbed installation with start-up/commissioning directly after installation.</p><p>All local preparations by customer such as paved access roads to the installation place, civil works, masonry, foundations, sewage system, tiling, piping to and off the plant, raw water and power supply etc. are to be ready before installation. For the storage of all plant components and materials the customer shall provide a lockable or guarded, dry, sun-protected and frost-free room adjacent to the place of installation. If plant components and materials must be stored distant from the place of installation, the transport within the site shall be provided by the customer at any time needed during installation.</p><p>Prior to departure of our Engineer the customer shall confirm by a Alantech checklist full readiness of the site. Trips made in vain/waiting times due to missing customer's preparation will be charged. Unless installation tools and ancillaries are included in our scope of supply, waiting times caused by unavailability of installation tools/welding gas will be charged.</p><p>The customer shall provide free of charge</p><ul><li>food and lodging for Alantech personnel</li><li>local transportation of the Alantech personnel</li><li>local personnel/helpers, i.e. 2 - 3 helpers</li><li>crane, heavy lifting equipment and personnel for bringing the plant equipment to the installation place</li><li>electric power for installation, water, steam, compressed air, CO2 (if needed) and chemicals for start-up</li><li>drainage/disposal of startup water, chemicals etc.</li><li>installation tools incl. stainless steel welding equipment and welding gases (Argon B 50 UN 1006 compressed 4.6) or equivalent.</li></ul><p>Please note that upon installation/startup considerable water quantities are needed for example for plant cleaning, backwash of freshly filled filters etc. Example: For 1st backwash of a filter of 3,2 m diameter abt. 1000 m³ are required.</p><p>One week prior to startup and during startup/commissioning the customer shall make permanently available at least one operator, electrician and maintenance engineer to work and to be trained under the guidance of our startup engineer. If this personal will not be provided, we are entitled to send additional startup personal on customer's account and to charge an extended stay for training of customer's personal after startup.</p><p>Apart from \"training on the job\" 1-2 days are provided for the training of the customer's personal.</p>",
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "TOC Monitoring",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Separate Line",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "TOC monitoring",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 850000.0,
+     "addon_pct": 2
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "1 X",
+     "title": "Online TOC analyser",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Make | [[ ]]\nMeasuring range | [[ ]] | ppb",
+     "notes": null
+    }
+   ],
+   "offer_title": "TOC monitoring",
+   "price_description": "TOC monitoring",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Direct Labour",
+   "cost_type": "Manpower",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 0,
+   "items": [
+    {
+     "cost_head": "Process design",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Designer",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Purchaser",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Logistics",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Store keeper",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Fabricator",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Machinist",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Welder",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Fitter",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Helper",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Process Engineer",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Electrical designer",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Electrician",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Automation engineer",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Project Co ordinator",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Sales overhead",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Admin overhead",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Marketing overhead",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Finance overhead",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    }
+   ],
+   "components": [],
+   "offer_title": "Direct labour",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "General",
+   "cost_type": "General",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 0,
+   "items": [
+    {
+     "cost_head": "Consumables",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 650000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Plant Rent",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 555000.0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Electricity",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 48599.0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "After Sales Overheads",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 400000.0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "SCADA System",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 1650000.0,
+     "addon_pct": 2
+    },
+    {
+     "cost_head": "Licensing",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "COD monitoring",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "OIW monitoring",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Multiparameter analyser",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Silica monitoring",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Endcap Extractor Tool",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Air Compressor",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 0,
+     "unit_cost": 0,
+     "addon_pct": 0
+    },
+    {
+     "cost_head": "Miscellaneous",
+     "type_model": null,
+     "moc": null,
+     "make": null,
+     "qty": 1.0,
+     "unit_cost": 450000.0,
+     "addon_pct": 0
+    }
+   ],
+   "components": [],
+   "offer_title": "General",
+   "description": null,
+   "specs": null,
+   "notes": null
+  },
+  {
+   "sub_assembly_name": "Compact RO Plant",
+   "cost_type": "Equipment",
+   "default_pricing_mode": "Included",
+   "include_in_offer": 1,
+   "items": [
+    {
+     "cost_head": "RO plant - compact skid (pumps, membranes, vessels, frame, piping)",
+     "type_model": null,
+     "moc": "SS 304",
+     "make": "Alantech",
+     "qty": 1.0,
+     "unit_cost": 0.0,
+     "addon_pct": 2.0
+    },
+    {
+     "cost_head": "Starter / control panel",
+     "type_model": null,
+     "moc": null,
+     "make": "Alantech",
+     "qty": 1.0,
+     "unit_cost": 0.0,
+     "addon_pct": 2.0
+    }
+   ],
+   "components": [
+    {
+     "qty_label": "1 X",
+     "title": "RO plant - compact skid",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": null,
+     "specs": "Capacity (permeate) | [[1000]] | LPH\nRecovery | [[50]] | %\nFeed water TDS | [[ ]] | ppm\nProduct water TDS | < [[ ]] | ppm\nMembrane | [[ ]] | [[ ]] Nos\nHigh pressure pump | [[Grundfos CRN]] | [[ ]] kW\nPre-treatment | [[5 micron cartridge filter]]\nFrame and piping | [[SS 304]]",
+     "notes": null
+    },
+    {
+     "qty_label": "1 X",
+     "title": "Control panel",
+     "is_heading": 0,
+     "page_break": 0,
+     "description": "<p>Starter panel with level controls, conductivity indication, pressure switches and dry-run protection.</p>",
+     "specs": null,
+     "notes": null
+    }
+   ],
+   "offer_title": "Reverse osmosis plant - compact skid",
+   "price_description": "Reverse osmosis plant - [[1000]] LPH, complete skid",
+   "description": "<p>Skid mounted reverse osmosis plant, factory assembled and tested, ready for connection at site.</p>",
+   "specs": null,
+   "notes": null
+  }
+ ],
+ "plant_assemblies": [
+  {
+   "assembly_name": "UF + RO + EDI - UPW Plant",
+   "offer_format": "Detailed Proposal",
+   "plant_type": "UF + RO + EDI",
+   "capacity": 160,
+   "capacity_uom": "m³/h",
+   "no_of_trains": 1,
+   "default_addon_pct": 2,
+   "contingency_pct": 2,
+   "financing_pct": 2.7,
+   "include_financing": 0,
+   "margin_basis": "Markup on Cost",
+   "profit_pct": 35,
+   "sales_commission_pct": 0,
+   "round_to": "100",
+   "subject": "Offer for Water Treatment plant",
+   "guarantees": [
+    {
+     "group_title": null,
+     "parameter": "Conductivity of permeate water",
+     "value": "< [[16-18]] MΩ",
+     "unit": ""
+    },
+    {
+     "group_title": null,
+     "parameter": "pH of permeate water",
+     "value": "[[6.50 - 7.50]]",
+     "unit": ""
+    },
+    {
+     "group_title": null,
+     "parameter": "Product output",
+     "value": "[[160]] m³ / Hour",
+     "unit": ""
+    },
+    {
+     "group_title": null,
+     "parameter": "Total Organic Carbon - TOC",
+     "value": "< [[20]] ppb",
+     "unit": ""
+    },
+    {
+     "group_title": null,
+     "parameter": "Silica SiO2",
+     "value": "< [[1]] ppb",
+     "unit": ""
+    },
+    {
+     "group_title": null,
+     "parameter": "Product Recovery",
+     "value": "> [[93.0]]%",
+     "unit": ""
+    },
+    {
+     "group_title": null,
+     "parameter": "Energy Consumption",
+     "value": "< [[300]] KWH",
+     "unit": ""
+    }
+   ],
+   "project_data": [
+    {
+     "group_title": null,
+     "parameter": "Plant engineering",
+     "value": "Alantech",
+     "unit": ""
+    },
+    {
+     "group_title": null,
+     "parameter": "Type",
+     "value": "[[UPW - Water treatment for raw water]]",
+     "unit": ""
+    },
+    {
+     "group_title": null,
+     "parameter": "Capacity",
+     "value": "[[80 X 2 Trains]]",
+     "unit": "m³/h"
+    },
+    {
+     "group_title": "Connection data",
+     "parameter": "Infeed pressure min.",
+     "value": "[[2]]",
+     "unit": "bar"
+    },
+    {
+     "group_title": "Connection data",
+     "parameter": "Infeed pressure max.",
+     "value": "[[4]]",
+     "unit": "bar"
+    },
+    {
+     "group_title": "Connection data",
+     "parameter": "Water temperature min.",
+     "value": "[[22]]",
+     "unit": "°C"
+    },
+    {
+     "group_title": "Connection data",
+     "parameter": "Water temperature max.",
+     "value": "[[44]]",
+     "unit": "°C"
+    },
+    {
+     "group_title": "Connection data",
+     "parameter": "Connection diameter",
+     "value": "[[DN100 PN10]]",
+     "unit": ""
+    },
+    {
+     "group_title": "Electrical connection data",
+     "parameter": "Voltage",
+     "value": "400 (+/- 5%)",
+     "unit": "V"
+    },
+    {
+     "group_title": "Electrical connection data",
+     "parameter": "Frequency",
+     "value": "50",
+     "unit": "Hz"
+    },
+    {
+     "group_title": "Electrical connection data",
+     "parameter": "Installed electric power",
+     "value": "approx. [[320]]",
+     "unit": "kW"
+    },
+    {
+     "group_title": "Site conditions",
+     "parameter": "Room temperature",
+     "value": "< 25",
+     "unit": "°C"
+    },
+    {
+     "group_title": "Site conditions",
+     "parameter": "Rel. air humidity",
+     "value": "< 85%",
+     "unit": ""
+    },
+    {
+     "group_title": "Site conditions",
+     "parameter": "Colour of final coating",
+     "value": "[[MSEP]]",
+     "unit": ""
+    }
+   ],
+   "water_analysis": [
+    {
+     "group_title": null,
+     "parameter": "When not stated, assumed as not detected",
+     "value": "n.s.",
+     "unit": ""
+    },
+    {
+     "group_title": null,
+     "parameter": "Temperature",
+     "value": "[[25]]",
+     "unit": "°C"
+    },
+    {
+     "group_title": null,
+     "parameter": "pH-value",
+     "value": "[[ ]]",
+     "unit": ""
+    },
+    {
+     "group_title": null,
+     "parameter": "Conductivity",
+     "value": "[[ ]]",
+     "unit": "µS/cm"
+    },
+    {
+     "group_title": null,
+     "parameter": "TDS",
+     "value": "[[ ]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Total hardness CaCO3",
+     "value": "[[ ]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Total Alkalinity",
+     "value": "[[ ]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "TSS",
+     "value": "[[ ]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Turbidity",
+     "value": "[[ ]]",
+     "unit": "NTU"
+    },
+    {
+     "group_title": null,
+     "parameter": "Potassium K",
+     "value": "[[n.s.]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Sulfate SO4",
+     "value": "[[ ]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Chloride Cl",
+     "value": "[[ ]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Iron Fe",
+     "value": "[[ ]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Nitrate NO3",
+     "value": "[[ ]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Nitrite NO2",
+     "value": "[[n.s.]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Calcium Ca",
+     "value": "[[ ]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Magnesium Mg",
+     "value": "[[ ]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Sodium Na",
+     "value": "[[n.s.]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Phosphate PO4",
+     "value": "[[n.s.]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Fluoride F",
+     "value": "[[ ]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Ammonia NH3",
+     "value": "[[n.s.]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Ammonium NH4",
+     "value": "[[n.s.]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Manganese Mn",
+     "value": "[[n.s.]]",
+     "unit": "mg/l"
+    },
+    {
+     "group_title": null,
+     "parameter": "Silica SiO2",
+     "value": "[[ ]]",
+     "unit": "mg/l"
+    }
+   ],
+   "scope_of_supply_terms": "Alantech - Scope of Supply (Water Treatment)",
+   "commercial_terms": "Alantech - Commercial Conditions (Water Treatment)",
+   "price_notes": "<ol><li>GST will be extra as actual</li><li>All civil works are customer scope</li><li>Transportation to pay basis from cochin to site</li></ol>",
+   "bought_out_items": [
+    {
+     "item_group": "Pumps",
+     "manufacturer": "GRUNDFOS"
+    },
+    {
+     "item_group": "Valves",
+     "manufacturer": "Bray / FESTO / INOXPA"
+    },
+    {
+     "item_group": "Membranes",
+     "manufacturer": "DuPont"
+    },
+    {
+     "item_group": "Instruments",
+     "manufacturer": "E+H / HACH"
+    },
+    {
+     "item_group": "Dosing pumps",
+     "manufacturer": "GRUNDFOS"
+    },
+    {
+     "item_group": "Pneumatic Components",
+     "manufacturer": "FESTO"
+    },
+    {
+     "item_group": "PLC & HMI",
+     "manufacturer": "SIEMENS"
+    },
+    {
+     "item_group": "Flow meters",
+     "manufacturer": "E+H / Krohne"
+    },
+    {
+     "item_group": "Electricals",
+     "manufacturer": "Schneider / SIEMENS"
+    },
+    {
+     "item_group": "UV system",
+     "manufacturer": "Atlantium / UltraAqua"
+    },
+    {
+     "item_group": "Membrane housing",
+     "manufacturer": "PENTAIR"
+    },
+    {
+     "item_group": "SS Piping",
+     "manufacturer": "INOXPA"
+    },
+    {
+     "item_group": "Micron Filter",
+     "manufacturer": "Alantech"
+    },
+    {
+     "item_group": "Panel enclosure",
+     "manufacturer": "RITTAL"
+    }
+   ],
+   "sections": [
+    {
+     "sub_assembly": "Clarifier System",
+     "section_title": "Clarifier system",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "Multimedia Filter",
+     "section_title": "Multi media Filter",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "Feed Sensors",
+     "section_title": "pH, conductivity, ORP - monitoring",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "Ultrafiltration",
+     "section_title": "UF Membrane filtration",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "CEB Dosing - Caustic",
+     "section_title": "Dosing of Chemically Enhanced Backwash (CEB - A - Caustic)",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "CEB Dosing - Acid",
+     "section_title": "Dosing of Chemically Enhanced Backwash (CEB - B - Acid)",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "CEB Dosing - Hypochlorite",
+     "section_title": "Dosing of Chemically Enhanced Backwash (CEB - C - Hypo Chlorite)",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "RO System - Pass 1",
+     "section_title": "Membrane filtration - RO pass 1",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "RO System - Pass 2",
+     "section_title": "Membrane filtration - RO pass 2",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "Recovery RO",
+     "section_title": "Membrane filtration - recovery RO",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "UV System",
+     "section_title": "Hydro Optic Disinfection system for TOC reduction",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "De-Gasifier Column",
+     "section_title": "De-Gasifier column",
+     "pricing_mode": "Included",
+     "include_in_offer": 0
+    },
+    {
+     "sub_assembly": "EDI System",
+     "section_title": "Electro-deionisation system",
+     "pricing_mode": "Included",
+     "include_in_offer": 0
+    },
+    {
+     "sub_assembly": "NRMB System",
+     "section_title": "Non Regenerative Mixed bed system",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "Piping Connection",
+     "section_title": "Piping connection (budget only until final layout is known)",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "Electric and Control",
+     "section_title": "Electric and control",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "Remote Connectivity",
+     "section_title": "Remote connectivity with cloud",
+     "pricing_mode": "Included",
+     "include_in_offer": 0
+    },
+    {
+     "sub_assembly": "Dosing System - Chlorine",
+     "section_title": "Dosing system - Chlorine",
+     "pricing_mode": "Included",
+     "include_in_offer": 0
+    },
+    {
+     "sub_assembly": "CIP System",
+     "section_title": "CIP system",
+     "pricing_mode": "Included",
+     "include_in_offer": 0
+    },
+    {
+     "sub_assembly": "Post Dosing System",
+     "section_title": "Post dosing system",
+     "pricing_mode": "Included",
+     "include_in_offer": 0
+    },
+    {
+     "sub_assembly": "Delivery and Packing",
+     "section_title": "Delivery and packing (CFR)",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "Installation and Commissioning",
+     "section_title": "Installation, start up and commissioning",
+     "pricing_mode": "Separate Line",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "TOC Monitoring",
+     "section_title": "TOC monitoring",
+     "pricing_mode": "Separate Line",
+     "include_in_offer": 0
+    },
+    {
+     "sub_assembly": "Direct Labour",
+     "section_title": "Direct labour",
+     "pricing_mode": "Included",
+     "include_in_offer": 0
+    },
+    {
+     "sub_assembly": "General",
+     "section_title": "General",
+     "pricing_mode": "Included",
+     "include_in_offer": 0
+    }
+   ]
+  },
+  {
+   "assembly_name": "Compact RO Plant - Single Page Offer",
+   "offer_format": "Single Page Offer",
+   "plant_type": "Reverse Osmosis Plant",
+   "capacity": 1000,
+   "capacity_uom": "LPH",
+   "no_of_trains": 1,
+   "default_addon_pct": 2,
+   "contingency_pct": 2,
+   "margin_basis": "Markup on Cost",
+   "profit_pct": 30,
+   "round_to": "100",
+   "subject": "Offer for [[1000]] LPH Reverse Osmosis Plant",
+   "intro_text": "<p>We thank you for your enquiry and are pleased to offer our skid mounted reverse osmosis plant as below.</p>",
+   "commercial_terms": "Alantech - Single Page Offer Terms",
+   "price_notes": "<p>GST extra as applicable. Transportation to pay basis from Cochin to site.</p>",
+   "sections": [
+    {
+     "sub_assembly": "Compact RO Plant",
+     "section_title": "Reverse osmosis plant - compact skid",
+     "pricing_mode": "Included",
+     "include_in_offer": 1
+    },
+    {
+     "sub_assembly": "Installation and Commissioning",
+     "section_title": "Installation, start up and commissioning",
+     "pricing_mode": "Separate Line",
+     "include_in_offer": 0
+    }
+   ]
+  }
+ ]
+}

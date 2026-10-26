@@ -1,0 +1,135 @@
+{
+ "actions": [],
+ "creation": "2026-10-26 13:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_title",
+  "sub_assembly",
+  "cost_type",
+  "pricing_mode",
+  "total_cost",
+  "selling_price",
+  "section_detail_section",
+  "amount",
+  "addon_amount",
+  "override_margin",
+  "margin_pct",
+  "column_break_section_detail",
+  "include_in_offer",
+  "price_description"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_title",
+   "fieldtype": "Data",
+   "label": "Section",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "sub_assembly",
+   "fieldtype": "Link",
+   "label": "Sub Assembly",
+   "options": "Sub Assembly",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "cost_type",
+   "fieldtype": "Select",
+   "label": "Cost Type",
+   "options": "Equipment\nManpower\nGeneral\nServices",
+   "default": "Equipment",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "pricing_mode",
+   "fieldtype": "Select",
+   "label": "Pricing",
+   "options": "Included\nSeparate Line\nOptional",
+   "default": "Included",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "total_cost",
+   "fieldtype": "Currency",
+   "label": "Cost",
+   "options": "currency",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "selling_price",
+   "fieldtype": "Currency",
+   "label": "Selling Price",
+   "options": "currency",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "section_detail_section",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "addon_amount",
+   "fieldtype": "Currency",
+   "label": "Transport",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "override_margin",
+   "fieldtype": "Check",
+   "label": "Own Margin %"
+  },
+  {
+   "fieldname": "margin_pct",
+   "fieldtype": "Percent",
+   "label": "Margin %",
+   "depends_on": "override_margin"
+  },
+  {
+   "fieldname": "column_break_section_detail",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "include_in_offer",
+   "fieldtype": "Check",
+   "label": "Describe in Technical Offer",
+   "default": "1"
+  },
+  {
+   "fieldname": "price_description",
+   "fieldtype": "Data",
+   "label": "Price Schedule Line",
+   "description": "Line in the offer's price schedule. Blank = not listed (its price is spread over the listed lines)."
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-26 13:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Estimation Section",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1
+}

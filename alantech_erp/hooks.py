@@ -63,6 +63,10 @@ web_include_css = [
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 doctype_js = {
     "Employee": "public/js/employee.js",
+    "Opportunity": "public/js/opportunity.js",
+    "Quotation": "public/js/quotation.js",
+    # live cost sheet calculation of the Estimation form
+    "Estimation": "public/js/estimation_pricing.js",
 }
 doctype_list_js = {
     "Employee": "public/js/employee_list.js",
@@ -93,11 +97,13 @@ doctype_list_js = {
 # Jinja
 # ----------
 
-# add methods and filters to jinja environment
-# jinja = {
-# 	"methods": "alantech_erp.utils.jinja_methods",
-# 	"filters": "alantech_erp.utils.jinja_filters"
-# }
+jinja = {
+    # print formats Alantech Technical Offer / Alantech Proposal / Alantech Cost Sheet
+    "methods": [
+        "alantech_erp.proposal.printing.get_offer_context",
+        "alantech_erp.proposal.printing.get_cost_sheet_context",
+    ],
+}
 
 # Installation
 # ------------
@@ -170,6 +176,7 @@ has_permission = {
 # 		"on_trash": "method"
 # 	}
 # }
+
 fixtures = [
     {"dt": "Custom Field", "or_filters": [
         ["fieldname", "like", "alt\\_%"],
@@ -209,6 +216,16 @@ doc_events = {
 	"Leave Allocation": {
 		"validate": "alantech_erp.setup.leave_validation.validate_leave_allocation",
 	},
+    # Sales flow: Deal -> Estimation -> Quotation (manager + client approval) -> Sales Order
+    "Quotation": {
+        "validate": "alantech_erp.sales.quotation.validate",
+        "before_submit": "alantech_erp.sales.quotation.before_submit",
+        "before_update_after_submit": "alantech_erp.sales.quotation.before_update_after_submit",
+        "on_update_after_submit": "alantech_erp.sales.quotation.on_update_after_submit",
+    },
+    "Sales Order": {
+        "validate": "alantech_erp.sales.sales_order.validate",
+    },
 }
 
  
