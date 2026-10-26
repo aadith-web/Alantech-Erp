@@ -1,0 +1,69 @@
+{
+ "actions": [],
+ "creation": "2026-10-26 13:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "sub_assembly",
+  "section_title",
+  "pricing_mode",
+  "include_in_offer",
+  "price_description"
+ ],
+ "fields": [
+  {
+   "fieldname": "sub_assembly",
+   "fieldtype": "Link",
+   "label": "Sub Assembly",
+   "options": "Sub Assembly",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "section_title",
+   "fieldtype": "Data",
+   "label": "Section Title",
+   "in_list_view": 1,
+   "columns": 3,
+   "description": "Blank = the sub assembly's offer heading. Use different titles to add the same sub assembly twice (e.g. RO 1, RO 2)."
+  },
+  {
+   "fieldname": "pricing_mode",
+   "fieldtype": "Select",
+   "label": "Pricing",
+   "options": "Included\nSeparate Line\nOptional",
+   "in_list_view": 1,
+   "columns": 2,
+   "description": "Included: part of the main plant price. Separate Line: priced below the main price. Optional: quoted, not in the total."
+  },
+  {
+   "fieldname": "include_in_offer",
+   "fieldtype": "Check",
+   "label": "In Offer",
+   "default": "1",
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Describe this section in the technical offer"
+  },
+  {
+   "fieldname": "price_description",
+   "fieldtype": "Data",
+   "label": "Price Schedule Line",
+   "description": "Blank = the sub assembly's price schedule line"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-26 13:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Plant Assembly Section",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1
+}

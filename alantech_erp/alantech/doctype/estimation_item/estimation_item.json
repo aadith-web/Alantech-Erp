@@ -1,0 +1,146 @@
+{
+ "actions": [],
+ "creation": "2026-10-26 13:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section",
+  "cost_head",
+  "item_code",
+  "type_model",
+  "moc",
+  "make",
+  "column_break_head",
+  "qty",
+  "uom",
+  "cost_section",
+  "unit_cost",
+  "amount",
+  "column_break_cost",
+  "addon_pct",
+  "addon_amount",
+  "total_cost"
+ ],
+ "fields": [
+  {
+   "fieldname": "section",
+   "fieldtype": "Select",
+   "label": "Section",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "cost_head",
+   "fieldtype": "Data",
+   "label": "Item / Cost Head",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2,
+   "fetch_from": "item_code.item_name",
+   "fetch_if_empty": 1
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "type_model",
+   "fieldtype": "Data",
+   "label": "Type & Model",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "moc",
+   "fieldtype": "Data",
+   "label": "MOC"
+  },
+  {
+   "fieldname": "make",
+   "fieldtype": "Data",
+   "label": "Make / Vendor",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "column_break_head",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "label": "Qty",
+   "default": "1",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM",
+   "fetch_from": "item_code.stock_uom",
+   "fetch_if_empty": 1
+  },
+  {
+   "fieldname": "cost_section",
+   "fieldtype": "Section Break",
+   "label": "Cost"
+  },
+  {
+   "fieldname": "unit_cost",
+   "fieldtype": "Currency",
+   "label": "Unit Cost",
+   "options": "currency",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_cost",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "addon_pct",
+   "fieldtype": "Percent",
+   "label": "Transport %"
+  },
+  {
+   "fieldname": "addon_amount",
+   "fieldtype": "Currency",
+   "label": "Transport",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_cost",
+   "fieldtype": "Currency",
+   "label": "Total Cost",
+   "options": "currency",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-26 13:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Estimation Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1
+}

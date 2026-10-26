@@ -1,0 +1,56 @@
+{
+ "actions": [],
+ "creation": "2026-10-20 15:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "group_title",
+  "parameter",
+  "value",
+  "unit"
+ ],
+ "fields": [
+  {
+   "fieldname": "group_title",
+   "fieldtype": "Data",
+   "label": "Group",
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "parameter",
+   "fieldtype": "Data",
+   "label": "Parameter",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "value",
+   "fieldtype": "Data",
+   "label": "Value",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "unit",
+   "fieldtype": "Data",
+   "label": "Unit",
+   "in_list_view": 1,
+   "columns": 2
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-20 15:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Estimation Technical Data",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1
+}

@@ -1,0 +1,307 @@
+{#-
+	Technical Offer print layout, shared by
+	  Print Format "Alantech Technical Offer" (Technical Offer)
+	  Print Format "Alantech Proposal" (Quotation with a Technical Offer)
+	Expects `ctx` = get_offer_context(offer)  (alantech_erp/proposal/printing.py).
+	Detailed Proposal: cover, contents, letter, design basis, A. process items, B. scope of supply,
+	C. commercial conditions, D. pricing, bought out items. Single Page Offer: letter, items, price, terms.
+-#}
+{%- set o = ctx.offer -%}
+{#- letter head: repeated on every PDF page when Print Settings > Repeat Header and Footer is on -#}
+<div id="header-html" class="hidden-pdf">
+	{%- if letter_head and not no_letterhead %}<div class="letter-head">{{ letter_head }}</div>{% endif %}
+</div>
+<div id="footer-html" class="visible-pdf">
+	{%- if not no_letterhead and footer %}<div class="letter-head-footer">{{ footer }}</div>{% endif %}
+</div>
+
+{%- macro spec_table(t, cls="") -%}
+<table class="alt-spec {{ cls }}">
+	{%- for r in t.rows -%}
+		{%- if r.group is defined -%}
+		<tr class="alt-spec-group"><td colspan="{{ r.span }}">{{ r.group }}</td></tr>
+		{%- else -%}
+		<tr>{% for c in r.cells %}<td class="alt-c{{ loop.index }}">{{ c }}</td>{% endfor %}</tr>
+		{%- endif -%}
+	{%- endfor -%}
+</table>
+{%- endmacro -%}
+
+{%- macro tech_table(rows, cls="") -%}
+<table class="alt-spec {{ cls }}">
+	{%- set ns = namespace(group="") -%}
+	{%- for r in rows -%}
+		{%- if r.group and r.group != ns.group -%}
+			{%- set ns.group = r.group -%}
+			<tr class="alt-spec-group"><td colspan="3">{{ r.group }}</td></tr>
+		{%- endif -%}
+		<tr><td class="alt-c1">{{ r.parameter }}</td><td class="alt-c2">{{ r.value }}</td><td class="alt-c3">{{ r.unit }}</td></tr>
+	{%- endfor -%}
+</table>
+{%- endmacro -%}
+
+{%- macro component(c) -%}
+	{%- if c.is_heading -%}
+	<h4 class="alt-subhead{% if c.page_break %} alt-break{% endif %}">{{ c.title }}</h4>
+	{%- if c.description %}<div class="alt-text alt-indent">{{ c.description }}</div>{% endif -%}
+	{%- for t in c.tables %}<div class="alt-indent">{{ spec_table(t) }}</div>{% endfor -%}
+	{%- if c.notes %}<div class="alt-text alt-indent">{{ c.notes }}</div>{% endif -%}
+	{%- else -%}
+	<div class="alt-comp{% if c.page_break %} alt-break{% endif %}">
+		<table class="alt-comp-head"><tr><td class="alt-qty">{{ c.qty }}</td><td class="alt-comp-title">{{ c.title }}</td></tr></table>
+		<div class="alt-comp-body">
+			{%- if c.description %}<div class="alt-text">{{ c.description }}</div>{% endif -%}
+			{%- for t in c.tables %}{{ spec_table(t) }}{% endfor -%}
+			{%- if c.notes %}<div class="alt-text">{{ c.notes }}</div>{% endif -%}
+		</div>
+	</div>
+	{%- endif -%}
+{%- endmacro -%}
+
+{%- macro price_table() -%}
+{%- set p = ctx.pricing -%}
+<table class="alt-price">
+	<thead><tr><th class="alt-pno">{{ _("Item") }}</th><th>{{ _("Description") }}</th><th class="alt-pamt">{{ _("Price in {0}").format(p.currency) }}</th></tr></thead>
+	<tbody>
+	{%- for r in p.rows -%}
+	<tr class="alt-p-{{ r.kind }}"><td class="alt-pno">{{ r.no }}</td><td>{{ r.text }}</td><td class="alt-pamt">{{ r.amount }}</td></tr>
+	{%- endfor -%}
+	</tbody>
+</table>
+{%- if p.optional -%}
+<p class="alt-opt-head">{{ _("Optional items (not included in the total price)") }}</p>
+<table class="alt-price alt-price-opt">
+	<tbody>
+	{%- for r in p.optional -%}
+	<tr><td class="alt-pno">{{ r.no }}</td><td>{{ r.text }}</td><td class="alt-pamt">{{ r.amount }}</td></tr>
+	{%- endfor -%}
+	</tbody>
+</table>
+{%- endif -%}
+{%- endmacro -%}
+
+<style>
+	.alt-offer { font-size: 10.5pt; line-height: 1.55; color: #1f2328; }
+	.alt-offer p { margin: 0 0 6px; }
+	.alt-offer .alt-text { text-align: justify; margin: 4px 0 8px; }
+	.alt-offer .alt-text p { margin: 0 0 4px; }
+	.alt-offer h2.alt-h { font-size: 15pt; font-weight: 600; color: #1c7396; margin: 14px 0 8px; }
+	.alt-offer h3.alt-sec { font-size: 13.5pt; font-weight: 600; color: #1c7396; margin: 16px 0 6px; }
+	.alt-offer h4.alt-subhead { font-size: 12pt; font-weight: 600; margin: 14px 0 4px; }
+	.alt-offer .alt-break { page-break-before: always; }
+	.alt-offer h2, .alt-offer h3, .alt-offer h4 { page-break-after: avoid; break-after: avoid; }
+	.alt-offer .alt-fill { background: #fff3a8; border-bottom: 1px dashed #c99700; padding: 0 2px; }
+	.alt-offer table { border-collapse: collapse; }
+	.alt-spec { width: 100%; margin: 6px 0 8px; page-break-inside: auto; }
+	.alt-spec tr { page-break-inside: avoid; }
+	.alt-spec td { border: 1px solid #c4c9cc; padding: 5px 8px; vertical-align: top; }
+	.alt-spec td.alt-c1 { width: 45%; }
+	.alt-spec td.alt-c3 { width: 22%; }
+	.alt-spec tr.alt-spec-group td { font-weight: 600; background: #f3f6f7; }
+	.alt-comp { margin: 10px 0 4px; }
+	.alt-comp-head { width: 100%; margin: 0 0 2px; page-break-after: avoid; }
+	.alt-comp-head td { padding: 0; vertical-align: top; }
+	.alt-comp-head td.alt-qty { width: 60px; font-weight: 600; font-size: 11.5pt; white-space: nowrap; }
+	.alt-comp-head td.alt-comp-title { font-weight: 600; font-size: 11.5pt; }
+	.alt-comp-body, .alt-offer .alt-indent { margin-left: 60px; }
+	/* cover */
+	.alt-cover-img { text-align: center; margin: 30px 0 40px; }
+	.alt-cover-img img { max-width: 100%; max-height: 520px; }
+	.alt-cover-box { background: #5fa8d3; color: #fff; padding: 22px 26px; font-size: 17pt; font-weight: 600; line-height: 1.6; }
+	.alt-cover-box td { padding: 0 10px 0 0; vertical-align: top; color: #fff; }
+	/* contents */
+	.alt-toc { width: 100%; }
+	.alt-toc td { padding: 3px 0; }
+	.alt-toc .alt-toc-main td { font-size: 12pt; padding-top: 8px; }
+	.alt-toc .alt-toc-sub td { font-size: 9.5pt; padding-left: 22px; color: #3b4247; }
+	/* letter */
+	.alt-meta td { padding: 1px 18px 1px 0; vertical-align: top; }
+	.alt-flow { text-align: center; margin: 12px 0; }
+	.alt-flow img { max-width: 100%; max-height: 560px; }
+	.alt-guarantee { width: 75%; }
+	.alt-guarantee td.alt-c1 { width: 50%; }
+	.alt-sign { margin-top: 28px; }
+	/* pricing */
+	.alt-price { width: 100%; margin: 6px 0 10px; }
+	.alt-price th, .alt-price td { border: 1px solid #9aa3a8; padding: 6px 8px; vertical-align: top; }
+	.alt-price thead th { background: #6cbf4a; color: #fff; text-align: center; font-weight: 600; }
+	.alt-price .alt-pno { width: 52px; text-align: center; }
+	.alt-price .alt-pamt { width: 170px; text-align: right; white-space: nowrap; }
+	.alt-price tr.alt-p-heading td { font-weight: 600; }
+	.alt-price tr.alt-p-subtotal td, .alt-price tr.alt-p-total td { background: #62b0dc; font-weight: 600; }
+	.alt-opt-head { font-weight: 600; margin-top: 8px; }
+	.alt-bought { width: 100%; }
+	.alt-bought th { background: #62b0dc; color: #fff; text-align: left; padding: 6px 8px; }
+	.alt-bought td { border-bottom: 1px solid #c4c9cc; padding: 6px 8px; }
+	.alt-bought td.alt-bo-item { color: #2389b1; width: 40%; }
+	/* single page */
+	.alt-single { font-size: 9.5pt; line-height: 1.35; }
+	.alt-single .alt-price th, .alt-single .alt-price td { padding: 3px 8px; }
+	.alt-single .alt-text { margin: 2px 0 4px; }
+	.alt-single .alt-sp-head td { vertical-align: top; }
+	.alt-single h3.alt-sec { font-size: 11pt; margin: 8px 0 3px; }
+	.alt-single .alt-comp { margin: 4px 0 2px; }
+	.alt-single .alt-comp-head td.alt-qty, .alt-single .alt-comp-head td.alt-comp-title { font-size: 10.5pt; }
+	.alt-single .alt-comp-head td.alt-qty { width: 44px; }
+	.alt-single .alt-comp-body, .alt-single .alt-indent { margin-left: 44px; }
+	.alt-single .alt-spec td { padding: 2px 6px; }
+	.alt-single .alt-terms { font-size: 9pt; }
+	.alt-single .alt-subject { font-weight: 600; text-decoration: underline; margin: 8px 0; }
+</style>
+
+<div class="alt-offer{% if ctx.single_page %} alt-single{% endif %}">
+{%- if not ctx.single_page %}
+	{#- ------------------------------------------------------------ cover -#}
+	<div class="alt-cover">
+		{%- if o.cover_image %}<div class="alt-cover-img"><img src="{{ o.cover_image }}"></div>{% else %}<div style="height: 380px"></div>{% endif %}
+		<div class="alt-cover-box">
+			<table>
+				<tr><td>{{ _("Client Name") }}</td><td>: {{ ctx.customer | upper }}</td></tr>
+				{%- if ctx.project_name %}<tr><td>{{ _("Project Name") }}</td><td>: {{ ctx.project_name }}</td></tr>{% endif %}
+				{%- if ctx.project_location %}<tr><td>{{ _("Project Location") }}</td><td>: {{ ctx.project_location }}</td></tr>{% endif %}
+				<tr><td>{{ _("Offer No") }}</td><td>: {{ ctx.offer_no }}</td></tr>
+			</table>
+		</div>
+	</div>
+
+	{#- ------------------------------------------------------------ contents -#}
+	<div class="alt-break">
+		<h2 class="alt-h" style="color:#1f2328; font-weight: 400; font-size: 18pt">{{ _("Table of contents") }}</h2>
+		<table class="alt-toc">
+			{%- if ctx.project_data %}<tr class="alt-toc-main"><td>{{ _("Project-data") }}</td></tr>{% endif %}
+			{%- if ctx.water_analysis %}<tr class="alt-toc-main"><td>{{ _("Raw water analysis") }}</td></tr>{% endif %}
+			<tr class="alt-toc-main"><td>A. {{ _("Process Items") }}</td></tr>
+			{%- for s in ctx.sections %}
+			<tr class="alt-toc-main"><td>&nbsp;&nbsp;&nbsp;{{ s.no }}. {{ s.title }}</td></tr>
+				{%- for c in s.components if not c.is_heading %}
+				<tr class="alt-toc-sub"><td>{{ c.qty }} {{ c.title }}</td></tr>
+				{%- endfor %}
+			{%- endfor %}
+			{%- if ctx.scope_of_supply %}<tr class="alt-toc-main"><td>B. {{ _("Scope of supply") }}</td></tr>{% endif %}
+			{%- if ctx.commercial_terms %}<tr class="alt-toc-main"><td>C. {{ _("Commercial conditions") }}</td></tr>{% endif %}
+			{%- if ctx.pricing.rows %}<tr class="alt-toc-main"><td>D. {{ _("Pricing") }}</td></tr>{% endif %}
+			{%- if ctx.bought_out_items %}<tr class="alt-toc-main"><td>{{ _("Standard Bought out items") }}</td></tr>{% endif %}
+		</table>
+	</div>
+
+	{#- ------------------------------------------------------------ letter -#}
+	<div class="alt-break">
+		<p>{{ ctx.date }}{% if o.place %}<br>{{ o.place }}{% endif %}</p>
+		<table class="alt-meta" style="margin: 14px 0">
+			{%- if ctx.kind_attn %}<tr><td>{{ _("Kind Attn") }}</td><td>: {{ ctx.kind_attn }}</td></tr>{% endif %}
+			<tr><td>{% if not ctx.kind_attn %}{{ _("To") }}{% endif %}</td><td>: {{ ctx.customer | upper }}</td></tr>
+			<tr><td>{{ _("Our Ref") }}</td><td>: {{ ctx.offer_no }}</td></tr>
+			{%- if ctx.your_ref %}<tr><td>{{ _("Your Ref. No") }}</td><td>: {{ ctx.your_ref }}</td></tr>{% endif %}
+			{%- if ctx.subject %}<tr><td>{{ _("Sub") }}</td><td>: {{ ctx.subject }}</td></tr>{% endif %}
+		</table>
+		<p>{{ _("Dear Sirs,") }}</p>
+		{%- if ctx.intro_text %}<div class="alt-text">{{ ctx.intro_text }}</div>{% endif %}
+		{%- if o.flow_diagram %}<div class="alt-flow"><img src="{{ o.flow_diagram }}"></div>{% endif %}
+		{%- if ctx.guarantees %}
+		<p style="margin-top: 14px"><b>{{ _("Project Guarantees:") }}</b></p>
+		{{ tech_table(ctx.guarantees, "alt-guarantee") }}
+		{%- endif %}
+		<div class="alt-sign">
+			<p>{{ _("Sincerely") }}</p><br>
+			<p>{{ o.signatory_name or "" }}{% if o.signatory_contact %}<br>{{ o.signatory_contact }}{% endif %}</p>
+		</div>
+	</div>
+
+	{#- ------------------------------------------------------------ design basis -#}
+	{%- if ctx.project_data %}
+	<div class="alt-break">
+		<h2 class="alt-h">{{ _("Project-data") }}</h2>
+		{{ tech_table(ctx.project_data) }}
+	</div>
+	{%- endif %}
+	{%- if ctx.water_analysis %}
+	<div class="alt-break">
+		<h2 class="alt-h">{{ _("Raw water analysis") }}</h2>
+		{%- if ctx.water_analysis_intro %}<div class="alt-text">{{ ctx.water_analysis_intro }}</div>{% endif %}
+		{{ tech_table(ctx.water_analysis) }}
+		{%- if ctx.water_analysis_remarks %}<div class="alt-text"><b>{{ _("Important remark:") }}</b>{{ ctx.water_analysis_remarks }}</div>{% endif %}
+	</div>
+	{%- endif %}
+
+	{#- ------------------------------------------------------------ A. process items -#}
+	<div class="alt-break">
+		<h2 class="alt-h">A. {{ _("Process Items") }}</h2>
+		{%- for s in ctx.sections %}
+		<h3 class="alt-sec{% if s.page_break and not loop.first %} alt-break{% endif %}">{{ s.no }}. {{ s.title }}</h3>
+		{%- if s.description %}<div class="alt-text">{{ s.description }}</div>{% endif %}
+		{%- for t in s.tables %}{{ spec_table(t) }}{% endfor %}
+		{%- if s.notes %}<div class="alt-text">{{ s.notes }}</div>{% endif %}
+		{%- for c in s.components %}{{ component(c) }}{% endfor %}
+		{%- endfor %}
+	</div>
+
+	{#- ------------------------------------------------------------ B. C. terms -#}
+	{%- if ctx.scope_of_supply %}
+	<h2 class="alt-h">B. {{ _("Scope of supply") }}</h2>
+	<div class="alt-text">{{ ctx.scope_of_supply }}</div>
+	{%- endif %}
+	{%- if ctx.commercial_terms or ctx.bank_details %}
+	<h2 class="alt-h">C. {{ _("Commercial conditions") }}</h2>
+	<div class="alt-text">{{ ctx.commercial_terms }}</div>
+	{%- if ctx.bank_details %}<h4 class="alt-subhead">{{ _("Bank Details:") }}</h4><div class="alt-text" style="margin-left: 40px">{{ ctx.bank_details }}</div>{% endif %}
+	{%- endif %}
+
+	{#- ------------------------------------------------------------ D. pricing -#}
+	{%- if ctx.pricing.rows %}
+	<div class="alt-break">
+		<h2 class="alt-h">D. {{ _("Pricing") }}</h2>
+		{{ price_table() }}
+		{%- if ctx.price_notes %}<div class="alt-text"><b>{{ _("Note :") }}</b>{{ ctx.price_notes }}</div>{% endif %}
+	</div>
+	{%- endif %}
+	{%- if ctx.bought_out_items %}
+	<h2 class="alt-h">{{ _("Standard Bought out items") }}</h2>
+	<table class="alt-bought">
+		<tr><th>{{ _("Items") }}</th><th>{{ _("Manufacturer") }}</th></tr>
+		{%- for r in ctx.bought_out_items %}<tr><td class="alt-bo-item">{{ r.item_group }}</td><td>{{ r.manufacturer }}</td></tr>{% endfor %}
+	</table>
+	{%- endif %}
+
+{%- else %}
+	{#- ============================================================ single page offer -#}
+	<table class="alt-sp-head" style="width: 100%">
+		<tr>
+			<td style="width: 60%">
+				{{ _("To") }},<br><b>{{ ctx.customer }}</b>
+				{%- if ctx.kind_attn %}<br>{{ _("Kind Attn") }}: {{ ctx.kind_attn }}{% endif %}
+				{%- if ctx.project_location %}<br>{{ ctx.project_location }}{% endif %}
+			</td>
+			<td style="text-align: right">
+				{{ _("Date") }}: {{ ctx.date }}<br>
+				{{ _("Ref") }}: {{ ctx.offer_no }}
+				{%- if ctx.your_ref %}<br>{{ _("Your Ref") }}: {{ ctx.your_ref }}{% endif %}
+				{%- if ctx.valid_till %}<br>{{ _("Valid till") }}: {{ ctx.valid_till }}{% endif %}
+			</td>
+		</tr>
+	</table>
+	{%- if ctx.subject %}<p class="alt-subject">{{ _("Sub") }}: {{ ctx.subject }}</p>{% endif %}
+	<p>{{ _("Dear Sir,") }}</p>
+	{%- if ctx.intro_text %}<div class="alt-text">{{ ctx.intro_text }}</div>{% endif %}
+	{%- if ctx.guarantees %}{{ tech_table(ctx.guarantees, "alt-guarantee") }}{% endif %}
+	{%- if ctx.project_data %}{{ tech_table(ctx.project_data) }}{% endif %}
+	{%- for s in ctx.sections %}
+	<h3 class="alt-sec">{{ s.no }}. {{ s.title }}</h3>
+	{%- if s.description %}<div class="alt-text">{{ s.description }}</div>{% endif %}
+	{%- for t in s.tables %}{{ spec_table(t) }}{% endfor %}
+	{%- if s.notes %}<div class="alt-text">{{ s.notes }}</div>{% endif %}
+	{%- for c in s.components %}{{ component(c) }}{% endfor %}
+	{%- endfor %}
+	{%- if ctx.pricing.rows %}
+	<h3 class="alt-sec">{{ _("Price") }}</h3>
+	{{ price_table() }}
+	{%- if ctx.price_notes %}<div class="alt-text alt-terms">{{ ctx.price_notes }}</div>{% endif %}
+	{%- endif %}
+	{%- if ctx.scope_of_supply %}<h3 class="alt-sec">{{ _("Scope of supply") }}</h3><div class="alt-text alt-terms">{{ ctx.scope_of_supply }}</div>{% endif %}
+	{%- if ctx.commercial_terms %}<h3 class="alt-sec">{{ _("Terms and conditions") }}</h3><div class="alt-text alt-terms">{{ ctx.commercial_terms }}</div>{% endif %}
+	{%- if ctx.bank_details %}<div class="alt-terms"><b>{{ _("Bank Details") }}:</b><br>{{ ctx.bank_details }}</div>{% endif %}
+	<div class="alt-sign" style="margin-top: 14px">
+		<p>{{ _("Sincerely") }}</p>
+		<p>{{ o.signatory_name or "" }}{% if o.signatory_contact %}<br>{{ o.signatory_contact }}{% endif %}</p>
+	</div>
+{%- endif %}
+</div>

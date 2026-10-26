@@ -1,0 +1,538 @@
+{
+ "actions": [],
+ "creation": "2026-10-26 13:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "offer_section",
+  "naming_series",
+  "offer_no",
+  "offer_format",
+  "plant_assembly",
+  "column_break_offer",
+  "offer_date",
+  "valid_till",
+  "revision",
+  "estimation",
+  "amended_from",
+  "client_section",
+  "opportunity",
+  "customer_name",
+  "kind_attn",
+  "your_ref",
+  "column_break_client",
+  "project_name",
+  "project_location",
+  "subject",
+  "signature_section",
+  "company",
+  "currency",
+  "letter_head",
+  "column_break_signature",
+  "place",
+  "signatory_name",
+  "signatory_contact",
+  "images_section",
+  "cover_image",
+  "column_break_images",
+  "flow_diagram",
+  "letter_tab",
+  "intro_text",
+  "guarantees",
+  "design_tab",
+  "project_data",
+  "water_analysis_intro",
+  "water_analysis",
+  "water_analysis_remarks",
+  "process_tab",
+  "sections",
+  "components",
+  "commercial_tab",
+  "scope_of_supply_terms",
+  "scope_of_supply",
+  "commercial_terms_template",
+  "commercial_terms",
+  "bank_details",
+  "pricing_tab",
+  "price_heading",
+  "show_line_prices",
+  "column_break_pricing_head",
+  "main_price_label",
+  "total_label",
+  "price_lines_section",
+  "price_lines",
+  "price_totals_section",
+  "main_total",
+  "separate_total",
+  "column_break_price_totals",
+  "optional_total",
+  "grand_total",
+  "price_notes_section",
+  "price_notes",
+  "bought_out_items"
+ ],
+ "fields": [
+  {
+   "fieldname": "offer_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "AIS/.YY..MM..DD./IN/.##\nAIS/.YY..MM..DD./EX/.##",
+   "default": "AIS/.YY..MM..DD./IN/.##",
+   "reqd": 1,
+   "no_copy": 1,
+   "print_hide": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "offer_no",
+   "fieldtype": "Data",
+   "label": "Offer No.",
+   "read_only": 1,
+   "no_copy": 1,
+   "in_list_view": 1,
+   "bold": 1,
+   "description": "Printed reference: series number and revision"
+  },
+  {
+   "fieldname": "offer_format",
+   "fieldtype": "Select",
+   "label": "Offer Format",
+   "options": "Detailed Proposal\nSingle Page Offer",
+   "default": "Detailed Proposal",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "plant_assembly",
+   "fieldtype": "Link",
+   "label": "Plant Assembly",
+   "options": "Plant Assembly",
+   "description": "Loads the sections, standard text and defaults"
+  },
+  {
+   "fieldname": "column_break_offer",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "offer_date",
+   "fieldtype": "Date",
+   "label": "Offer Date",
+   "default": "Today",
+   "reqd": 1
+  },
+  {
+   "fieldname": "valid_till",
+   "fieldtype": "Date",
+   "label": "Valid Till"
+  },
+  {
+   "fieldname": "revision",
+   "fieldtype": "Int",
+   "label": "Revision",
+   "read_only": 1,
+   "no_copy": 1,
+   "default": "0"
+  },
+  {
+   "fieldname": "estimation",
+   "fieldtype": "Link",
+   "label": "Estimation",
+   "options": "Estimation",
+   "search_index": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Technical Offer",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  },
+  {
+   "fieldname": "client_section",
+   "fieldtype": "Section Break",
+   "label": "Client"
+  },
+  {
+   "fieldname": "opportunity",
+   "fieldtype": "Link",
+   "label": "Deal",
+   "options": "Opportunity",
+   "search_index": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Client Name",
+   "in_list_view": 1,
+   "fetch_from": "opportunity.customer_name",
+   "fetch_if_empty": 1
+  },
+  {
+   "fieldname": "kind_attn",
+   "fieldtype": "Data",
+   "label": "Kind Attn",
+   "fetch_from": "opportunity.contact_display",
+   "fetch_if_empty": 1
+  },
+  {
+   "fieldname": "your_ref",
+   "fieldtype": "Data",
+   "label": "Your Ref."
+  },
+  {
+   "fieldname": "column_break_client",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "project_name",
+   "fieldtype": "Data",
+   "label": "Project Name",
+   "description": "e.g. 160 m³/hour UPW plant"
+  },
+  {
+   "fieldname": "project_location",
+   "fieldtype": "Data",
+   "label": "Project Location"
+  },
+  {
+   "fieldname": "subject",
+   "fieldtype": "Data",
+   "label": "Subject"
+  },
+  {
+   "fieldname": "signature_section",
+   "fieldtype": "Section Break",
+   "label": "Company"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "letter_head",
+   "fieldtype": "Link",
+   "label": "Letter Head",
+   "options": "Letter Head"
+  },
+  {
+   "fieldname": "column_break_signature",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "place",
+   "fieldtype": "Data",
+   "label": "Place"
+  },
+  {
+   "fieldname": "signatory_name",
+   "fieldtype": "Data",
+   "label": "Signatory"
+  },
+  {
+   "fieldname": "signatory_contact",
+   "fieldtype": "Data",
+   "label": "Signatory Contact"
+  },
+  {
+   "fieldname": "images_section",
+   "fieldtype": "Section Break",
+   "label": "Images"
+  },
+  {
+   "fieldname": "cover_image",
+   "fieldtype": "Attach Image",
+   "label": "Cover Image"
+  },
+  {
+   "fieldname": "column_break_images",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "flow_diagram",
+   "fieldtype": "Attach Image",
+   "label": "Process Flow Diagram"
+  },
+  {
+   "fieldname": "letter_tab",
+   "fieldtype": "Tab Break",
+   "label": "Cover Letter"
+  },
+  {
+   "fieldname": "intro_text",
+   "fieldtype": "Text Editor",
+   "label": "Cover Letter Text",
+   "description": "Use [[ ]] for values to fill in per project, e.g. [[160]] m³/h."
+  },
+  {
+   "fieldname": "guarantees",
+   "fieldtype": "Table",
+   "label": "Project Guarantees",
+   "options": "Estimation Technical Data"
+  },
+  {
+   "fieldname": "design_tab",
+   "fieldtype": "Tab Break",
+   "label": "Design Basis"
+  },
+  {
+   "fieldname": "project_data",
+   "fieldtype": "Table",
+   "label": "Project Data",
+   "options": "Estimation Technical Data"
+  },
+  {
+   "fieldname": "water_analysis_intro",
+   "fieldtype": "Text Editor",
+   "label": "Raw Water Analysis - Introduction"
+  },
+  {
+   "fieldname": "water_analysis",
+   "fieldtype": "Table",
+   "label": "Raw Water Analysis",
+   "options": "Estimation Technical Data"
+  },
+  {
+   "fieldname": "water_analysis_remarks",
+   "fieldtype": "Text Editor",
+   "label": "Raw Water Analysis - Important Remark"
+  },
+  {
+   "fieldname": "process_tab",
+   "fieldtype": "Tab Break",
+   "label": "Process Items"
+  },
+  {
+   "fieldname": "sections",
+   "fieldtype": "Table",
+   "label": "Sections",
+   "options": "Technical Offer Section"
+  },
+  {
+   "fieldname": "components",
+   "fieldtype": "Table",
+   "label": "Components",
+   "options": "Offer Component"
+  },
+  {
+   "fieldname": "commercial_tab",
+   "fieldtype": "Tab Break",
+   "label": "Commercial"
+  },
+  {
+   "fieldname": "scope_of_supply_terms",
+   "fieldtype": "Link",
+   "label": "Scope of Supply Template",
+   "options": "Terms and Conditions"
+  },
+  {
+   "fieldname": "scope_of_supply",
+   "fieldtype": "Text Editor",
+   "label": "Scope of Supply"
+  },
+  {
+   "fieldname": "commercial_terms_template",
+   "fieldtype": "Link",
+   "label": "Commercial Conditions Template",
+   "options": "Terms and Conditions"
+  },
+  {
+   "fieldname": "commercial_terms",
+   "fieldtype": "Text Editor",
+   "label": "Commercial Conditions"
+  },
+  {
+   "fieldname": "bank_details",
+   "fieldtype": "Small Text",
+   "label": "Bank Details"
+  },
+  {
+   "fieldname": "pricing_tab",
+   "fieldtype": "Tab Break",
+   "label": "Pricing"
+  },
+  {
+   "fieldname": "price_heading",
+   "fieldtype": "Data",
+   "label": "Price Schedule Heading",
+   "description": "e.g. Process Items - 160 m³/hour capacity"
+  },
+  {
+   "fieldname": "show_line_prices",
+   "fieldtype": "Check",
+   "label": "Show Price of Each Line"
+  },
+  {
+   "fieldname": "column_break_pricing_head",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "main_price_label",
+   "fieldtype": "Data",
+   "label": "Main Price Label",
+   "default": "Price ex works"
+  },
+  {
+   "fieldname": "total_label",
+   "fieldtype": "Data",
+   "label": "Total Label",
+   "default": "Total price - Ex-works Cochin"
+  },
+  {
+   "fieldname": "price_lines_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "price_lines",
+   "fieldtype": "Table",
+   "label": "Price Schedule",
+   "options": "Technical Offer Price Line"
+  },
+  {
+   "fieldname": "price_totals_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "main_total",
+   "fieldtype": "Currency",
+   "label": "Main Price",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "separate_total",
+   "fieldtype": "Currency",
+   "label": "Separate Lines",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_price_totals",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "optional_total",
+   "fieldtype": "Currency",
+   "label": "Optional Items",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "grand_total",
+   "fieldtype": "Currency",
+   "label": "Total Price",
+   "options": "currency",
+   "read_only": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "price_notes_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "price_notes",
+   "fieldtype": "Text Editor",
+   "label": "Notes below Price Schedule"
+  },
+  {
+   "fieldname": "bought_out_items",
+   "fieldtype": "Table",
+   "label": "Standard Bought Out Items",
+   "options": "Offer Bought Out Item"
+  }
+ ],
+ "links": [
+  {
+   "link_doctype": "Quotation",
+   "link_fieldname": "alt_technical_offer"
+  }
+ ],
+ "modified": "2026-10-26 13:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Technical Offer",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1,
+   "create": 1,
+   "write": 1,
+   "share": 1,
+   "delete": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1,
+   "create": 1,
+   "write": 1,
+   "share": 1,
+   "delete": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Proposal Engineer",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1,
+   "create": 1,
+   "write": 1,
+   "share": 1,
+   "delete": 0,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "naming_series:",
+ "naming_rule": "By \"Naming Series\" field",
+ "is_submittable": 1,
+ "title_field": "customer_name",
+ "search_fields": "offer_no,customer_name,project_name",
+ "default_print_format": "Alantech Technical Offer",
+ "track_changes": 1
+}
