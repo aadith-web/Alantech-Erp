@@ -10,6 +10,7 @@
 	const erpnext_onload = settings.onload;
 	settings.onload = function (listview) {
 		if (erpnext_onload) erpnext_onload.call(this, listview);
+		keep_department_tree_filter(listview);
 		if (!frappe.model.can_create(DOC)) return;
 
 		listview.page.add_inner_button(__("Upload Document"), () => {
@@ -39,6 +40,20 @@
 			get_description: (doc) => __("Upload a document for {0}", [doc.employee_name || doc.name]),
 			action: (doc) => alt_upload_document(doc.name),
 		};
+	}
+
+	// Department filter must always include sub-departments ("All Departments" = everyone).
+	// Frappe switches it to an exact "=" match for good once a department filter comes from the
+	// URL or the saved list settings, after which a parent department finds nobody.
+	function keep_department_tree_filter(listview) {
+		const field = listview.page.fields_dict.department;
+		if (!field || !field.df.condition) return;
+		Object.defineProperty(field.df, "match_type", {
+			get: () => field.df.condition,
+			set: () => {},
+			configurable: true,
+		});
+		if (field.get_value()) listview.refresh();
 	}
 
 	// Ask for employee + document type, then open a pre-filled Document form

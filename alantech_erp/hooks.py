@@ -194,6 +194,8 @@ fixtures = [
 
 doc_events = {
     "Employee": {
+        "before_insert": "alantech_erp.setup.employee_user.employee_before_insert",
+        "after_insert": "alantech_erp.setup.employee_user.employee_after_insert",
         "validate": [
             "alantech_erp.org_structure.apply_designation_defaults",
             "alantech_erp.setup.employee_validation.validate_unique_employee",

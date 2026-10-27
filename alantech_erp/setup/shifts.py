@@ -20,6 +20,7 @@ from frappe.utils import getdate
 
 COMPANY = "Alantech Industries India Pvt Ltd"
 HOLIDAY_LIST_PREFIX = "Alantech Holidays"
+DEFAULT_SHIFT = "General Shift"
 
 SHIFT_BASE = {
 	"enable_auto_attendance": 0,  # attendance comes from Session Log, not HRMS auto attendance
@@ -47,6 +48,7 @@ def execute():
 		return  # fresh site before the setup wizard: the next migrate will do it
 	ensure_holiday_lists()
 	create_shift_types()
+	set_default_shift()
 
 
 # ---------------------------------------------------------------- holiday lists
@@ -92,7 +94,7 @@ def ensure_holiday_lists():
 	"""This year's and next year's lists, so next year's exists well before January."""
 	if not frappe.db.exists("Company", COMPANY):
 		return
-	this_year = getdate().year
+	this_year = datetime.date.today().year
 	for year in (this_year, this_year + 1):
 		create_year(year)
 	if not frappe.db.get_value("Company", COMPANY, "default_holiday_list"):
@@ -125,3 +127,25 @@ def create_shift_types():
 		frappe.get_doc({"doctype": "Shift Type", "name": name, "__newname": name, **values}).insert(
 			ignore_permissions=True
 		)
+
+def set_default_shift():
+	"""New employees get General Shift unless HR picks another. Create-only, like the shifts."""
+	from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+
+	if not frappe.db.exists("Shift Type", DEFAULT_SHIFT):
+		return
+	if frappe.db.exists(
+		"Property Setter", {"doc_type": "Employee", "field_name": "default_shift", "property": "default"}
+	):
+		return  # already set (or changed by HR in Customize Form): leave it
+	make_property_setter(
+		"Employee", "default_shift", "default", DEFAULT_SHIFT, "Text", validate_fields_for_doctype=False
+	)
+
+
+def fill_missing_shifts():
+	"""One-off for existing active employees without a shift."""
+	frappe.db.set_value(
+		"Employee", {"status": "Active", "default_shift": ["is", "not set"]}, "default_shift", DEFAULT_SHIFT
+	)
+	frappe.db.commit()
