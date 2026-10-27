@@ -16,6 +16,7 @@ from frappe import _
 from frappe.permissions import add_user_permission
 from frappe.utils import cint, validate_email_address
 
+from alantech_erp.setup import approvers
 from alantech_erp.setup.access import FULL_ACCESS_DESIGNATIONS, FULL_ACCESS_ROLES
 
 # who may use Employee > Create User
@@ -66,6 +67,8 @@ def create_user(employee: str, email: str | None = None, create_user_permission:
 	emp.set("user_id", user.name)
 	emp.set("create_user_permission", 1 if restrict else 0)
 	emp.save()  # also applies the designation's role profile (org_structure.sync_user_role_profile)
+	# user_id was already written by db_set above, so the save did not see it change
+	approvers.user_changed(emp, None)
 
 	# second decision by role, now that the role profile has been applied
 	if restrict and has_full_access_role(user.name):
@@ -102,21 +105,68 @@ def outgoing_email_configured():
 
 
 # ---------------------------------------------------------------------- Employee doc_events
+# Every employee with an email gets a user, whether added in the form or by Data Import, ticked
+# "Create User Automatically" or not. ERPNext's own after_insert would call its create_user, which
+# needs User create permission, so the request is taken over here and done with ours.
+
+
+def employee_email(doc):
+	return doc.get("prefered_email") or doc.get("company_email") or doc.get("personal_email")
+
+
 def employee_before_insert(doc, method=None):
-	"""'Create User Automatically': ERPNext's after_insert calls its own create_user, which needs
-	User create permission. Take the request over so after_insert below uses ours instead."""
-	if doc.get("create_user_automatically") and not doc.get("user_id"):
+	if not doc.get("user_id") and employee_email(doc):
 		doc.flags.alt_create_user = True
-		doc.create_user_automatically = 0
+		doc.create_user_automatically = 0  # keeps ERPNext's after_insert out of it
 
 
 def employee_after_insert(doc, method=None):
 	if not doc.flags.pop("alt_create_user", None):
 		return
-	create_user(
-		employee=doc.name,
-		email=doc.get("prefered_email") or doc.get("company_email") or doc.get("personal_email"),
-		create_user_permission=doc.get("create_user_permission"),
-	)
-	doc.db_set("create_user_automatically", 1, update_modified=False)
-	doc.reload()
+	if auto_create_user(doc):
+		doc.db_set("create_user_automatically", 1, update_modified=False)
+		doc.reload()
+
+
+def auto_create_user(doc):
+	"""Create and link the user, or say why not. Never fails the employee save or import row:
+	everything create_user would refuse is checked first."""
+	email = employee_email(doc)
+	reason = None
+	if not CREATOR_ROLES & set(frappe.get_roles()):
+		reason = _("only HR Managers can create users")
+	elif not validate_email_address(email):
+		reason = _("{0} is not a valid email").format(email)
+	elif frappe.db.exists("User", email):
+		linked = frappe.db.get_value("Employee", {"user_id": email, "name": ["!=", doc.name]}, "name")
+		if linked:
+			reason = _("{0} is already the user of {1}").format(email, linked)
+		else:  # a user without an employee (e.g. made before the employee): link it
+			doc.db_set("user_id", email)
+			doc.reload()
+			doc.save(ignore_permissions=True)  # role profile, approvers, user permissions
+			approvers.user_changed(doc, None)
+			return True
+	if reason:
+		frappe.msgprint(
+			_("No user created for {0}: {1}.").format(doc.employee_name or doc.name, reason),
+			indicator="orange",
+			alert=True,
+		)
+		return False
+	create_user(doc.name, email=email, create_user_permission=doc.get("create_user_permission"))
+	return True
+
+
+def create_missing_users():
+	"""One-off / after_migrate: users for existing active employees that have an email."""
+	created, skipped = [], []
+	for name in frappe.get_all(
+		"Employee", filters={"status": "Active", "user_id": ["is", "not set"]}, pluck="name", order_by="creation asc"
+	):
+		emp = frappe.get_doc("Employee", name)
+		if not employee_email(emp):
+			continue
+		(created if auto_create_user(emp) else skipped).append(f"{emp.get("employee_name")} <{employee_email(emp)}>")
+		frappe.db.commit()
+	return created, skipped

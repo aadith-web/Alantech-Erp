@@ -200,10 +200,14 @@ doc_events = {
             "alantech_erp.org_structure.apply_designation_defaults",
             "alantech_erp.setup.employee_validation.validate_unique_employee",
             "alantech_erp.setup.access.employee_validate",
+            # after apply_designation_defaults, which may fill Reports To
+            "alantech_erp.setup.approvers.employee_validate",
         ],
         "on_update": [
             "alantech_erp.org_structure.sync_user_role_profile",
             "alantech_erp.setup.access.employee_on_update",
+            "alantech_erp.setup.approvers.employee_on_update",
+            "alantech_erp.org_structure.fill_vacant_post",
         ],
     },
     "Salary Slip": {
@@ -213,6 +217,7 @@ doc_events = {
         "after_insert": "alantech_erp.alantech.doctype.session_log.builder.on_checkin",  # "On Check-out"
     },
     "Leave Application": {
+		"before_validate": "alantech_erp.setup.leave_workflow.leave_application_before_validate",
 		"validate": "alantech_erp.setup.leave_validation.validate_leave_application",
 	},
 	"Leave Allocation": {
@@ -339,4 +344,7 @@ after_migrate = [
     "alantech_erp.setup.session_log_fields.execute",
     "alantech_erp.setup.shifts.execute",
     "alantech_erp.setup.leave_fields.execute",
+    "alantech_erp.org_structure.fill_missing_reports_to",
+    "alantech_erp.setup.approvers.execute",
+    "alantech_erp.setup.leave_workflow.execute",
 ]

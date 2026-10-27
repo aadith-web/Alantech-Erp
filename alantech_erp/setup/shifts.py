@@ -49,6 +49,7 @@ def execute():
 	ensure_holiday_lists()
 	create_shift_types()
 	set_default_shift()
+	hide_unused_overtime()
 
 
 # ---------------------------------------------------------------- holiday lists
@@ -97,8 +98,29 @@ def ensure_holiday_lists():
 	this_year = datetime.date.today().year
 	for year in (this_year, this_year + 1):
 		create_year(year)
+		assign_to_company(year)
 	if not frappe.db.get_value("Company", COMPANY, "default_holiday_list"):
 		frappe.db.set_value("Company", COMPANY, "default_holiday_list", holiday_list_name(this_year))
+
+
+def assign_to_company(year):
+	"""HRMS v16 finds an employee's holidays through a Holiday List Assignment, not the Company's
+	default list; without one, leave approval fails ("No Holiday List was found")."""
+	name = holiday_list_name(year)
+	if not frappe.db.exists("Holiday List", name) or frappe.db.exists(
+		"Holiday List Assignment",
+		{"applicable_for": "Company", "assigned_to": COMPANY, "holiday_list": name, "docstatus": 1},
+	):
+		return
+	frappe.get_doc(
+		{
+			"doctype": "Holiday List Assignment",
+			"applicable_for": "Company",
+			"assigned_to": COMPANY,
+			"holiday_list": name,
+			"from_date": f"{year}-01-01",
+		}
+	).submit()
 
 
 def add_year(year):
@@ -141,6 +163,40 @@ def set_default_shift():
 	make_property_setter(
 		"Employee", "default_shift", "default", DEFAULT_SHIFT, "Text", validate_fields_for_doctype=False
 	)
+
+
+# ---------------------------------------------------------------- overtime
+# Overtime is paid through Overtime Log -> Salary Slip (overtime_utils.py). HRMS Overtime Slip and
+# the Overtime Type on Shift Assignment are not used. Shift Type > Allow Overtime + Overtime Type
+# stay: Session Log reads the overtime rule from there (session_log/calculation.py).
+SHIFT_MODULE = "Shift and Attendance"
+HIDDEN_SIDEBAR_ITEMS = {("Section Break", "Overtime"), ("Link", "Overtime Type"), ("Link", "Overtime Slip")}
+
+
+def hide_unused_overtime():
+	"""Create-only, like the shifts: a sidebar or field changed later by hand is left alone."""
+	from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+	from frappe.desk.doctype.custom_sidebar.custom_sidebar import (
+		_save_customization,
+		get_customization,
+		layer_arrangement,
+	)
+
+	if not frappe.db.exists(
+		"Property Setter", {"doc_type": "Shift Assignment", "field_name": "overtime_type", "property": "hidden"}
+	):
+		make_property_setter(
+			"Shift Assignment", "overtime_type", "hidden", 1, "Check", validate_fields_for_doctype=False
+		)
+
+	# site-wide layer, the same one the sidebar editor's "for everyone" saves
+	if get_customization(SHIFT_MODULE, None):
+		return
+	rows = layer_arrangement(SHIFT_MODULE, None)
+	for row in rows:
+		if (row.get("type"), row.get("label")) in HIDDEN_SIDEBAR_ITEMS:
+			row["hidden"] = 1
+	_save_customization(SHIFT_MODULE, rows, user=None)
 
 
 def fill_missing_shifts():

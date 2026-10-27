@@ -15,7 +15,8 @@ What it creates
 
 Employee hooks (wire them in hooks.py, see bottom of file)
     * On save, an employee with a designation gets the default department and,
-      if exactly one active employee holds the parent designation, the Reports To.
+      the Reports To: the active employee holding the parent designation (the first created one
+      when there are several). When nobody holds it (vacant post), the Managing Director.
     * If the employee has a linked User with no role profile yet, the designation's
       role profile is applied to that user.
 """
@@ -288,15 +289,66 @@ def apply_designation_defaults(doc, method=None):
         doc.department = dept
 
     if not doc.reports_to and parent_desig:
-        managers = frappe.get_all(
-            "Employee",
-            filters={"designation": parent_desig, "company": doc.company,
-                     "status": "Active", "name": ["!=", doc.name or ""]},
-            pluck="name",
-            limit=2,
-        )
-        if len(managers) == 1:  # several (e.g. regional sales managers): leave for the user to pick
+        managers = _active_holders(parent_desig, doc)
+        if not managers:  # parent post vacant: the Managing Director until it is filled
+            managers = _active_holders(TOP_DESIGNATION, doc)
+        if managers:  # several (e.g. two Production Managers): the first created one
             doc.reports_to = managers[0]
+
+
+TOP_DESIGNATION = "Managing Director"
+
+
+def fill_vacant_post(doc, method=None):
+    """Employee.on_update: someone now holds a post that was vacant. The employees under that post
+    who were given the Managing Director as a stand-in move to them, if they are its only holder."""
+    if not doc.designation or doc.status != "Active" or doc.designation == TOP_DESIGNATION:
+        return
+    before = doc.get_doc_before_save()
+    if before and before.designation == doc.designation and before.status == doc.status:
+        return
+    if len(_active_holders(doc.designation, frappe._dict(company=doc.company, name=""))) != 1:
+        return
+    child_desigs = frappe.get_all("Designation", filters={"alt_reports_to": doc.designation}, pluck="name")
+    md = _active_holders(TOP_DESIGNATION, doc)
+    if not child_desigs or len(md) != 1:
+        return
+    for name in frappe.get_all(
+        "Employee",
+        filters={"designation": ["in", child_desigs], "company": doc.company,
+                 "status": "Active", "reports_to": md[0], "name": ["!=", doc.name]},
+        pluck="name",
+    ):
+        emp = frappe.get_doc("Employee", name)
+        emp.reports_to = doc.name
+        emp.flags.ignore_permissions = True
+        emp.save()  # validate also moves the approvers that followed the MD (setup/approvers.py)
+
+
+def fill_missing_reports_to():
+    """after_migrate: give existing employees without a Reports To the one their designation implies.
+    Values already set are never changed."""
+    for name in frappe.get_all(
+        "Employee", filters={"status": "Active", "reports_to": ["is", "not set"],
+                             "designation": ["is", "set"]}, pluck="name"
+    ):
+        emp = frappe.get_doc("Employee", name)
+        apply_designation_defaults(emp)
+        if emp.reports_to:
+            emp.flags.ignore_permissions = True
+            emp.save()
+    frappe.db.commit()
+
+
+def _active_holders(designation, doc):
+    return frappe.get_all(
+        "Employee",
+        filters={"designation": designation, "company": doc.company,
+                 "status": "Active", "name": ["!=", doc.name or ""]},
+        pluck="name",
+        order_by="creation asc",
+        limit=2,
+    )
 
 
 def sync_user_role_profile(doc, method=None):
