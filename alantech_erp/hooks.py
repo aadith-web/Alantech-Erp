@@ -63,6 +63,7 @@ web_include_css = [
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 doctype_js = {
     "Employee": "public/js/employee.js",
+    "Lead": "public/js/lead.js",
     "Opportunity": "public/js/opportunity.js",
     "Quotation": "public/js/quotation.js",
     # live cost sheet calculation of the Estimation form
@@ -180,9 +181,20 @@ has_permission = {
 fixtures = [
     {"dt": "Custom Field", "or_filters": [
         ["fieldname", "like", "alt\\_%"],
-        ["name", "in", ["Salary Detail-custom_overtime_hours", "Salary Detail-custom_ot_type"]],
+        ["name", "in", [
+          "Salary Detail-custom_overtime_hours",
+          "Salary Detail-custom_ot_type",
+          "Event-custom_call_type",
+          "Event-custom_call_purpose",
+          "Event-custom_call_result",
+          "Event-custom_section_break_i4ir3",
+          "Event-custom_section_break_fxv5g",
+        ]],
     ]},
-    {"dt": "Property Setter", "filters": [["name", "like", "%alt\\_%"]]},
+    {"dt": "Property Setter", "or_filters": [
+        ["name", "like", "%alt\\_%"],
+        ["name", "=", "Event-main-field_order"],
+    ]},
     {"dt": "Workflow"},
     {"dt": "Workflow State"},
     {"dt": "Workflow Action Master"},
