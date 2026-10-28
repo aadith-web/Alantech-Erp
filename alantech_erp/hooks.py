@@ -67,9 +67,14 @@ doctype_js = {
     "Quotation": "public/js/quotation.js",
     # live cost sheet calculation of the Estimation form
     "Estimation": "public/js/estimation_pricing.js",
+    # approver lookup without an employee yet (Frappe v16 link validation)
+    "Shift Request": "public/js/shift_request.js",
+    # view-only Holiday List for employees
+    "Holiday List": "public/js/holiday_list.js",
 }
 doctype_list_js = {
     "Employee": "public/js/employee_list.js",
+    "Holiday List Assignment": "public/js/holiday_list_assignment_list.js",
 }
 
 # Svg Icons
@@ -152,10 +157,12 @@ jinja = {
 permission_query_conditions = {
 	"Document": "alantech_erp.alantech.doctype.document.document.get_permission_query_conditions",
 	"Session Log": "alantech_erp.alantech.doctype.session_log.session_log.get_permission_query_conditions",
+	"Holiday List": "alantech_erp.setup.shifts.holiday_list_query_conditions",
 }
 has_permission = {
 	"Document": "alantech_erp.alantech.doctype.document.document.has_permission",
 	"Session Log": "alantech_erp.alantech.doctype.session_log.session_log.has_permission",
+	"Holiday List": "alantech_erp.setup.shifts.holiday_list_has_permission",
 }
 # DocType Class
 # ---------------
@@ -202,6 +209,7 @@ doc_events = {
             "alantech_erp.setup.access.employee_validate",
             # after apply_designation_defaults, which may fill Reports To
             "alantech_erp.setup.approvers.employee_validate",
+            "alantech_erp.setup.shifts.employee_holiday_list",
         ],
         "on_update": [
             "alantech_erp.org_structure.sync_user_role_profile",
@@ -212,6 +220,12 @@ doc_events = {
     },
     "Salary Slip": {
         "validate": "alantech_erp.overtime_utils.add_overtime_components",
+    },
+    "Holiday List Assignment": {
+        "validate": "alantech_erp.setup.shifts.set_assignment_status",
+        "before_cancel": "alantech_erp.setup.shifts.set_assignment_status",
+        "on_submit": "alantech_erp.setup.shifts.sync_employee_holiday_lists",
+        "on_cancel": "alantech_erp.setup.shifts.sync_employee_holiday_lists",
     },
     "Employee Checkin": {
         "after_insert": "alantech_erp.alantech.doctype.session_log.builder.on_checkin",  # "On Check-out"
@@ -245,7 +259,10 @@ scheduler_events = {
         "alantech_erp.alantech.doctype.document.document.send_expiry_alerts",
         "alantech_erp.alantech.doctype.session_log.builder.build_yesterday_logs",  # "Daily Scheduler"
     ],
-    "monthly": ["alantech_erp.setup.shifts.ensure_holiday_lists"],
+    "monthly": [
+        "alantech_erp.setup.shifts.ensure_holiday_lists",
+        "alantech_erp.setup.shifts.sync_employee_holiday_lists",
+    ],
 }
 
 # Testing

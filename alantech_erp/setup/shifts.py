@@ -50,6 +50,10 @@ def execute():
 	create_shift_types()
 	set_default_shift()
 	hide_unused_overtime()
+	lock_employee_holiday_list()
+	sync_employee_holiday_lists()
+	allow_employees_to_read_holiday_list()
+	add_assignment_status()
 
 
 # ---------------------------------------------------------------- holiday lists
@@ -121,6 +125,149 @@ def assign_to_company(year):
 			"from_date": f"{year}-01-01",
 		}
 	).submit()
+
+
+# ---------------------------------------------------------------- holiday list on the Employee
+# HRMS v16 reads holidays only from Holiday List Assignments (here one per year, for the Company);
+# the Employee's own Holiday List field is no longer used and stayed empty. It is kept filled,
+# read-only, with the list that applies today so it can be seen on the employee: on save, when an
+# assignment is submitted or cancelled, and monthly (the 1st of January moves everyone to the new
+# year's list).
+EMPLOYEE_HOLIDAY_LIST_HELP = "Set from Holiday List Assignment (the company's list for the current year)."
+
+
+def current_holiday_list(employee, company, as_on=None, assignments=None):
+	from hrms.utils.holiday_list import get_holiday_list_assignments, resolve_holiday_list_assignment
+
+	if assignments is None:
+		assignments = get_holiday_list_assignments([employee, company])
+	found = resolve_holiday_list_assignment(
+		assignments.get(employee, []), assignments.get(company, []), getdate(as_on)
+	)
+	return found.holiday_list if found else None
+
+
+def employee_holiday_list(doc, method=None):
+	"""Employee.validate"""
+	doc.holiday_list = current_holiday_list(doc.name, doc.company)
+
+
+def sync_employee_holiday_lists(doc=None, method=None):
+	"""Monthly, after_migrate, and Holiday List Assignment on_submit / on_cancel."""
+	from hrms.utils.holiday_list import get_holiday_list_assignments
+
+	employees = frappe.get_all("Employee", fields=["name", "company", "holiday_list"])
+	companies = {e.company for e in employees}
+	assignments = get_holiday_list_assignments([e.name for e in employees] + list(companies))
+	for emp in employees:
+		holiday_list = current_holiday_list(emp.name, emp.company, assignments=assignments)
+		if emp.holiday_list != holiday_list:
+			frappe.db.set_value("Employee", emp.name, "holiday_list", holiday_list, update_modified=False)
+
+
+def lock_employee_holiday_list():
+	"""Create-only, like the shifts."""
+	from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+
+	if frappe.db.exists(
+		"Property Setter", {"doc_type": "Employee", "field_name": "holiday_list", "property": "read_only"}
+	):
+		return
+	make_property_setter("Employee", "holiday_list", "read_only", 1, "Check", validate_fields_for_doctype=False)
+	make_property_setter(
+		"Employee", "holiday_list", "description", EMPLOYEE_HOLIDAY_LIST_HELP, "Text",
+		validate_fields_for_doctype=False,
+	)
+
+
+# Employees see only their own current list (Employee > Holiday List, kept in sync above), so the
+# next year's list stays out of sight until it applies. HR (FULL_ACCESS_ROLES) sees every list.
+# hooks.py: permission_query_conditions / has_permission for "Holiday List".
+def _holiday_list_unrestricted(user):
+	from alantech_erp.setup.access import FULL_ACCESS_ROLES
+
+	return user == "Administrator" or bool(FULL_ACCESS_ROLES & set(frappe.get_roles(user)))
+
+
+def _own_holiday_lists(user):
+	return frappe.get_all(
+		"Employee", filters={"user_id": user, "holiday_list": ["is", "set"]}, pluck="holiday_list", distinct=True
+	)
+
+
+def holiday_list_query_conditions(user=None):
+	"""Filters the list view, reports and search."""
+	user = user or frappe.session.user
+	if _holiday_list_unrestricted(user):
+		return ""
+	lists = _own_holiday_lists(user)
+	if not lists:
+		return "1=0"
+	values = ", ".join(frappe.db.escape(name) for name in lists)
+	return f"`tabHoliday List`.`name` in ({values})"
+
+
+def holiday_list_has_permission(doc, ptype=None, user=None):
+	"""Checks a single record (opening by URL, API)."""
+	user = user or frappe.session.user
+	if _holiday_list_unrestricted(user):
+		return True
+	return doc.name in _own_holiday_lists(user)
+
+
+def allow_employees_to_read_holiday_list():
+	"""Employees see the holiday calendar (read only; HR keeps create / write). Create-only: a rule
+	for the Employee role changed later in Role Permissions Manager is left alone."""
+	from frappe.permissions import add_permission
+
+	if frappe.db.exists("Custom DocPerm", {"parent": "Holiday List", "role": "Employee", "permlevel": 0}):
+		return
+	add_permission("Holiday List", "Employee", 0, "read")
+
+
+# ---------------------------------------------------------------- Holiday List Assignment status
+# Draft until submitted, Active once submitted, Cancelled when cancelled (Active does not depend on
+# the date: the 2027 assignment is Active before 2027 starts). The list / form badge shows it
+# (public/js/holiday_list_assignment_list.js).
+ASSIGNMENT_STATUS = {0: "Draft", 1: "Active", 2: "Cancelled"}
+
+
+def add_assignment_status():
+	from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
+
+	create_custom_fields(
+		{
+			"Holiday List Assignment": [
+				{
+					"fieldname": "alt_status",
+					"label": "Status",
+					"fieldtype": "Select",
+					"options": "\n".join(ASSIGNMENT_STATUS.values()),
+					"default": "Draft",
+					"insert_after": "holiday_list",
+					"read_only": 1,
+					"allow_on_submit": 1,
+					"no_copy": 1,
+					"in_list_view": 1,
+					"in_standard_filter": 1,
+				}
+			]
+		},
+		update=True,
+	)
+	for docstatus, status in ASSIGNMENT_STATUS.items():
+		frappe.db.set_value(
+			"Holiday List Assignment",
+			{"docstatus": docstatus, "alt_status": ["!=", status]},
+			"alt_status",
+			status,
+			update_modified=False,
+		)
+
+
+def set_assignment_status(doc, method=None):
+	"""Holiday List Assignment.validate (save, submit) and before_cancel"""
+	doc.alt_status = ASSIGNMENT_STATUS[doc.docstatus]
 
 
 def add_year(year):
