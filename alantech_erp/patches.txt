@@ -5,3 +5,4 @@
 [post_model_sync]
 # Patches added in this section will be executed after doctypes are migrated
 alantech_erp.patches.v16.estimation_sub_assemblies
+alantech_erp.patches.v16.demo_data

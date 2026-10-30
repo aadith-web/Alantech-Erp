@@ -205,7 +205,7 @@ fixtures = [
     {"dt": "Workflow"},
     {"dt": "Workflow State"},
     {"dt": "Workflow Action Master"},
-    {"dt": "Role", "filters": [["name", "in", ["Proposal Engineer", "Design Engineer"]]]},
+    {"dt": "Role", "filters": [["name", "in", ["Proposal Engineer", "Design Engineer", "Quotation Level 2 Approver"]]]},
     {"dt": "Designation"},
     {"dt": "Department", "filters": [["name", "!=", "All Departments"]]},
     {"dt": "Document Type Master"}
@@ -228,7 +228,15 @@ doc_events = {
             "alantech_erp.setup.access.employee_on_update",
             "alantech_erp.setup.approvers.employee_on_update",
             "alantech_erp.org_structure.fill_vacant_post",
+            # alert HR when a resigning / leaving employee still holds assets
+            "alantech_erp.alantech.doctype.employee_asset_handover.exit_alerts.employee_on_update",
+            # Sales department employees get a linked Sales Person (alantech_erp.sales.sales_person)
+            "alantech_erp.sales.sales_person.employee_on_update",
         ],
+        "on_trash": "alantech_erp.sales.sales_person.employee_on_trash",
+    },
+    "Employee Separation": {
+        "after_insert": "alantech_erp.alantech.doctype.employee_asset_handover.exit_alerts.employee_separation_after_insert",
     },
     "Salary Slip": {
         "validate": "alantech_erp.overtime_utils.add_overtime_components",
@@ -255,6 +263,8 @@ doc_events = {
         "before_submit": "alantech_erp.sales.quotation.before_submit",
         "before_update_after_submit": "alantech_erp.sales.quotation.before_update_after_submit",
         "on_update_after_submit": "alantech_erp.sales.quotation.on_update_after_submit",
+        # tell the salesperson when the quotation is approved / rejected
+        "on_change": "alantech_erp.sales.quotation.on_change",
     },
     "Sales Order": {
         "validate": "alantech_erp.sales.sales_order.validate",
@@ -270,6 +280,7 @@ scheduler_events = {
     "daily": [
         "alantech_erp.alantech.doctype.document.document.send_expiry_alerts",
         "alantech_erp.alantech.doctype.session_log.builder.build_yesterday_logs",  # "Daily Scheduler"
+        "alantech_erp.alantech.doctype.employee_asset_handover.exit_alerts.send_daily_reminders",
     ],
     "monthly": [
         "alantech_erp.setup.shifts.ensure_holiday_lists",
@@ -376,4 +387,11 @@ after_migrate = [
     "alantech_erp.org_structure.fill_missing_reports_to",
     "alantech_erp.setup.approvers.execute",
     "alantech_erp.setup.leave_workflow.execute",
+    "alantech_erp.setup.asset_handover.execute",
+    # Quotation approval workflow (Sales Manager, Level 2 above the Selling Settings limit)
+    "alantech_erp.setup.sales_flow.execute",
+    # Sales Person for every active employee in the Sales department
+    "alantech_erp.sales.sales_person.execute",
+    # demo / UAT sites only (site_config "alantech_demo_data": 1): keep last
+    "alantech_erp.demo.data.after_migrate",
 ]

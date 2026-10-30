@@ -30,6 +30,7 @@ from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 CUSTOM_ROLES = [
     "Proposal Engineer",  # technical-commercial quotes, BOQ (custom doctypes come later)
     "Design Engineer",  # BOM / drawings ownership, design approvals in workflows
+    "Quotation Level 2 Approver",  # quotations above the Selling Settings limit (alantech_erp.sales)
 ]
 
 EMP = ["Employee"]
@@ -40,7 +41,7 @@ ROLE_PROFILES = {
     "ALT Managing Director": [
         "Accounts Manager", "Sales Manager", "Purchase Manager", "Stock Manager",
         "Manufacturing Manager", "Projects Manager", "HR Manager", "Quality Manager",
-        "Auditor", "Report Manager", "Analytics", *APPROVER, *EMP,
+        "Auditor", "Report Manager", "Analytics", "Quotation Level 2 Approver", *APPROVER, *EMP,
     ],
     # Finance & purchase
     "ALT Finance Manager": [
@@ -59,7 +60,7 @@ ROLE_PROFILES = {
     # Sales & marketing
     "ALT Sales Head": [
         "Sales Manager", "Sales Master Manager", "Sales User", "Projects User",
-        "Report Manager", *APPROVER, *EMP,
+        "Report Manager", "Quotation Level 2 Approver", *APPROVER, *EMP,
     ],
     "ALT Sales Manager": ["Sales Manager", "Sales User", "Leave Approver", *EMP],
     "ALT Sales Engineer": ["Sales User", *EMP],
