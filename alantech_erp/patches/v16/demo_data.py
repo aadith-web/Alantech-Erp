@@ -1,4 +1,5 @@
-"""Demo data (users, employees, HRMS / CRM masters, sales persons, customers, leads, deals).
+"""Demo data (users, employees, HRMS / CRM masters, sales persons, customers, leads, deals,
+assets and employee asset handovers).
 
 Only on demo / UAT sites: add "alantech_demo_data": 1 to the site's site_config.json (Frappe Cloud:
 Site > Site Config) before `bench migrate`. On any other site this patch does nothing, so the live

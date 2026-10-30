@@ -1,5 +1,7 @@
 """Demo data for an Alantech demo / UAT site: users, employees, HRMS and CRM masters, sales persons,
-customers, leads and deals, so every flow can be walked through as the right user.
+customers, leads and deals, company assets and employee asset handovers (issues, returns with
+inspection, a damaged return with its Asset Repair, a draft issue and a leaving employee who still
+holds an asset), so every flow can be walked through as the right user.
 
 Run (safe to re-run: every record is looked up first and only created when missing):
     bench --site <site> execute alantech_erp.demo.data.execute
@@ -15,6 +17,7 @@ Everything created here is easy to recognise:
     Users      <name>@alantech.example (the .example domain never receives mail),
                password DEMO_PASSWORD (or "alantech_demo_password" in site_config.json)
     Parties    customer / lead company names end in "(Demo)"
+    Assets     asset names end in "(Demo)"; handovers have remarks starting "(Demo) H01:" ...
 
 Users get their roles the normal way: the Employee hooks create the user and apply the
 designation's role profile (org_structure.py), and Sales employees get a Sales Person
@@ -154,6 +157,86 @@ DEALS = [
 # the RO deal (18.5 lakh) stays at Level 1, the UF deal (24.5 lakh) goes to Level 2.
 LEVEL_2_LIMIT = 2000000
 
+# ------------------------------------------------------------------- assets and asset handover
+# Locations mirror the branches, so an asset sits where the employee who uses it works.
+ASSET_ITEM_GROUP = "Fixed Assets"
+# category: words to find its Fixed Asset account in the chart of accounts (first match wins;
+# any Fixed Asset ledger is the fallback)
+ASSET_CATEGORIES = {
+	"IT Equipment": ("Electronic", "Computer", "Office Equipment"),
+	"Mobile Phones": ("Electronic", "Office Equipment"),
+	"Vehicles": ("Vehicle", "Capital Equipment"),
+	"Tools & Equipment": ("Plant", "Machiner", "Capital Equipment"),
+}
+# item code: (item name, category)
+ASSET_ITEMS = {
+	"FA-LAPTOP": ("Dell Latitude 5440 Laptop", "IT Equipment"),
+	"FA-WORKSTATION": ("HP Z2 G9 CAD Workstation", "IT Equipment"),
+	"FA-MOBILE": ("Samsung Galaxy A35 Mobile Phone", "Mobile Phones"),
+	"FA-BIKE": ("Honda Shine Motorcycle", "Vehicles"),
+	"FA-PICKUP": ("Mahindra Bolero Pickup", "Vehicles"),
+	"FA-WELDING": ("ESAB Arc Welding Machine", "Tools & Equipment"),
+	"FA-TOOLKIT": ("Bosch Cordless Power Tool Kit", "Tools & Equipment"),
+	"FA-WQ-KIT": ("Portable Water Quality Test Kit (pH / TDS / Conductivity)", "Tools & Equipment"),
+}
+# key: (item code, asset name, location, purchase amount, bought this many days ago)
+# The key goes into the asset name, so a re-run finds the asset again.
+ASSETS = {
+	"L01": ("FA-LAPTOP", "Laptop L01", HEAD_OFFICE, 78000, 540),
+	"L02": ("FA-LAPTOP", "Laptop L02", HEAD_OFFICE, 78000, 540),
+	"L03": ("FA-LAPTOP", "Laptop L03", HEAD_OFFICE, 78000, 540),
+	"L04": ("FA-LAPTOP", "Laptop L04", HEAD_OFFICE, 78000, 480),
+	"L05": ("FA-LAPTOP", "Laptop L05", HEAD_OFFICE, 78000, 480),
+	"L06": ("FA-LAPTOP", "Laptop L06", "Mookkannoor", 78000, 480),
+	"L07": ("FA-LAPTOP", "Laptop L07", HEAD_OFFICE, 82000, 120),
+	"L08": ("FA-LAPTOP", "Laptop L08", HEAD_OFFICE, 82000, 120),
+	"W01": ("FA-WORKSTATION", "CAD Workstation W01", "Mookkannoor", 185000, 500),
+	"M01": ("FA-MOBILE", "Mobile M01", HEAD_OFFICE, 30000, 420),
+	"M02": ("FA-MOBILE", "Mobile M02", HEAD_OFFICE, 30000, 420),
+	"M03": ("FA-MOBILE", "Mobile M03", HEAD_OFFICE, 30000, 420),
+	"M04": ("FA-MOBILE", "Mobile M04", HEAD_OFFICE, 30000, 420),
+	"M05": ("FA-MOBILE", "Mobile M05", HEAD_OFFICE, 30000, 420),
+	"V01": ("FA-BIKE", "Motorcycle V01 (KL-07-DM-4521)", FACTORY, 92000, 600),
+	"V02": ("FA-PICKUP", "Pickup V02 (KL-41-DM-8834)", FACTORY, 965000, 700),
+	"T01": ("FA-WELDING", "Welding Machine T01", FACTORY, 65000, 650),
+	"T02": ("FA-TOOLKIT", "Power Tool Kit T02", FACTORY, 28000, 650),
+	"T03": ("FA-TOOLKIT", "Power Tool Kit T03", FACTORY, 28000, 650),
+	"T04": ("FA-TOOLKIT", "Power Tool Kit T04", FACTORY, 28000, 300),
+	"K01": ("FA-WQ-KIT", "Water Test Kit K01", HEAD_OFFICE, 42000, 400),
+	"K02": ("FA-WQ-KIT", "Water Test Kit K02", FACTORY, 42000, 400),
+}
+# Handovers in date order (each one must be later than the asset's last movement).
+# key: (type, employee no., days ago, {asset key: None | "Good" | damage description},
+#       return-to location (Receipt), submit)
+# A Receipt with conditions is inspected; a damaged asset gets an Asset Repair (Pending).
+# Left free for a live demo: L08 and V02 (never issued).
+HANDOVERS = {
+	"H01": ("Issue", "001", 300, {"L01": None, "M01": None}, None, 1),
+	"H02": ("Issue", "002", 300, {"L02": None}, None, 1),
+	"H03": ("Issue", "006", 280, {"L03": None, "M02": None}, None, 1),
+	"H04": ("Issue", "008", 250, {"L04": None, "M03": None, "K01": None}, None, 1),
+	"H05": ("Issue", "009", 250, {"L05": None, "M04": None}, None, 1),
+	"H06": ("Issue", "013", 240, {"W01": None}, None, 1),
+	"H07": ("Issue", "014", 240, {"L06": None}, None, 1),
+	"H08": ("Issue", "018", 200, {"T01": None}, None, 1),
+	"H09": ("Issue", "017", 200, {"T02": None}, None, 1),
+	"H10": ("Issue", "020", 180, {"V01": None, "M05": None, "K02": None, "T03": None}, None, 1),
+	"H11": ("Issue", "019", 150, {"T04": None}, None, 1),
+	# the Thevara test kit comes back in good condition and goes to Puliyanam
+	"H12": ("Receipt", "008", 60, {"K01": "Good"}, "Thevara", 1),
+	"H13": ("Issue", "009", 55, {"K01": None}, None, 1),
+	# the service engineer returns a damaged tool kit (Asset Repair) and a good phone
+	"H14": ("Receipt", "020", 30, {
+		"T03": "Drill chuck is cracked and the second battery does not hold charge.",
+		"M05": "Good",
+	}, FACTORY, 1),
+	# waiting for HR: a new laptop for the proposal engineer, saved but not submitted
+	"H15": ("Issue", "010", 0, {"L07": None}, None, 0),
+}
+# The store keeper (T04 above) has resigned and leaves in a few days: Employee Asset Holdings
+# (Leaving Only) and the exit reminders show the kit he still has to return.
+LEAVING_EMPLOYEE = ("019", 25, 5)  # (employee no., resigned this many days ago, relieved in days)
+
 
 # ======================================================================================= runner
 def execute(company=None, run_setup=None):
@@ -183,6 +266,10 @@ def execute(company=None, run_setup=None):
 		("Leads", lambda: _leads()),
 		("Deals (Opportunities)", lambda: _deals(company)),
 		("Quotation approval limit", lambda: _selling_settings()),
+		("Asset masters (locations, categories, items)", lambda: _asset_masters(company)),
+		("Assets", lambda: _assets(company)),
+		("Employee asset handovers", lambda: _asset_handovers(company)),
+		("Leaving employee with assets", lambda: _leaving_employee(company)),
 	]
 	for label, fn in steps:
 		report.append(_step(label, fn))
@@ -744,3 +831,210 @@ def _selling_settings():
 		return "kept existing limit"
 	frappe.db.set_single_value("Selling Settings", LEVEL_2_LIMIT_FIELD, LEVEL_2_LIMIT)
 	return f"Level 2 above {LEVEL_2_LIMIT:,}"
+
+
+# ================================================================== assets and asset handover
+def _asset_name(key):
+	return f"{ASSETS[key][1]} {DEMO_TAG}"
+
+
+def _asset_masters(company):
+	if not frappe.db.exists("DocType", "Asset"):
+		return "skipped (ERPNext Assets not installed)"
+
+	for branch in BRANCHES:
+		_ensure("Location", branch, name_field="location_name")
+
+	ledgers = frappe.get_all(
+		"Account",
+		filters={"company": company, "account_type": "Fixed Asset", "is_group": 0, "disabled": 0},
+		fields=["name", "account_name"],
+		order_by="lft asc",
+	)
+	if not ledgers:
+		return "skipped (no Fixed Asset ledger in the chart of accounts)"
+	accumulated = frappe.db.get_value(
+		"Account", {"company": company, "account_type": "Accumulated Depreciation", "is_group": 0}, "name")
+	expense = frappe.db.get_value(
+		"Account", {"company": company, "account_type": "Depreciation", "is_group": 0}, "name")
+
+	for category, hints in ASSET_CATEGORIES.items():
+		if frappe.db.exists("Asset Category", category):
+			continue
+		ledger = next(
+			(a.name for hint in hints for a in ledgers if hint.lower() in a.account_name.lower()),
+			ledgers[0].name,
+		)
+		frappe.get_doc(
+			{
+				"doctype": "Asset Category",
+				"asset_category_name": category,
+				"accounts": [
+					{
+						"company_name": company,
+						"fixed_asset_account": ledger,
+						"accumulated_depreciation_account": accumulated,
+						"depreciation_expense_account": expense,
+					}
+				],
+			}
+		).insert(ignore_permissions=True)
+
+	_ensure("Item Group", ASSET_ITEM_GROUP,
+	        {"parent_item_group": get_root_of("Item Group"), "is_group": 0}, "item_group_name")
+	for code, (item_name, category) in ASSET_ITEMS.items():
+		if frappe.db.exists("Item", code):
+			continue
+		frappe.get_doc(
+			{
+				"doctype": "Item",
+				"item_code": code,
+				"item_name": item_name,
+				"item_group": ASSET_ITEM_GROUP,
+				"stock_uom": "Nos",
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"asset_category": category,
+				"is_sales_item": 0,
+				"is_purchase_item": 1,
+				"description": item_name,
+			}
+		).insert(ignore_permissions=True)
+
+
+def _existing_asset_values():
+	"""Assets already owned (no Purchase Receipt / Invoice). v16 has an Asset Type select,
+	older versions an Is Existing Asset check."""
+	meta = frappe.get_meta("Asset")
+	values = {}
+	if meta.has_field("asset_type"):
+		options = (meta.get_field("asset_type").options or "").split("\n")
+		existing = next((o for o in options if "Existing" in o), None)
+		if existing:
+			values["asset_type"] = existing
+	if meta.has_field("is_existing_asset"):
+		values["is_existing_asset"] = 1
+	return values
+
+
+def _assets(company):
+	if not frappe.db.exists("DocType", "Asset"):
+		return "skipped (ERPNext Assets not installed)"
+	existing = _existing_asset_values()
+	amount_fields = [f for f in ("net_purchase_amount", "gross_purchase_amount", "purchase_amount")
+	                 if _has_field("Asset", f)]
+	created, failed = 0, []
+	for key, (item_code, _name, location, amount, days_ago) in ASSETS.items():
+		asset_name = _asset_name(key)
+		if frappe.db.exists("Asset", {"asset_name": asset_name, "company": company, "docstatus": ["<", 2]}):
+			continue
+		if not (frappe.db.get_value("Item", item_code, "is_fixed_asset") and frappe.db.exists("Location", location)):
+			failed.append(key)
+			continue
+		bought = add_days(today(), -days_ago)
+		asset = frappe.get_doc(
+			{
+				"doctype": "Asset",
+				"company": company,
+				"item_code": item_code,
+				"asset_name": asset_name,
+				"asset_category": frappe.db.get_value("Item", item_code, "asset_category"),
+				"location": location,
+				"asset_owner": "Company",
+				"purchase_date": bought,
+				"available_for_use_date": bought,
+				"calculate_depreciation": 0,
+				**existing,
+				**{f: amount for f in amount_fields},
+			}
+		)
+		savepoint = f"alt_demo_asset_{key.lower()}"
+		frappe.db.savepoint(savepoint)
+		try:
+			asset.insert(ignore_permissions=True)
+			asset.submit()   # ERPNext makes the first Asset Movement (Receipt to the location)
+			created += 1
+		except Exception:
+			frappe.db.rollback(save_point=savepoint)
+			frappe.log_error(title=f"Alantech demo data: Asset {key}")
+			failed.append(key)
+	return f"{created} created" + (f", failed: {', '.join(failed)} (see Error Log)" if failed else "")
+
+
+def _asset_handovers(company):
+	if not frappe.db.exists("DocType", "Asset"):
+		return "skipped (ERPNext Assets not installed)"
+	employees = _by_number(company)
+	assets = {}
+	for key in ASSETS:
+		name = frappe.db.get_value("Asset", {"asset_name": _asset_name(key), "company": company, "docstatus": 1}, "name")
+		if name:
+			assets[key] = name
+	hr_manager = _user_of(company, "002")
+	hr_executive = _user_of(company, "003")
+
+	created, failed = 0, []
+	for key, (ttype, number, days_ago, rows, location, submit) in HANDOVERS.items():
+		tag = f"{DEMO_TAG} {key}:"
+		if frappe.db.exists("Employee Asset Handover", {"remarks": ["like", f"{tag}%"], "docstatus": ["<", 2]}):
+			continue
+		emp = employees.get(EMP_PREFIX + number)
+		if not emp or any(k not in assets for k in rows):
+			failed.append(key)
+			continue
+		emp_info = frappe.db.get_value("Employee", emp.name, ["employee_name", "department"], as_dict=True)
+		on = add_days(today(), -days_ago)
+		inspected = ttype == "Receipt" and any(rows.values())
+		names = ", ".join(ASSETS[k][1] for k in rows)
+		doc = frappe.get_doc(
+			{
+				"doctype": "Employee Asset Handover",
+				"transaction_type": ttype,
+				"transaction_date": f"{on} 10:30:00",
+				"employee": emp.name,
+				"employee_name": emp_info.employee_name,
+				"department": emp_info.department,
+				"company": company,
+				"location": location if ttype == "Receipt" else None,
+				"inspection_required": 1 if inspected else 0,
+				"inspected_by": hr_manager if inspected else None,
+				"inspection_date": on if inspected else None,
+				"inspection_remarks": "Checked at return against the issue list." if inspected else None,
+				"remarks": f"{tag} {'Issued' if ttype == 'Issue' else 'Returned'}: {names}",
+			}
+		)
+		for asset_key, condition in rows.items():
+			row = {"asset": assets[asset_key]}
+			if inspected and condition:
+				row["condition"] = "Good" if condition == "Good" else "Damaged"
+				if condition != "Good":
+					row["issue_description"] = condition
+			doc.append("items", row)
+
+		savepoint = f"alt_demo_handover_{key.lower()}"
+		frappe.db.savepoint(savepoint)
+		try:
+			doc.insert(ignore_permissions=True)
+			if submit:
+				doc.submit()   # Asset Movement, and Asset Repair for the damaged return
+			_set_owner(doc, hr_executive)
+			created += 1
+		except Exception:
+			frappe.db.rollback(save_point=savepoint)
+			frappe.log_error(title=f"Alantech demo data: Employee Asset Handover {key}")
+			failed.append(key)
+	return f"{created} created" + (f", failed: {', '.join(failed)} (see Error Log)" if failed else "")
+
+
+def _leaving_employee(company):
+	number, resigned_days_ago, relieved_in = LEAVING_EMPLOYEE
+	emp = _by_number(company).get(EMP_PREFIX + number)
+	if not emp:
+		return "skipped (employee missing)"
+	doc = frappe.get_doc("Employee", emp.name)
+	if doc.relieving_date or doc.resignation_letter_date:
+		return "already set"
+	doc.resignation_letter_date = add_days(today(), -resigned_days_ago)
+	doc.relieving_date = add_days(today(), relieved_in)
+	doc.save(ignore_permissions=True)   # the exit alert tells HR which assets are still with him
+	return f"{doc.employee_name} relieved on {doc.relieving_date}"
