@@ -72,6 +72,10 @@ doctype_js = {
     # view-only Holiday List for employees
     "Holiday List": "public/js/holiday_list.js",
 }
+extend_doctype_class = {
+    # "Create User Automatically" without an email: no user, no error (setup/employee_user.py)
+    "Employee": "alantech_erp.setup.employee_user.AlantechEmployee",
+}
 doctype_list_js = {
     "Employee": "public/js/employee_list.js",
     "Holiday List Assignment": "public/js/holiday_list_assignment_list.js",
@@ -201,7 +205,11 @@ fixtures = [
 
 doc_events = {
     "Employee": {
-        "before_insert": "alantech_erp.setup.employee_user.employee_before_insert",
+        "before_insert": [
+            # blank Employee Number (form or Data Import) -> next E### number
+            "alantech_erp.setup.employee_validation.set_employee_number",
+            "alantech_erp.setup.employee_user.employee_before_insert",
+        ],
         "after_insert": "alantech_erp.setup.employee_user.employee_after_insert",
         "validate": [
             "alantech_erp.org_structure.apply_designation_defaults",
@@ -216,7 +224,11 @@ doc_events = {
             "alantech_erp.setup.access.employee_on_update",
             "alantech_erp.setup.approvers.employee_on_update",
             "alantech_erp.org_structure.fill_vacant_post",
+            "alantech_erp.setup.employee_fields.sync_user_employee_number",
         ],
+    },
+    "HR Settings": {
+        "on_update": "alantech_erp.setup.employee_fields.show_employee_number_in_list",
     },
     "Salary Slip": {
         "validate": "alantech_erp.overtime_utils.add_overtime_components",

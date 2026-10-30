@@ -34,3 +34,39 @@ def validate_unique_employee(doc, method=None):
             frappe.DuplicateEntryError,
             title=_("Duplicate Employee"),
         )
+
+
+# Employee Numbers run E001, E002, ... E132; a new employee without one gets the next.
+EMPLOYEE_NUMBER_PREFIX = "E"
+EMPLOYEE_NUMBER_DIGITS = 3
+
+
+def set_employee_number(doc, method=None):
+    """Employee.before_insert: fill a blank Employee Number with the next E### number."""
+    if (doc.employee_number or "").strip():
+        return
+    doc.employee_number = next_employee_number()
+
+
+def next_employee_number():
+    """Highest E<digits> Employee Number + 1. Rows inserted earlier in the same Data Import
+    are in the same transaction, so each row sees the one before it."""
+    last = frappe.db.sql(
+        """select max(cast(substring(employee_number, %(start)s) as unsigned))
+        from `tabEmployee` where employee_number regexp %(pattern)s""",
+        {"start": len(EMPLOYEE_NUMBER_PREFIX) + 1, "pattern": f"^{EMPLOYEE_NUMBER_PREFIX}[0-9]+$"},
+    )[0][0]
+    return f"{EMPLOYEE_NUMBER_PREFIX}{(last or 0) + 1:0{EMPLOYEE_NUMBER_DIGITS}d}"
+
+
+def fill_missing_employee_numbers():
+    """One-off: numbers for existing employees without one, oldest first."""
+    filled = []
+    for name in frappe.get_all(
+        "Employee", filters={"employee_number": ["is", "not set"]}, pluck="name", order_by="creation asc"
+    ):
+        number = next_employee_number()
+        frappe.db.set_value("Employee", name, "employee_number", number, update_modified=False)
+        filled.append(f"{name}: {number}")
+    frappe.db.commit()
+    return filled
