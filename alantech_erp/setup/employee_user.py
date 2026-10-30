@@ -57,6 +57,8 @@ def create_user(employee: str, email: str | None = None, create_user_permission:
 			"send_welcome_email": 1 if outgoing_email_configured() else 0,
 		}
 	)
+	# welcome email through the Email Queue: a mail server that is down must not fail the save
+	user.flags.delay_emails = True
 	emp.db_set("user_id", email)
 	user.append("roles", {"role": "Employee"})
 	user.insert(ignore_permissions=True)  # the one real difference from ERPNext
@@ -105,9 +107,18 @@ def outgoing_email_configured():
 
 
 # ---------------------------------------------------------------------- Employee doc_events
-# Every employee with an email gets a user, whether added in the form or by Data Import, ticked
-# "Create User Automatically" or not. ERPNext's own after_insert would call its create_user, which
-# needs User create permission, so the request is taken over here and done with ours.
+# "Create User Automatically" is ticked by default (employee_fields.py), in the form and in Data
+# Import rows without that column; untick it to add the employee without a user. ERPNext's own
+# after_insert would call its create_user, which needs User create permission, so the request is
+# taken over here and done with ours.
+
+
+class AlantechEmployee:
+	"""extend_doctype_class: ticked without an email adds the employee without a user (with a
+	message) instead of ERPNext's error, as the box is now ticked by default."""
+
+	def validate_auto_user_creation(self):
+		pass
 
 
 def employee_email(doc):
@@ -115,9 +126,17 @@ def employee_email(doc):
 
 
 def employee_before_insert(doc, method=None):
-	if not doc.get("user_id") and employee_email(doc):
+	if not cint(doc.get("create_user_automatically")) or doc.get("user_id"):
+		return
+	doc.create_user_automatically = 0  # keeps ERPNext's after_insert out of it
+	if employee_email(doc):
 		doc.flags.alt_create_user = True
-		doc.create_user_automatically = 0  # keeps ERPNext's after_insert out of it
+	else:
+		frappe.msgprint(
+			_("No user created for {0}: no email.").format(doc.employee_name or doc.first_name),
+			indicator="orange",
+			alert=True,
+		)
 
 
 def employee_after_insert(doc, method=None):
