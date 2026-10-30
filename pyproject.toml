@@ -9,6 +9,8 @@ readme = "README.md"
 dynamic = ["version"]
 dependencies = [
     # "frappe~=16.0.0" # Installed and managed by bench.
+    # Aadhaar (Verhoeff) and Emirates ID (Luhn) check digits, alantech/doctype/document/document_number.py
+    "python-stdnum>=2.0",
 ]
 
 [build-system]

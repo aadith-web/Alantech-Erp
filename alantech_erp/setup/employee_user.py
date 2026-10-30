@@ -132,19 +132,78 @@ def employee_before_insert(doc, method=None):
 	if employee_email(doc):
 		doc.flags.alt_create_user = True
 	else:
-		frappe.msgprint(
-			_("No user created for {0}: no email.").format(doc.employee_name or doc.first_name),
-			indicator="orange",
-			alert=True,
-		)
+		user_not_created(doc, _("no email"))
 
 
 def employee_after_insert(doc, method=None):
 	if not doc.flags.pop("alt_create_user", None):
 		return
+	start = len(frappe.local.message_log)
 	if auto_create_user(doc):
 		doc.db_set("create_user_automatically", 1, update_modified=False)
 		doc.reload()
+		if frappe.flags.in_import:
+			# one "Welcome email sent" per row would pile up; the import summary says it once
+			welcome = _("Welcome email sent")
+			added = frappe.local.message_log[start:]
+			del frappe.local.message_log[start:]
+			frappe.local.message_log.extend(m for m in added if m.get("message") != welcome)
+			add_import_note(
+				doc,
+				user=doc.user_id,
+				welcome_email=any(m.get("message") == welcome for m in added),
+			)
+
+
+def user_not_created(doc, reason):
+	"""In the form: an alert now. In Data Import: a line in the summary shown once all rows are in."""
+	if frappe.flags.in_import:
+		add_import_note(doc, reason=reason)
+		return
+	frappe.msgprint(
+		_("No user created for {0}: {1}.").format(doc.employee_name or doc.first_name or doc.name, reason),
+		indicator="orange",
+		alert=True,
+	)
+
+
+# ---------------------------------------------------------------------- Data Import summary
+# Rows run one by one (in a background job outside developer mode), so what happened to each
+# row's user is kept in Redis under the running Data Import, and public/js/data_import.js shows
+# it once that import is done. Keyed per import so an earlier import's notes never mix in.
+
+
+def import_notes_key(data_import):
+	return f"alt_employee_import_notes|{data_import}"
+
+
+def running_employee_import():
+	# the importer sets "In Progress" before the first row and its final status after the last
+	return frappe.db.get_value(
+		"Data Import",
+		{"reference_doctype": "Employee", "status": "In Progress"},
+		"name",
+		order_by="modified desc",
+	)
+
+
+def add_import_note(doc, **note):
+	data_import = running_employee_import()
+	if not data_import:
+		return
+	note["employee"] = doc.employee_name or doc.first_name or doc.name
+	key = import_notes_key(data_import)
+	frappe.cache.rpush(key, frappe.as_json(note))
+	frappe.cache.expire(frappe.cache.make_key(key), 24 * 3600)  # import dialog closed early
+
+
+@frappe.whitelist()
+def pop_import_notes(data_import: str) -> list[dict]:
+	frappe.get_doc("Data Import", data_import).check_permission("read")
+	key = import_notes_key(data_import)
+	notes = [frappe.parse_json(frappe.safe_decode(n)) for n in frappe.cache.lrange(key, 0, -1)]
+	frappe.cache.delete_value(key)
+	return notes
 
 
 def auto_create_user(doc):
@@ -167,11 +226,7 @@ def auto_create_user(doc):
 			approvers.user_changed(doc, None)
 			return True
 	if reason:
-		frappe.msgprint(
-			_("No user created for {0}: {1}.").format(doc.employee_name or doc.name, reason),
-			indicator="orange",
-			alert=True,
-		)
+		user_not_created(doc, reason)
 		return False
 	create_user(doc.name, email=email, create_user_permission=doc.get("create_user_permission"))
 	return True

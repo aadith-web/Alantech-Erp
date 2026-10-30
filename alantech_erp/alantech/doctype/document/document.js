@@ -24,11 +24,20 @@ frappe.ui.form.on("Document", {
 		alt_doc.set_card_number_label(frm);
 		alt_doc.take_snapshot(frm);
 		alt_doc.show_status_intro(frm);
+		alt_doc.check_number(frm, "open");
+		alt_doc.format_number_on_blur(frm);
+		alt_doc.limit_date_pickers(frm);
 		alt_doc.add_review_buttons(frm);
 	},
 
 	document_type(frm) {
 		alt_doc.set_card_number_label(frm);
+		alt_doc.check_number(frm, "typing");
+	},
+
+	card_number(frm) {
+		// fires while typing: message under the field only, no popup
+		alt_doc.check_number(frm, "typing");
 	},
 
 	reference_doctype(frm) {
@@ -60,6 +69,16 @@ frappe.ui.form.on("Document", {
 	},
 
 	expiry_date(frm) {
+		const d = frm.doc.expiry_date;
+		if (d && frappe.datetime.get_day_diff(d, frappe.datetime.get_today()) < 0) {
+			frappe.msgprint({
+				title: __("Invalid Expiry Date"),
+				message: __("Expiry Date cannot be in the past."),
+				indicator: "orange",
+			});
+			frm.set_value("expiry_date", null);
+			return;
+		}
 		alt_doc.check_expiry_after_issue(frm);
 	},
 });
@@ -67,7 +86,8 @@ const ALT_DOC_STATUS = { PENDING: "Pending Approval", APPROVED: "Approved", REJE
 
 // Server-set fields, ignored by the "has anything changed?" check
 const ALT_DOC_SYSTEM_FIELDS = new Set([
-	"reference_title", "employee", "expiry_required",
+	"reference_title", "employee", "expiry_required", "expiry_date_mandatory",
+	"issue_date_required", "issue_date_mandatory",
 	"approval_status", "submitted_by", "reviewed_by", "reviewed_on", "rejection_reason",
 ]);
 
@@ -76,6 +96,71 @@ const alt_doc = {
 	set_card_number_label(frm) {
 		const t = frm.doc.document_type;
 		frm.set_df_property("card_number", "label", t ? __("{0} Number", [__(t)]) : __("Card Number"));
+	},
+
+	// Number Format of the Document Type (document_number.py). The result shows under the field:
+	// the format example, or in red why the number is wrong (bad format, already used).
+	//   "open":   also an orange warning at the top for an existing document with a wrong number
+	//             (the server blocks saving it until the number is fixed)
+	//   "typing": message only, the number is left as typed
+	//   "blur":   on leaving the field, a valid number is written the standard way
+	//             (e.g. Aadhaar "2345 6789 0124")
+	check_number(frm, mode) {
+		const { document_type, card_number } = frm.doc;
+		if (!document_type) return;
+		const request = (frm.__alt_number_request = (frm.__alt_number_request || 0) + 1);
+		frappe
+			.xcall("alantech_erp.alantech.doctype.document.document_number.check_number", {
+				document_type,
+				number: card_number || "",
+				name: frm.is_new() ? null : frm.doc.name,
+			})
+			.then((r) => {
+				// a newer check started while this one ran (still typing)
+				if (request !== frm.__alt_number_request || frm.doc.document_type !== document_type) return;
+				const hint = r.example ? __("Format: {0}", [r.example]) : "";
+				frm.set_df_property(
+					"card_number",
+					"description",
+					r.error ? `<span class="text-danger">${r.error}</span>` : hint
+				);
+				frm.toggle_reqd("card_number", !!r.mandatory);
+				if (mode === "open") {
+					if (r.error) {
+						frm.dashboard.set_headline_alert(
+							`${r.error} ${__("Correct the number to save this document.")}`,
+							"orange"
+						);
+					}
+					return;
+				}
+				if (!r.error) frm.dashboard.clear_headline();
+				if (mode === "blur" && !r.error && r.value !== (card_number || "")) {
+					frm.set_value("card_number", r.value);
+				}
+			});
+	},
+
+	format_number_on_blur(frm) {
+		const $input = frm.fields_dict.card_number?.$input;
+		if (!$input) return;
+		$input.off("blur.alt_number").on("blur.alt_number", () => {
+			// let the field pass the typed value to frm.doc first
+			setTimeout(() => alt_doc.check_number(frm, "blur"), 300);
+		});
+	},
+
+	// Issue Date up to today, Expiry Date from today: other days cannot be picked in the calendar
+	// (typed dates are checked by issue_date / expiry_date above, and by the server)
+	limit_date_pickers(frm) {
+		const today = frappe.datetime.str_to_obj(frappe.datetime.get_today());
+		const limits = { issue_date: { max_date: today }, expiry_date: { min_date: today } };
+		for (const [fieldname, limit] of Object.entries(limits)) {
+			const field = frm.fields_dict[fieldname];
+			if (!field) continue;
+			Object.assign(field.df, limit); // pickers built later (field shown by depends_on)
+			field.datepicker?.update({ minDate: limit.min_date, maxDate: limit.max_date });
+		}
 	},
 
 	check_expiry_after_issue(frm) {

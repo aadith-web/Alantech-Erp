@@ -72,11 +72,15 @@ doctype_js = {
     "Shift Request": "public/js/shift_request.js",
     # view-only Holiday List for employees
     "Holiday List": "public/js/holiday_list.js",
+    # one summary of the users created by an Employee import
+    "Data Import": "public/js/data_import.js",
 }
 extend_doctype_class = {
     # "Create User Automatically" without an email: no user, no error (setup/employee_user.py)
     "Employee": "alantech_erp.setup.employee_user.AlantechEmployee",
 }
+# Employee import summary (setup/employee_user.py): Employee.on_update clears the whole cache
+persistent_cache_keys = ["alt_employee_import_notes|*"]
 doctype_list_js = {
     "Employee": "public/js/employee_list.js",
     "Holiday List Assignment": "public/js/holiday_list_assignment_list.js",
@@ -226,6 +230,7 @@ doc_events = {
         "validate": [
             "alantech_erp.org_structure.apply_designation_defaults",
             "alantech_erp.setup.employee_validation.validate_unique_employee",
+            "alantech_erp.setup.employee_validation.validate_unique_email",
             "alantech_erp.setup.access.employee_validate",
             # after apply_designation_defaults, which may fill Reports To
             "alantech_erp.setup.approvers.employee_validate",
@@ -382,6 +387,7 @@ after_migrate = [
     "alantech_erp.setup.designations.execute",
     "alantech_erp.setup.access.execute",
     "alantech_erp.setup.employee_fields.execute",
+    "alantech_erp.setup.employee_validation.seed_employee_number_counter",
     "alantech_erp.setup.session_log_fields.execute",
     "alantech_erp.setup.shifts.execute",
     "alantech_erp.setup.leave_fields.execute",

@@ -3,6 +3,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, cint, get_fullname, get_link_to_form, getdate, now_datetime, today
 
+from alantech_erp.alantech.doctype.document.document_number import validate_document_number
+
 DOCTYPE = "Document"
 APPROVER_ROLE = "HR Manager"
 UNRESTRICTED_ROLES = {"System Manager", "HR Manager", "HR User"}
@@ -21,6 +23,7 @@ class Document(Document):
 		self.set_reference_details()
 		self.validate_reference_access()
 		self.validate_dates()
+		validate_document_number(self)  # also blocks approving a wrong number until it is fixed
 		if self.flags.approval_action:      # approve()/reject() set the fields themselves
 			return
 		self.restore_approval_fields()
@@ -50,10 +53,40 @@ class Document(Document):
 			             frappe.PermissionError)
 
 	def validate_dates(self):
+		# Document Type Master decides which dates are shown (fetched to *_required) and mandatory;
+		# checked here too, as the form's mandatory_depends_on is not enforced by the server
+		rules = frappe.db.get_value(
+			"Document Type Master", self.document_type,
+			["issue_date_required", "issue_date_mandatory", "expiry_required", "expiry_date_mandatory"],
+			as_dict=True,
+		) or {}
+		for date_field, required, mandatory, label in (
+			("issue_date", "issue_date_required", "issue_date_mandatory", _("Issue Date")),
+			("expiry_date", "expiry_required", "expiry_date_mandatory", _("Expiry Date")),
+		):
+			self.set(required, cint(rules.get(required)))
+			self.set(mandatory, cint(rules.get(required)) and cint(rules.get(mandatory)))
+			if self.get(mandatory) and not self.get(date_field):
+				frappe.throw(
+					_("{0} is mandatory for {1}.").format(label, frappe.bold(self.document_type)),
+					frappe.MandatoryError,
+					title=_("Missing {0}").format(label),
+				)
 		if self.issue_date and getdate(self.issue_date) > getdate(today()):
 			frappe.throw(
 				_("Issue Date {0} cannot be in the future.").format(frappe.format(self.issue_date, "Date")),
 				title=_("Invalid Issue Date"),
+			)
+		# checked when the Expiry Date is entered or changed, so a document that has since expired
+		# can still be edited (e.g. its remarks)
+		if (
+			self.expiry_date
+			and (self.is_new() or self.has_value_changed("expiry_date"))
+			and getdate(self.expiry_date) < getdate(today())
+		):
+			frappe.throw(
+				_("Expiry Date {0} cannot be in the past.").format(frappe.format(self.expiry_date, "Date")),
+				title=_("Invalid Expiry Date"),
 			)
 		if self.issue_date and self.expiry_date and getdate(self.expiry_date) <= getdate(self.issue_date):
 			frappe.throw(

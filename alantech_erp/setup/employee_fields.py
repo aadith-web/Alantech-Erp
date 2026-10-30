@@ -76,7 +76,8 @@ def execute():
     make_property_setter(
         "Employee", "create_user_automatically", "default", "1", "Text", validate_fields_for_doctype=False
     )
-    fill_user_employee_numbers()
+    # fill_user_employee_numbers() is not run here: Role Profile jobs started by this migrate
+    # update the same users in parallel. Employee.on_update keeps the numbers in step.
 
 
 def show_employee_number_in_list(doc=None, method=None):
@@ -84,6 +85,8 @@ def show_employee_number_in_list(doc=None, method=None):
     Employee links. Also HR Settings.on_update: with "Employee Naming By" = Naming Series, HRMS
     hides the field on every HR Settings save."""
     make_property_setter("Employee", "employee_number", "hidden", 0, "Check", validate_fields_for_doctype=False)
+    # unique and never changed once saved (employee_validation.py)
+    make_property_setter("Employee", "employee_number", "set_only_once", 1, "Check", validate_fields_for_doctype=False)
     for prop in ("in_list_view", "in_standard_filter"):
         make_property_setter("Employee", "employee_number", prop, 1, "Check", validate_fields_for_doctype=False)
     search_fields = frappe.get_meta("Employee").search_fields or "employee_name"
@@ -104,8 +107,9 @@ def sync_user_employee_number(doc, method=None):
 
 
 def fill_user_employee_numbers():
-    for emp in frappe.get_all(
-        "Employee", filters={"user_id": ["is", "set"]}, fields=["user_id", "employee_number"]
-    ):
-        if frappe.db.exists("User", emp.user_id):
-            frappe.db.set_value("User", emp.user_id, "alt_employee_number", emp.employee_number, update_modified=False)
+    """One-off (bench execute): users whose Employee Number is out of date."""
+    frappe.db.sql(
+        """update `tabUser` u join `tabEmployee` e on e.user_id = u.name
+        set u.alt_employee_number = e.employee_number
+        where not (u.alt_employee_number <=> e.employee_number)"""
+    )

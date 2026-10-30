@@ -16,6 +16,9 @@
   "document_type",
   "card_number",
   "expiry_required",
+  "issue_date_required",
+  "issue_date_mandatory",
+  "expiry_date_mandatory",
   "validity_section",
   "issue_date",
   "place_of_issue",
@@ -60,8 +63,7 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Name",
-   "read_only": 1,
-   "unique": 1
+   "read_only": 1
   },
   {
    "fieldname": "employee",
@@ -100,6 +102,33 @@
    "read_only": 1
   },
   {
+   "default": "0",
+   "fetch_from": "document_type.issue_date_required",
+   "fieldname": "issue_date_required",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Issue Date Required",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "document_type.issue_date_mandatory",
+   "fieldname": "issue_date_mandatory",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Issue Date Mandatory",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "document_type.expiry_date_mandatory",
+   "fieldname": "expiry_date_mandatory",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Expiry Date Mandatory",
+   "read_only": 1
+  },
+  {
    "fieldname": "validity_section",
    "fieldtype": "Section Break",
    "label": "Validity"
@@ -107,7 +136,9 @@
   {
    "fieldname": "issue_date",
    "fieldtype": "Date",
-   "label": "Issue Date"
+   "label": "Issue Date",
+   "depends_on": "eval:doc.issue_date_required",
+   "mandatory_depends_on": "eval:doc.issue_date_mandatory"
   },
   {
    "fieldname": "place_of_issue",
@@ -123,7 +154,8 @@
    "fieldtype": "Date",
    "in_list_view": 1,
    "label": "Expiry Date",
-   "mandatory_depends_on": "doc.expiry_required"
+   "mandatory_depends_on": "eval:doc.expiry_date_mandatory",
+   "depends_on": "eval:doc.expiry_required"
   },
   {
    "fieldname": "issuing_country",
