@@ -197,3 +197,38 @@ const alt_employee_docs = {
 		dialog.show();
 	},
 };
+
+// Assets: Issue / Receive buttons, and a warning on leaving employees who still hold assets.
+frappe.ui.form.on("Employee", {
+	refresh(frm) {
+		if (frm.is_new() || !frappe.model.can_read("Employee Asset Handover")) return;
+		const handover = "Employee Asset Handover";
+
+		if (frappe.model.can_create(handover)) {
+			if (frm.doc.status === "Active") {
+				frm.add_custom_button(__("Issue Asset"), () =>
+					frappe.new_doc(handover, { transaction_type: "Issue", employee: frm.doc.name }), __("Assets"));
+			}
+			frm.add_custom_button(__("Receive Assets"), () =>
+				frappe.new_doc(handover, { transaction_type: "Receipt", employee: frm.doc.name }), __("Assets"));
+		}
+		frm.add_custom_button(__("Handover History"), () =>
+			frappe.set_route("List", handover, { employee: frm.doc.name }), __("Assets"));
+
+		const leaving = frm.doc.status === "Left" || frm.doc.relieving_date || frm.doc.resignation_letter_date;
+		if (!leaving) return;
+		frappe
+			.call({
+				method: "alantech_erp.alantech.doctype.employee_asset_handover.employee_asset_handover.get_employee_assets",
+				args: { employee: frm.doc.name },
+			})
+			.then(({ message: assets = [] }) => {
+				if (!assets.length) return;
+				const names = assets.map((a) => frappe.utils.escape_html(a.asset_name || a.asset)).join(", ");
+				frm.dashboard.set_headline_alert(
+					__("Assets not returned ({0}): {1}", [assets.length, names]),
+					"orange"
+				);
+			});
+	},
+});
