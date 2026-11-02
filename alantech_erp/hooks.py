@@ -167,11 +167,15 @@ permission_query_conditions = {
 	"Document": "alantech_erp.alantech.doctype.document.document.get_permission_query_conditions",
 	"Session Log": "alantech_erp.alantech.doctype.session_log.session_log.get_permission_query_conditions",
 	"Holiday List": "alantech_erp.setup.shifts.holiday_list_query_conditions",
+	"Salary Structure Assignment": "alantech_erp.setup.salary_access.salary_structure_assignment_query_conditions",
+	"Salary Slip": "alantech_erp.setup.salary_access.salary_slip_query_conditions",
 }
 has_permission = {
 	"Document": "alantech_erp.alantech.doctype.document.document.has_permission",
 	"Session Log": "alantech_erp.alantech.doctype.session_log.session_log.has_permission",
 	"Holiday List": "alantech_erp.setup.shifts.holiday_list_has_permission",
+	"Salary Structure Assignment": "alantech_erp.setup.salary_access.has_permission",
+	"Salary Slip": "alantech_erp.setup.salary_access.has_permission",
 }
 # DocType Class
 # ---------------
@@ -273,6 +277,9 @@ doc_events = {
 	},
 	"Leave Allocation": {
 		"validate": "alantech_erp.setup.leave_validation.validate_leave_allocation",
+	},
+	"Attendance Request": {
+		"before_submit": "alantech_erp.setup.attendance_request.check_approver",  # own Leave Approver or HR
 	},
     # Sales flow: Deal -> Estimation -> Quotation (manager + client approval) -> Sales Order
     "Quotation": {
@@ -405,6 +412,7 @@ after_migrate = [
     "alantech_erp.org_structure.fill_missing_reports_to",
     "alantech_erp.setup.approvers.execute",
     "alantech_erp.setup.leave_workflow.execute",
+    "alantech_erp.setup.attendance_request.execute",
     "alantech_erp.setup.asset_handover.execute",
     # Quotation approval workflow (Sales Manager, Level 2 above the Selling Settings limit)
     "alantech_erp.setup.sales_flow.execute",

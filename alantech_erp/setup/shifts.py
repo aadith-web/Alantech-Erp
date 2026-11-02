@@ -24,7 +24,7 @@ DEFAULT_SHIFT = "General Shift"
 
 SHIFT_BASE = {
 	"enable_auto_attendance": 0,  # attendance comes from Session Log, not HRMS auto attendance
-	"allow_overtime": 0,  # overtime only on General Shift, ticked by hand with its Overtime Type
+	"allow_overtime": 0,  # overtime only on General Shift: setup_overtime() ticks it with its Overtime Type
 	"enable_late_entry_marking": 1,
 	"late_entry_grace_period": 15,
 	"enable_early_exit_marking": 1,
@@ -49,6 +49,7 @@ def execute():
 	ensure_holiday_lists()
 	create_shift_types()
 	set_default_shift()
+	setup_overtime()
 	hide_unused_overtime()
 	lock_employee_holiday_list()
 	sync_employee_holiday_lists()
@@ -318,6 +319,64 @@ def set_default_shift():
 # stay: Session Log reads the overtime rule from there (session_log/calculation.py).
 SHIFT_MODULE = "Shift and Attendance"
 HIDDEN_SIDEBAR_ITEMS = {("Section Break", "Overtime"), ("Link", "Overtime Type"), ("Link", "Overtime Slip")}
+
+
+OVERTIME_COMPONENT = ("Overtime", "OT")  # earning added to the Salary Slip; never in a Salary Structure
+OVERTIME_TYPE = "General Shift Overtime"
+# rate = (gross - fixed allowances) / days in month / 8 x 1.5; fixed allowances are left out of this list
+OVERTIME_APPLICABLE_COMPONENTS = ("Basic", "House Rent Allowance")
+OVERTIME_MULTIPLIER = 1.5
+
+
+def setup_overtime():
+	"""Create-only: the OT component, the Overtime Type on General Shift and Overtime Settings.
+	Settings already filled in (Working Hours Per Day set) are left alone."""
+	name, abbr = OVERTIME_COMPONENT
+	if not frappe.db.exists("Salary Component", name):
+		frappe.get_doc(
+			{"doctype": "Salary Component", "salary_component": name, "salary_component_abbr": abbr,
+				"type": "Earning", "depends_on_payment_days": 0}
+		).insert(ignore_permissions=True)
+
+	applicable = [c for c in OVERTIME_APPLICABLE_COMPONENTS if frappe.db.exists("Salary Component", c)]
+	if not frappe.db.exists("Overtime Type", OVERTIME_TYPE) and applicable:
+		ot_type = frappe.new_doc("Overtime Type")
+		ot_type.update(
+			{
+				"overtime_salary_component": name,
+				"overtime_calculation_method": "Salary Component Based",
+				"applicable_salary_component": [{"salary_component": c} for c in applicable],
+				"standard_multiplier": OVERTIME_MULTIPLIER,
+				"applicable_for_weekend": 1,
+				"applicable_for_public_holiday": 1,
+			}
+		)
+		ot_type.insert(ignore_permissions=True, set_name=OVERTIME_TYPE)
+
+	shift = frappe.db.get_value("Shift Type", DEFAULT_SHIFT, ["allow_overtime", "overtime_type"], as_dict=True)
+	if shift and not shift.overtime_type and frappe.db.exists("Overtime Type", OVERTIME_TYPE):
+		frappe.db.set_value("Shift Type", DEFAULT_SHIFT, {"allow_overtime": 1, "overtime_type": OVERTIME_TYPE})
+
+	settings = frappe.get_doc("Overtime Settings")
+	if settings.working_hours_per_day or not applicable:
+		return
+	settings.update(
+		{
+			"enable_multiple_ot": 0,
+			"base_component_method": "Custom",
+			"working_days_base": "Month Days",
+			"working_hours_per_day": 8,
+		}
+	)
+	settings.set("applicable_overtime_component", [{"salary_component": c} for c in applicable])
+	settings.set(
+		"overtime_type_rules",
+		[
+			{"ot_type": "Normal", "salary_component": name, "calculation_method": "Salary Derived",
+				"component_method": "Component Wise", "rate_multiplier": OVERTIME_MULTIPLIER},
+		],
+	)
+	settings.save(ignore_permissions=True)
 
 
 def hide_unused_overtime():
