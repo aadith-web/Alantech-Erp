@@ -373,6 +373,7 @@ after_migrate = [
     "alantech_erp.setup.session_log_fields.execute",
     "alantech_erp.setup.shifts.execute",
     "alantech_erp.setup.leave_fields.execute",
+    "alantech_erp.setup.sales_flow.execute",
     "alantech_erp.org_structure.fill_missing_reports_to",
     "alantech_erp.setup.approvers.execute",
     "alantech_erp.setup.leave_workflow.execute",
