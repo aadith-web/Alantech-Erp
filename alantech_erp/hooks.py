@@ -413,6 +413,8 @@ after_migrate = [
     "alantech_erp.setup.approvers.execute",
     "alantech_erp.setup.leave_workflow.execute",
     "alantech_erp.setup.attendance_request.execute",
+    # HR User prepares Payroll Entries; payroll payable account of type Payable
+    "alantech_erp.setup.payroll.execute",
     "alantech_erp.setup.asset_handover.execute",
     # Quotation approval workflow (Sales Manager, Level 2 above the Selling Settings limit)
     "alantech_erp.setup.sales_flow.execute",
