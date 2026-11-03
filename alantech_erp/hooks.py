@@ -159,11 +159,13 @@ permission_query_conditions = {
 	"Document": "alantech_erp.alantech.doctype.document.document.get_permission_query_conditions",
 	"Session Log": "alantech_erp.alantech.doctype.session_log.session_log.get_permission_query_conditions",
 	"Holiday List": "alantech_erp.setup.shifts.holiday_list_query_conditions",
+	"Company Policy": "alantech_erp.alantech.doctype.company_policy.company_policy.get_permission_query_conditions",
 }
 has_permission = {
 	"Document": "alantech_erp.alantech.doctype.document.document.has_permission",
 	"Session Log": "alantech_erp.alantech.doctype.session_log.session_log.has_permission",
 	"Holiday List": "alantech_erp.setup.shifts.holiday_list_has_permission",
+	"Company Policy": "alantech_erp.alantech.doctype.company_policy.company_policy.has_permission",
 }
 # DocType Class
 # ---------------
