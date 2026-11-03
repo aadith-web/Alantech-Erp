@@ -232,3 +232,17 @@ frappe.ui.form.on("Employee", {
 			});
 	},
 });
+
+// Mobile: pick the country, then type the number (Phone field). Checked against the country code
+// as soon as it is entered; the same check runs again on save (employee_validation.validate_mobile_number).
+frappe.ui.form.on("Employee", {
+	onload(frm) {
+		frm.set_df_property("cell_number", "description", __("Select the country code, then enter the number"));
+	},
+	cell_number(frm) {
+		if (!frm.doc.cell_number) return;
+		frappe
+			.xcall("alantech_erp.setup.employee_validation.check_mobile_number", { mobile: frm.doc.cell_number })
+			.then((error) => error && frappe.show_alert({ message: error, indicator: "red" }, 7));
+	},
+});

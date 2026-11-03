@@ -76,6 +76,9 @@ def execute():
     make_property_setter(
         "Employee", "create_user_automatically", "default", "1", "Text", validate_fields_for_doctype=False
     )
+    # Mobile with a country code picker; numbers checked per country (employee_validation.validate_mobile_number)
+    make_property_setter("Employee", "cell_number", "fieldtype", "Phone", "Select", validate_fields_for_doctype=False)
+    make_property_setter("Employee", "cell_number", "options", "", "Text", validate_fields_for_doctype=False)
     # fill_user_employee_numbers() is not run here: Role Profile jobs started by this migrate
     # update the same users in parallel. Employee.on_update keeps the numbers in step.
 

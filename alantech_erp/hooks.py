@@ -38,6 +38,10 @@ app_include_css = [
         "/assets/alantech_erp/js/alantech_documents.js",
 ]
 # app_include_js = "/assets/alantech_erp/js/alantech_erp.js"
+app_include_js = [
+    # country code picker of Phone fields opens on saved records too
+    "/assets/alantech_erp/js/phone_control.js",
+]
 
 # include js, css files in header of web template
 web_include_css = [
@@ -235,6 +239,7 @@ doc_events = {
             "alantech_erp.org_structure.apply_designation_defaults",
             "alantech_erp.setup.employee_validation.validate_unique_employee",
             "alantech_erp.setup.employee_validation.validate_unique_email",
+            "alantech_erp.setup.employee_validation.validate_mobile_number",
             "alantech_erp.setup.access.employee_validate",
             # after apply_designation_defaults, which may fill Reports To
             "alantech_erp.setup.approvers.employee_validate",
