@@ -10,6 +10,10 @@ to confirm are written as [[value]] and must all be filled in before the offer i
 
 Revisions: cancel and amend. The amended offer gets the next revision number, printed as
 <offer no>/Rev<n>. A Quotation links to its Technical Offer (alt_technical_offer) and prints it.
+
+The offer is for a Customer (Company or Individual). The Quotation is made from a submitted
+offer: through its submitted Estimation (prices from the cost sheet), or straight from the
+offer's price schedule when it was built from a Plant Assembly without an Estimation.
 """
 
 import re
@@ -97,6 +101,8 @@ class TechnicalOffer(Document):
 			)
 		if not self.sections:
 			frappe.throw(_("Add at least one section to the offer."), title=_("Offer Empty"))
+		if not self.customer:
+			frappe.throw(_("Select the Customer the offer is for."), title=_("Customer Missing"))
 
 	# ------------------------------------------------------------------ validation helpers
 	def set_missing_values(self):
@@ -123,20 +129,30 @@ class TechnicalOffer(Document):
 			self.offer_no = f"{base}/Rev{self.revision}"
 
 	def validate_estimation(self):
-		if not self.estimation:
-			return
-		est = frappe.db.get_value("Estimation", self.estimation, ["opportunity", "docstatus"], as_dict=True)
-		if est.docstatus == 2:
-			frappe.throw(_("Estimation {0} is cancelled.").format(frappe.bold(self.estimation)))
-		if not self.opportunity:
-			self.opportunity = est.opportunity
-		elif est.opportunity != self.opportunity:
-			frappe.throw(
-				_("Estimation {0} belongs to Deal {1}, not {2}.").format(
-					frappe.bold(self.estimation), frappe.bold(est.opportunity), frappe.bold(self.opportunity)
-				),
-				title=_("Wrong Estimation"),
+		"""The offer belongs to the Customer of its Estimation (when built from one)."""
+		if self.estimation:
+			est = frappe.db.get_value(
+				"Estimation", self.estimation, ["customer", "contact_person", "sales_user", "docstatus"], as_dict=True
 			)
+			if est.docstatus == 2:
+				frappe.throw(_("Estimation {0} is cancelled.").format(frappe.bold(self.estimation)))
+			if not self.customer:
+				self.customer = est.customer
+			elif est.customer and est.customer != self.customer:
+				frappe.throw(
+					_("Estimation {0} is for Customer {1}, not {2}.").format(
+						frappe.bold(self.estimation), frappe.bold(est.customer), frappe.bold(self.customer)
+					),
+					title=_("Wrong Estimation"),
+				)
+			self.contact_person = self.contact_person or est.contact_person
+			self.sales_user = self.sales_user or est.sales_user
+		if self.customer and not self.customer_name:
+			self.customer_name = frappe.db.get_value("Customer", self.customer, "customer_name")
+		if self.customer and not self.sales_user:
+			owner = frappe.db.get_value("Customer", self.customer, "owner")
+			if owner and owner not in ("Administrator", "Guest"):
+				self.sales_user = owner
 
 	def validate_sections(self):
 		titles = []
@@ -315,14 +331,17 @@ def make_from_estimation(estimation):
 
 	offer = frappe.new_doc("Technical Offer")
 	offer.estimation = est.name
-	offer.opportunity = est.opportunity
+	offer.customer = est.customer
 	offer.customer_name = est.customer_name
+	offer.contact_person = est.contact_person
+	offer.sales_user = est.sales_user
+	offer.quote_item = est.quote_item
 	offer.company = est.company
 	offer.currency = est.currency
 	offer.offer_date = getdate()
 	if est.capacity:
 		offer.project_name = f"{fmt_num(est.capacity)} {est.capacity_uom or ''} {est.plant_type or ''}".strip()
-	contact = frappe.db.get_value("Opportunity", est.opportunity, "contact_display")
+	contact = est.contact_person and frappe.db.get_value("Contact", est.contact_person, "full_name")
 	if contact:
 		offer.kind_attn = contact
 
@@ -359,3 +378,74 @@ def make_from_estimation(estimation):
 		).strip()
 	offer.calculate_totals()
 	return offer
+
+
+@frappe.whitelist()
+def make_quotation(source_name: str, target_doc=None):
+	"""Quotation from a submitted Technical Offer.
+
+	With a submitted Estimation the prices come from its cost sheet (same as Estimation > Create >
+	Quotation). Without one, from the offer's price schedule: one line for the Included lines
+	(main price) and one per Separate Line; Optional lines stay in the offer only.
+	"""
+	from frappe.model.mapper import get_mapped_doc
+
+	offer = frappe.get_doc("Technical Offer", source_name)
+	offer.check_permission("read")
+	if offer.docstatus != 1:
+		frappe.throw(_("Submit Technical Offer {0} first.").format(frappe.bold(offer.name)))
+	if offer.estimation and frappe.db.get_value("Estimation", offer.estimation, "docstatus") == 1:
+		from alantech_erp.alantech.doctype.estimation.estimation import make_quotation as from_estimation
+
+		frappe.flags.args = frappe._dict(technical_offer=offer.name)
+		return from_estimation(offer.estimation, target_doc)
+	if not offer.customer:
+		frappe.throw(_("Set the Customer on the offer first."))
+	if not offer.quote_item:
+		frappe.throw(
+			_("Set the Quotation Item on the offer (or on its Plant Assembly) to quote it without an Estimation."),
+			title=_("Quotation Item Missing"),
+		)
+
+	def set_missing_values(source, target):
+		target.quotation_to = "Customer"
+		target.party_name = source.customer
+		target.customer_name = source.customer_name
+		target.contact_person = source.contact_person
+		target.alt_technical_offer = source.name
+		if source.valid_till:
+			target.valid_till = source.valid_till
+		heading = source.price_heading or source.project_name or source.subject
+		if flt(source.main_total):
+			target.append(
+				"items",
+				{"item_code": source.quote_item, "qty": 1, "rate": source.main_total, "description": heading or None},
+			)
+		for row in source.price_lines:
+			if row.pricing_mode == SEPARATE and flt(row.amount):
+				target.append(
+					"items",
+					{"item_code": source.quote_item, "qty": 1, "rate": row.amount, "description": row.description},
+				)
+		if not target.items:
+			frappe.throw(_("The offer's price schedule is empty."), title=_("No Prices"))
+		target.run_method("set_missing_values")
+		target.run_method("calculate_taxes_and_totals")
+
+	return get_mapped_doc(
+		"Technical Offer",
+		source_name,
+		{
+			"Technical Offer": {
+				"doctype": "Quotation",
+				"field_map": {},
+				"field_no_map": [
+					"naming_series", "items", "sections", "customer", "letter_head", "grand_total",
+					"amended_from", "subject", "estimation",
+				],
+				"validation": {"docstatus": ["=", 1]},
+			},
+		},
+		target_doc,
+		set_missing_values,
+	)

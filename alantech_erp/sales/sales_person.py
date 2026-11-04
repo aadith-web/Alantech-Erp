@@ -1,13 +1,21 @@
-"""Sales Person from Employee.
+"""Sales Person from Employee: the sales hierarchy.
 
-Every active employee in the Sales department (or a department under it) gets a Sales Person
-linked to them, so they can be picked in the Sales Team of Customers, Quotations and Sales Orders
-and show up in the sales person reports.
+The ERPNext Sales Person tree follows the sales line of Alantech's CRM workflow deck:
+
+    Sales Team (root) -> Sales Director -> Sales Managers -> Sales Engineers
+
+so each Sales Engineer sits under a Sales Manager, and targets, reports, record access and
+quotation approvals roll up to the Sales Director (see sales/hierarchy.py). Proposal Engineers,
+the Sales Co-ordinator and the Marketing team report to Management and are not in the tree.
+
+Every active employee in the Sales department (or a department under it) on the sales line gets a
+Sales Person linked to them, so they can be picked in the Sales Team of Customers, Quotations and
+Sales Orders and show up in the sales person reports.
 
 * Name: the employee name. If another Sales Person already has that name, "<name> - <employee ID>".
 * Parent: the Sales Person of the employee's Reports To, when that manager is in Sales too;
   otherwise the root ("Sales Team").
-* Sales Head and Sales Manager get a group Sales Person, so their team sits under them.
+* Sales Director and Sales Manager get a group Sales Person, so their team sits under them.
 * Leaves Sales, or status no longer Active: the Sales Person is disabled, never deleted (old
   orders and targets still point at it). It is enabled again if the employee comes back.
 * Employee deleted: the link is cleared so the delete is not blocked.
@@ -29,7 +37,14 @@ from frappe.utils.nestedset import get_ancestors_of, get_root_of
 SALES_DEPARTMENTS = {"Sales"}
 
 # Designations that lead a sales team: their Sales Person is a group, so others can sit under it
-GROUP_DESIGNATIONS = {"Sales Head", "Sales Manager"}
+# ("Sales Head" is the name the Sales Director post had before Nov 2026)
+GROUP_DESIGNATIONS = {"Sales Director", "Sales Head", "Sales Manager"}
+
+# In the Sales department but not on the sales line (they report to Management)
+NOT_SALES_LINE = {"Proposal Engineer", "Sales Co-ordinator"}
+
+# Top-down order used when building the tree for existing employees
+TREE_ORDER = ["Sales Director", "Sales Head", "Sales Manager"]
 
 
 # ---------------------------------------------------------------------- rules
@@ -44,7 +59,11 @@ def is_sales_department(department):
 
 
 def should_be_sales_person(emp):
-	return emp.get("status") == "Active" and is_sales_department(emp.get("department"))
+	return (
+		emp.get("status") == "Active"
+		and emp.get("designation") not in NOT_SALES_LINE
+		and is_sales_department(emp.get("department"))
+	)
 
 
 def sales_person_of(employee):
@@ -99,6 +118,7 @@ def sync(emp, before=None):
 			}
 		)
 		sp.insert(ignore_permissions=True)
+		clear_hierarchy_cache()
 		frappe.msgprint(
 			_("Sales Person {0} created for {1}.").format(frappe.bold(sp.name), emp.employee_name),
 			indicator="green",
@@ -120,7 +140,14 @@ def sync(emp, before=None):
 	if any(sp.get(f) != old[f] for f in fields):
 		sp.flags.ignore_permissions = True
 		sp.save()
+		clear_hierarchy_cache()
 	return sp.name
+
+
+def clear_hierarchy_cache():
+	from alantech_erp.sales.hierarchy import clear_cache
+
+	clear_cache()
 
 
 def _disable(name, emp):
@@ -176,7 +203,7 @@ def execute():
 		fields=["name", "department", "designation"],
 		order_by="creation asc",
 	)
-	order = {d: i for i, d in enumerate(["Sales Head", "Sales Manager"])}
+	order = {d: i for i, d in enumerate(TREE_ORDER)}
 	employees.sort(key=lambda e: order.get(e.designation, len(order)))
 	created = 0
 	for row in employees:
@@ -187,3 +214,29 @@ def execute():
 	if created:
 		frappe.db.commit()
 		print(f"Sales Person: created {created} from Sales employees.")
+
+
+def rebuild_tree():
+	"""Put every Sales Person of an employee back where the sales line says (one-off / patch).
+
+	Top-down: Sales Director, then Sales Managers, then the rest, each under the Sales Person of
+	their Reports To. Sales Persons of employees no longer on the sales line (Proposal Engineer,
+	Sales Co-ordinator, left Sales) are disabled. Values set by hand are overwritten here, unlike
+	the Employee hook, so run it only to rebuild.
+	"""
+	if not frappe.db.exists("DocType", "Sales Person"):
+		return
+	linked = frappe.get_all("Sales Person", filters={"employee": ["is", "set"]}, pluck="employee")
+	employees = frappe.get_all(
+		"Employee",
+		or_filters={"name": ["in", linked or [""]], "status": "Active"},
+		fields=["name", "designation"],
+		order_by="creation asc",
+	)
+	order = {d: i for i, d in enumerate(TREE_ORDER)}
+	employees.sort(key=lambda e: order.get(e.designation, len(order)))
+	for row in employees:
+		emp = frappe.get_doc("Employee", row.name)
+		if sales_person_of(emp.name) or should_be_sales_person(emp):
+			sync(emp)  # before=None: the parent follows Reports To again
+	frappe.db.commit()

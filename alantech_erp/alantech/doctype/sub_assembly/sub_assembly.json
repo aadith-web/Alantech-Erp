@@ -17,6 +17,12 @@
   "price_description",
   "costing_tab",
   "items",
+  "expenses_section",
+  "expenses",
+  "totals_section",
+  "item_cost",
+  "expense_cost",
+  "column_break_totals",
   "total_cost",
   "offer_tab",
   "description",
@@ -94,18 +100,50 @@
   {
    "fieldname": "costing_tab",
    "fieldtype": "Tab Break",
-   "label": "Costing Items"
+   "label": "Costing"
   },
   {
    "fieldname": "items",
    "fieldtype": "Table",
-   "label": "Items",
+   "label": "Standard Items (free text)",
    "options": "Sub Assembly Item"
+  },
+  {
+   "fieldname": "expenses_section",
+   "fieldtype": "Section Break",
+   "label": "Standard Other Expenses"
+  },
+  {
+   "fieldname": "expenses",
+   "fieldtype": "Table",
+   "label": "Other Expenses",
+   "options": "Sub Assembly Expense",
+   "description": "Manpower man-days, transport... copied into an Estimation with the items"
+  },
+  {
+   "fieldname": "totals_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "item_cost",
+   "fieldtype": "Currency",
+   "label": "Items incl. Add-on",
+   "read_only": 1
+  },
+  {
+   "fieldname": "expense_cost",
+   "fieldtype": "Currency",
+   "label": "Other Expenses",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_totals",
+   "fieldtype": "Column Break"
   },
   {
    "fieldname": "total_cost",
    "fieldtype": "Currency",
-   "label": "Standard Cost incl. Transport",
+   "label": "Standard Cost",
    "read_only": 1,
    "no_copy": 1
   },
@@ -144,7 +182,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-26 13:30:00.000000",
+ "modified": "2026-11-03 14:30:00.000000",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Sub Assembly",

@@ -58,13 +58,15 @@ ROLE_PROFILES = {
     ],
     "ALT Purchase Executive": ["Purchase User", "Stock User", *EMP],
     # Sales & marketing
-    "ALT Sales Head": [
+    # Sales line (Sales Director -> Sales Managers -> Sales Engineers, see sales/hierarchy.py)
+    "ALT Sales Director": [
         "Sales Manager", "Sales Master Manager", "Sales User", "Projects User",
         "Report Manager", "Quotation Level 2 Approver", *APPROVER, *EMP,
     ],
     "ALT Sales Manager": ["Sales Manager", "Sales User", "Leave Approver", *EMP],
     "ALT Sales Engineer": ["Sales User", *EMP],
     "ALT Proposal Engineer": ["Sales User", "Proposal Engineer", *EMP],
+    "ALT Sales Coordinator": ["Sales User", "Report Manager", *EMP],
     "ALT Marketing Manager": ["Sales Manager", "Sales User", "Leave Approver", *EMP],
     "ALT Marketing Executive": ["Sales User", *EMP],
     # HR
@@ -119,7 +121,7 @@ DESIGNATIONS = [
     # Management team
     ("Managing Director", None, "Management", "ALT Managing Director"),
     ("Finance Manager", "Managing Director", "Accounts", "ALT Finance Manager"),
-    ("Sales Head", "Managing Director", "Sales", "ALT Sales Head"),
+    ("Sales Director", "Managing Director", "Sales", "ALT Sales Director"),
     ("HR Manager", "Managing Director", "Human Resources", "ALT HR Manager"),
     ("Operations Manager", "Managing Director", "Operations", "ALT Operations Manager"),
     ("Marketing Manager", "Managing Director", "Marketing", "ALT Marketing Manager"),
@@ -133,9 +135,12 @@ DESIGNATIONS = [
     ("Purchase Manager", "Finance Manager", "Purchase", "ALT Purchase Manager"),
     ("Purchase Executive", "Purchase Manager", "Purchase", "ALT Purchase Executive"),
     # Sales team (regions Kerala / Bangalore / Hyderabad / UAE are Territories, not designations)
-    ("Sales Manager", "Sales Head", "Sales", "ALT Sales Manager"),
+    # Sales line: Sales Director -> Sales Managers -> Sales Engineers (the Sales Person tree)
+    ("Sales Manager", "Sales Director", "Sales", "ALT Sales Manager"),
     ("Sales Engineer", "Sales Manager", "Sales", "ALT Sales Engineer"),
-    ("Proposal Engineer", "Sales Manager", "Sales", "ALT Proposal Engineer"),
+    # Report to Management, outside the sales line (CRM workflow deck, org chart)
+    ("Proposal Engineer", "Managing Director", "Sales", "ALT Proposal Engineer"),
+    ("Sales Co-ordinator", "Managing Director", "Sales", "ALT Sales Coordinator"),
     # Operations team
     ("Production Manager", "Operations Manager", "Production", "ALT Production Manager"),
     ("Design Head", "Operations Manager", "Design", "ALT Design Head"),

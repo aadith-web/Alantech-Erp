@@ -1,25 +1,32 @@
 # Copyright (c) 2026, JincyTricta and contributors
 # For license information, please see license.txt
 
-"""Estimation: the costing of a plant for a Deal (ERPNext Opportunity).
+"""Estimation: the cost sheet of a plant for a Customer (Company or Individual).
 
-Built as Plant Assembly -> Sub Assemblies (sections) -> cost items, like the water treatment
-costing workbook. All costs are per train:
+Built as Plant Assembly -> Sub Assemblies (sections) -> free-text Items, plus Other Expenses
+(manpower, transport, travel...), like the water treatment costing workbook. Items are typed text,
+never Item master records: no stock, warehouse or valuation impact. All costs are per train:
 
-    item:     Amount = Qty x Unit Cost;  Transport = Amount x Transport %;  Total Cost = Amount + Transport
-    section:  sum of its items (Sub Total of the workbook)
-    Total Cost                       = sections priced Included or Separate Line (Optional ones are left out)
-    Total Cost incl. Contingencies   = Total Cost + Contingencies (+ Financing Cost when ticked)
-    section selling price            = section cost x (Total Cost incl. Contingencies / Total Cost)
-                                       then + margin: x (1 + Margin %)       Markup on Cost
-                                                  or  / (1 - Margin %)      Margin on Selling Price
-    Main Plant Price per Train       = Included sections
-    Selling Price per Train          = Main Plant Price + Separate Line sections
-    Profit Margin                    = Selling Price - Total Cost incl. Contingencies - Sales Commission
-    Selling Price, all Trains        = Selling Price per Train x No. of Trains
+    item:      Amount = Qty x Unit Cost;  Add-on = Amount x Add-on %;  Amount incl. Add-on
+    expense:   Amount = Qty x Rate  (tagged to a section, or untagged = general to the plant)
+    section:   items incl. add-on + expenses tagged to it
+    Total Item Cost        = items of sections priced Included or Separate Line (not Optional)
+    Total Other Expenses   = expenses of those sections + untagged expenses
+    Total Cost             = Total Item Cost + Total Other Expenses
+    Total Cost incl. Contingencies = Total Cost + Contingencies (+ Financing Cost when ticked)
+    section selling price  = section cost x (Total Cost incl. Contingencies / cost of the priced sections)
+                             (untagged expenses, contingencies and financing spread in proportion;
+                              Optional sections only carry contingencies and financing)
+                             then + margin: x (1 + Margin %)  Markup on Cost
+                                        or  / (1 - Margin %)  Margin on Selling Price
+    Main Plant Price per Train = Included sections
+    Selling Price per Train    = Main Plant Price + Separate Line sections
+    Profit Margin              = Selling Price - Total Cost incl. Contingencies - Sales Commission
+    Selling Price, all Trains  = Selling Price per Train x No. of Trains
 
-Flow: Deal -> Estimation (Sales Manager) -> Technical Offer (Proposal Engineer) -> Quotation
--> manager approval -> client approval -> Sales Order. Once submitted the Estimation is fixed.
+Flow: Lead -> Customer -> Estimation (optional, Sales Manager) -> Technical Offer -> Quotation
+-> approval up the sales hierarchy -> client -> Sales Order. Once submitted the Estimation is fixed;
+a revised quotation keeps the same Estimation. The Deal is created from the Quotation.
 """
 
 import frappe
@@ -28,7 +35,17 @@ from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils import cint, flt
 
-from alantech_erp.proposal import INCLUDED, MANPOWER, OPTIONAL, SEPARATE, get_sub_assembly, section_title_of
+from alantech_erp.proposal import (
+	EXPENSE_FIELDS,
+	EXPENSE_MANPOWER,
+	INCLUDED,
+	ITEM_FIELDS,
+	MANPOWER,
+	OPTIONAL,
+	SEPARATE,
+	get_sub_assembly,
+	section_title_of,
+)
 
 CLOSED_DEAL_STATUSES = ("Lost", "Closed", "Converted")
 
@@ -38,81 +55,103 @@ ASSEMBLY_FIELDS = (
 	"default_addon_pct", "contingency_pct", "financing_pct", "include_financing",
 	"margin_basis", "profit_pct", "sales_commission_pct", "round_to",
 )
-ITEM_FIELDS = ("cost_head", "item_code", "type_model", "moc", "make", "qty", "uom", "unit_cost", "addon_pct")
+
+
+def _p(doc, field, value):
+	return flt(value, doc.precision(field))
 
 
 def calculate_pricing(doc):
 	"""Fill every computed amount on an Estimation (same formulas as public/js/estimation_pricing.js)."""
 	sections = {s.section_title: s for s in doc.get("sections") or []}
 	for s in sections.values():
-		s.amount = s.addon_amount = s.total_cost = 0.0
+		s.amount = s.addon_amount = s.expense_cost = s.total_cost = 0.0
 
 	for row in doc.get("items") or []:
 		if flt(row.qty) < 0 or flt(row.unit_cost) < 0:
-			frappe.throw(_("Row {0} ({1}): Qty and Unit Cost cannot be negative.").format(row.idx, row.cost_head))
-		row.amount = flt(flt(row.qty) * flt(row.unit_cost), row.precision("amount"))
-		row.addon_amount = flt(row.amount * flt(row.addon_pct) / 100, row.precision("addon_amount"))
-		row.total_cost = flt(row.amount + row.addon_amount, row.precision("total_cost"))
+			frappe.throw(_("Items row {0}: Qty and Unit Cost cannot be negative.").format(row.idx))
+		row.amount = _p(row, "amount", flt(row.qty) * flt(row.unit_cost))
+		row.addon_amount = _p(row, "addon_amount", row.amount * flt(row.addon_pct) / 100)
+		row.total_cost = _p(row, "total_cost", row.amount + row.addon_amount)
 		section = sections.get(row.section)
 		if section:
 			section.amount += row.amount
 			section.addon_amount += row.addon_amount
-			section.total_cost += row.total_cost
 
-	totals = {"amount": 0.0, "addon": 0.0, "cost": 0.0, "Equipment": 0.0, "Manpower": 0.0, "Other": 0.0}
+	manpower = other = untagged = 0.0
+	for row in doc.get("expenses") or []:
+		if flt(row.qty) < 0 or flt(row.rate) < 0:
+			frappe.throw(_("Other Expenses row {0}: Qty and Rate cannot be negative.").format(row.idx))
+		row.amount = _p(row, "amount", flt(row.qty) * flt(row.rate))
+		section = sections.get(row.section) if row.section else None
+		if section:
+			section.expense_cost += row.amount
+			if section.pricing_mode == OPTIONAL:
+				continue
+		else:
+			untagged += row.amount
+		if row.expense_type == EXPENSE_MANPOWER:
+			manpower += row.amount
+		else:
+			other += row.amount
+
+	amount = addon = item_cost = tagged = section_cost = 0.0
 	for s in sections.values():
+		s.total_cost = s.amount + s.addon_amount + s.expense_cost
 		if s.pricing_mode == OPTIONAL:
 			continue
-		totals["amount"] += s.amount
-		totals["addon"] += s.addon_amount
-		totals["cost"] += s.total_cost
-		key = s.cost_type if s.cost_type in ("Equipment", "Manpower") else "Other"
-		totals[key] += s.total_cost
+		amount += s.amount
+		addon += s.addon_amount
+		item_cost += s.amount + s.addon_amount
+		tagged += s.expense_cost
+		section_cost += s.total_cost
 
-	doc.total_amount = flt(totals["amount"], doc.precision("total_amount"))
-	doc.total_addon = flt(totals["addon"], doc.precision("total_addon"))
-	doc.total_cost = flt(totals["cost"], doc.precision("total_cost"))
-	doc.equipment_cost = flt(totals["Equipment"], doc.precision("equipment_cost"))
-	doc.manpower_cost = flt(totals["Manpower"], doc.precision("manpower_cost"))
-	doc.general_cost = flt(totals["Other"], doc.precision("general_cost"))
+	doc.total_amount = _p(doc, "total_amount", amount)
+	doc.total_addon = _p(doc, "total_addon", addon)
+	doc.total_item_cost = _p(doc, "total_item_cost", item_cost)
+	doc.manpower_cost = _p(doc, "manpower_cost", manpower)
+	doc.general_cost = _p(doc, "general_cost", other)
+	doc.total_other_expenses = _p(doc, "total_other_expenses", tagged + untagged)
+	doc.total_cost = _p(doc, "total_cost", item_cost + tagged + untagged)
 
-	doc.contingency_amount = flt(doc.total_cost * flt(doc.contingency_pct) / 100, doc.precision("contingency_amount"))
-	doc.financing_amount = flt(doc.total_cost * flt(doc.financing_pct) / 100, doc.precision("financing_amount"))
-	doc.cost_price = flt(
-		doc.total_cost + doc.contingency_amount + (doc.financing_amount if cint(doc.include_financing) else 0),
-		doc.precision("cost_price"),
+	financing_on = cint(doc.include_financing)
+	doc.contingency_amount = _p(doc, "contingency_amount", doc.total_cost * flt(doc.contingency_pct) / 100)
+	doc.financing_amount = _p(doc, "financing_amount", doc.total_cost * flt(doc.financing_pct) / 100)
+	doc.cost_price = _p(
+		doc, "cost_price", doc.total_cost + doc.contingency_amount + (doc.financing_amount if financing_on else 0)
 	)
 
-	# contingencies and financing spread over the sections in proportion to their cost
-	load = (
-		doc.cost_price / doc.total_cost
-		if doc.total_cost
-		else 1 + (flt(doc.contingency_pct) + (flt(doc.financing_pct) if cint(doc.include_financing) else 0)) / 100
-	)
+	# contingencies, financing and untagged expenses spread over the priced sections by their cost
+	pct_load = 1 + (flt(doc.contingency_pct) + (flt(doc.financing_pct) if financing_on else 0)) / 100
+	load = doc.cost_price / section_cost if section_cost else pct_load
 	main = separate = optional = 0.0
 	for s in sections.values():
+		s.amount = _p(s, "amount", s.amount)
+		s.addon_amount = _p(s, "addon_amount", s.addon_amount)
+		s.expense_cost = _p(s, "expense_cost", s.expense_cost)
+		s.total_cost = _p(s, "total_cost", s.total_cost)
 		margin = flt(s.margin_pct) if cint(s.override_margin) else flt(doc.profit_pct)
-		s.selling_price = flt(apply_margin(s.total_cost * load, margin, doc.margin_basis, doc.round_to), s.precision("selling_price"))
+		base = s.total_cost * (pct_load if s.pricing_mode == OPTIONAL else load)
+		s.selling_price = _p(s, "selling_price", apply_margin(base, margin, doc.margin_basis, doc.round_to))
 		if s.pricing_mode == OPTIONAL:
 			optional += s.selling_price
 		elif s.pricing_mode == SEPARATE:
 			separate += s.selling_price
 		else:
 			main += s.selling_price
+	if not section_cost and doc.cost_price:
+		# only untagged expenses (or no sections at all): priced as the main plant
+		main += apply_margin(doc.cost_price, doc.profit_pct, doc.margin_basis, doc.round_to)
 
-	doc.main_price = flt(main, doc.precision("main_price"))
-	doc.selling_price = flt(main + separate, doc.precision("selling_price"))
-	doc.optional_price = flt(optional, doc.precision("optional_price"))
-	doc.sales_commission_amount = flt(
-		doc.selling_price * flt(doc.sales_commission_pct) / 100, doc.precision("sales_commission_amount")
+	doc.main_price = _p(doc, "main_price", main)
+	doc.selling_price = _p(doc, "selling_price", main + separate)
+	doc.optional_price = _p(doc, "optional_price", optional)
+	doc.sales_commission_amount = _p(
+		doc, "sales_commission_amount", doc.selling_price * flt(doc.sales_commission_pct) / 100
 	)
-	doc.profit_amount = flt(
-		doc.selling_price - doc.cost_price - doc.sales_commission_amount, doc.precision("profit_amount")
-	)
+	doc.profit_amount = _p(doc, "profit_amount", doc.selling_price - doc.cost_price - doc.sales_commission_amount)
 	doc.profit_on_cost_pct = flt(doc.profit_amount / doc.cost_price * 100, 2) if doc.cost_price else 0
-	doc.grand_selling_price = flt(
-		doc.selling_price * max(cint(doc.no_of_trains), 1), doc.precision("grand_selling_price")
-	)
+	doc.grand_selling_price = _p(doc, "grand_selling_price", doc.selling_price * max(cint(doc.no_of_trains), 1))
 
 
 def apply_margin(cost, margin_pct, basis, round_to=None):
@@ -130,23 +169,54 @@ def apply_margin(cost, margin_pct, basis, round_to=None):
 
 class Estimation(Document):
 	def validate(self):
-		self.validate_deal()
+		self.set_company_and_currency()
+		self.validate_customer()
 		if cint(self.no_of_trains) < 1:
 			self.no_of_trains = 1
 		self.validate_sections()
 		calculate_pricing(self)
 
 	def before_submit(self):
-		if not self.items:
-			frappe.throw(_("Add at least one cost item before submitting."), title=_("Cost Sheet Empty"))
+		if not (self.items or self.expenses):
+			frappe.throw(_("Add at least one item or other expense before submitting."), title=_("Cost Sheet Empty"))
 		if not self.quote_item:
 			frappe.throw(
 				_("Set the Quotation Item (the plant item quoted to the client) before submitting."),
 				title=_("Quotation Item Missing"),
 			)
 
+	def set_company_and_currency(self):
+		if not self.company:
+			self.company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value(
+				"Global Defaults", "default_company"
+			)
+		if not self.currency:
+			self.currency = (
+				self.customer and frappe.db.get_value("Customer", self.customer, "default_currency")
+			) or (self.company and frappe.get_cached_value("Company", self.company, "default_currency"))
+
+	def validate_customer(self):
+		if not self.customer:
+			return
+		if frappe.db.get_value("Customer", self.customer, "disabled"):
+			frappe.throw(_("Customer {0} is disabled.").format(frappe.bold(self.customer)), title=_("Customer Disabled"))
+		if not self.sales_user:
+			owner = frappe.db.get_value("Customer", self.customer, "owner")
+			if owner and owner not in ("Administrator", "Guest"):
+				self.sales_user = owner
+		if self.contact_person and not frappe.db.exists(
+			"Dynamic Link",
+			{"parenttype": "Contact", "parent": self.contact_person, "link_doctype": "Customer", "link_name": self.customer},
+		):
+			frappe.throw(
+				_("Contact {0} is not linked to Customer {1}.").format(
+					frappe.bold(self.contact_person), frappe.bold(self.customer)
+				),
+				title=_("Wrong Contact"),
+			)
+
 	def validate_sections(self):
-		"""Every cost item belongs to a section of the Sub Assemblies table."""
+		"""Items belong to a section of the Sub Assemblies table; expenses may (optional)."""
 		titles = []
 		for s in self.sections:
 			s.section_title = (s.section_title or "").strip()
@@ -166,18 +236,23 @@ class Estimation(Document):
 					row.section = titles[0]
 				else:
 					frappe.throw(
-						_("Cost item row {0} ({1}): select its Section.").format(row.idx, frappe.bold(row.cost_head)),
+						_("Items row {0} ({1}): select its Section.").format(row.idx, frappe.bold(row.cost_head)),
 						title=_("Section Missing"),
 					)
-			if row.section not in titles:
+		for row in [*self.items, *self.expenses]:
+			if row.section and row.section not in titles:
 				# typed in or imported: add the section instead of losing the cost
 				self.append("sections", {"section_title": row.section, "cost_type": "Equipment", "pricing_mode": INCLUDED})
 				titles.append(row.section)
 
+		sub_of = {s.section_title: s.sub_assembly for s in self.sections}
+		for row in [*self.items, *self.expenses]:
+			row.sub_assembly = sub_of.get(row.section) if row.section else None
+
 	# ------------------------------------------------------------------ actions from the form
 	@frappe.whitelist()
 	def apply_plant_assembly(self):
-		"""Replace the sub assemblies, cost items and costing defaults with the Plant Assembly's."""
+		"""Replace the sub assemblies, items, expenses and costing defaults with the Plant Assembly's."""
 		self.check_draft()
 		if not self.plant_assembly:
 			return
@@ -188,6 +263,7 @@ class Estimation(Document):
 				self.set(field, assembly.get(field))
 		self.set("sections", [])
 		self.set("items", [])
+		self.set("expenses", [])
 		for row in assembly.sections:
 			self.add_sub_assembly(
 				row.sub_assembly,
@@ -200,7 +276,7 @@ class Estimation(Document):
 
 	@frappe.whitelist()
 	def add_sub_assembly(self, sub_assembly, section_title=None, pricing_mode=None, include_in_offer=None, price_description=None):
-		"""Add a Sub Assembly as a new section with its standard cost items."""
+		"""Add a Sub Assembly (master) as a new section with its standard items and other expenses."""
 		self.check_draft()
 		sub = get_sub_assembly(sub_assembly)
 		title = (section_title or "").strip() or section_title_of(sub.name)
@@ -224,37 +300,34 @@ class Estimation(Document):
 		)
 		for item in sub.items:
 			row = {field: item.get(field) for field in ITEM_FIELDS}
-			row["section"] = title
+			row.update({"section": title, "sub_assembly": sub.name})
 			if row["addon_pct"] is None:
 				row["addon_pct"] = 0 if sub.cost_type == MANPOWER else self.default_addon_pct
 			self.append("items", row)
+		for expense in sub.get("expenses") or []:
+			row = {field: expense.get(field) for field in EXPENSE_FIELDS}
+			row.update({"section": title, "sub_assembly": sub.name})
+			self.append("expenses", row)
 		calculate_pricing(self)
 
 	@frappe.whitelist()
 	def remove_zero_rows(self):
-		"""Drop cost items with no quantity or no unit cost (unused lines of the standard sub assemblies)."""
+		"""Drop items and expenses with no quantity or no cost (unused lines of the standard sub assemblies)."""
 		self.check_draft()
-		keep = [row for row in self.items if flt(row.qty) and flt(row.unit_cost)]
-		removed = len(self.items) - len(keep)
-		self.set("items", keep)
-		for idx, row in enumerate(self.items, 1):
-			row.idx = idx
+		items = [row for row in self.items if flt(row.qty) and flt(row.unit_cost)]
+		expenses = [row for row in self.expenses if flt(row.qty) and flt(row.rate)]
+		removed = len(self.items) - len(items) + len(self.expenses) - len(expenses)
+		self.set("items", items)
+		self.set("expenses", expenses)
+		for table in (self.items, self.expenses):
+			for idx, row in enumerate(table, 1):
+				row.idx = idx
 		calculate_pricing(self)
 		return removed
 
 	def check_draft(self):
 		if self.docstatus != 0:
 			frappe.throw(_("Only a draft Estimation can be changed."))
-
-	def validate_deal(self):
-		status = frappe.db.get_value("Opportunity", self.opportunity, "status")
-		if status in CLOSED_DEAL_STATUSES:
-			frappe.throw(
-				_("Deal {0} is {1}. Estimations can only be made for open deals.").format(
-					frappe.bold(self.opportunity), _(status)
-				),
-				title=_("Deal Not Open"),
-			)
 
 
 @frappe.whitelist()
@@ -305,27 +378,27 @@ def make_technical_offer(source_name: str, target_doc=None):
 
 @frappe.whitelist()
 def make_quotation(source_name: str, target_doc=None):
-	"""Draft Quotation for the deal's party.
+	"""Draft Quotation for the estimation's Customer.
 
-	One line for the plant (Qty = trains, rate = main plant price per train) and one line per
-	Separate Line sub assembly. Optional sub assemblies are only described in the Technical Offer.
+	One line for the plant (Qty = No. of Trains, Rate = main plant price per train) and one line
+	per Separate Line sub assembly. Optional sub assemblies are only described in the Technical Offer.
 	"""
 	from erpnext.controllers.accounts_controller import _get_default_taxes_and_charges
 	from erpnext.setup.utils import get_exchange_rate
 
-	deal = frappe.db.get_value(
-		"Opportunity",
-		frappe.db.get_value("Estimation", source_name, "opportunity"),
-		["name", "opportunity_from", "party_name", "status"],
-		as_dict=True,
-	)
-	if deal.status in CLOSED_DEAL_STATUSES:
-		frappe.throw(_("Deal {0} is {1}.").format(frappe.bold(deal.name), _(deal.status)))
+	est = frappe.db.get_value("Estimation", source_name, ["customer", "opportunity"], as_dict=True)
+	if not est or not est.customer:
+		frappe.throw(_("Set the Customer on Estimation {0} first.").format(frappe.bold(source_name)))
+	if frappe.db.get_value("Customer", est.customer, "disabled"):
+		frappe.throw(_("Customer {0} is disabled.").format(frappe.bold(est.customer)))
+	deal_open = est.opportunity and frappe.db.get_value("Opportunity", est.opportunity, "status") not in CLOSED_DEAL_STATUSES
 
 	def set_missing_values(source, target):
-		target.quotation_to = deal.opportunity_from
-		target.party_name = deal.party_name
-		target.opportunity = deal.name
+		target.quotation_to = "Customer"
+		target.party_name = source.customer
+		target.customer_name = source.customer_name
+		target.contact_person = source.contact_person
+		target.opportunity = source.opportunity if deal_open else None
 		chosen = (frappe.flags.args or {}).get("technical_offer")
 		target.alt_technical_offer = chosen or latest_technical_offer(source.name)
 
@@ -379,8 +452,11 @@ def make_quotation(source_name: str, target_doc=None):
 		{
 			"Estimation": {
 				"doctype": "Quotation",
-				"field_map": {"name": "alt_estimation", "opportunity": "opportunity"},
-				"field_no_map": ["remarks", "items", "sections", "total_amount", "total_cost"],
+				"field_map": {"name": "alt_estimation"},
+				"field_no_map": [
+					"naming_series", "remarks", "items", "sections", "expenses", "customer", "opportunity",
+					"total_amount", "total_cost", "selling_price", "amended_from",
+				],
 				"validation": {"docstatus": ["=", 1]},
 			},
 		},

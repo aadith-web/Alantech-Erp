@@ -1,4 +1,5 @@
-// Live costing for the Estimation form (same formulas as estimation.py calculate_pricing).
+// Live costing for the Estimation form (same formulas as estimation.py calculate_pricing):
+// free-text Items per Sub Assembly section + Other Expenses (manpower, transport...).
 // Loaded through doctype_js in hooks.py; the guard keeps handlers from being added twice.
 
 frappe.provide("alantech.estimation");
@@ -8,6 +9,7 @@ if (!alantech.estimation.loaded) {
 
 	const OPTIONAL = "Optional";
 	const SEPARATE = "Separate Line";
+	const MANPOWER = "Manpower";
 
 	alantech.estimation.apply_margin = function (cost, margin, basis, round_to) {
 		let price =
@@ -25,7 +27,7 @@ if (!alantech.estimation.loaded) {
 		const doc = frm.doc;
 		const sections = {};
 		(doc.sections || []).forEach((s) => {
-			s.amount = s.addon_amount = s.total_cost = 0;
+			s.amount = s.addon_amount = s.expense_cost = s.total_cost = 0;
 			sections[s.section_title] = s;
 		});
 
@@ -37,39 +39,61 @@ if (!alantech.estimation.loaded) {
 			if (s) {
 				s.amount += row.amount;
 				s.addon_amount += row.addon_amount;
-				s.total_cost += row.total_cost;
 			}
 		});
 
-		const t = { amount: 0, addon: 0, cost: 0, Equipment: 0, Manpower: 0, Other: 0 };
+		let manpower = 0;
+		let other = 0;
+		let untagged = 0;
+		(doc.expenses || []).forEach((row) => {
+			row.amount = flt(flt(row.qty) * flt(row.rate), precision("amount", row));
+			const s = row.section ? sections[row.section] : null;
+			if (s) {
+				s.expense_cost += row.amount;
+				if (s.pricing_mode === OPTIONAL) return;
+			} else {
+				untagged += row.amount;
+			}
+			if (row.expense_type === MANPOWER) manpower += row.amount;
+			else other += row.amount;
+		});
+
+		const t = { amount: 0, addon: 0, items: 0, tagged: 0, sections: 0 };
 		Object.values(sections).forEach((s) => {
+			s.total_cost = s.amount + s.addon_amount + s.expense_cost;
 			if (s.pricing_mode === OPTIONAL) return;
 			t.amount += s.amount;
 			t.addon += s.addon_amount;
-			t.cost += s.total_cost;
-			t[["Equipment", "Manpower"].includes(s.cost_type) ? s.cost_type : "Other"] += s.total_cost;
+			t.items += s.amount + s.addon_amount;
+			t.tagged += s.expense_cost;
+			t.sections += s.total_cost;
 		});
 
-		const contingency = (t.cost * flt(doc.contingency_pct)) / 100;
-		const financing = (t.cost * flt(doc.financing_pct)) / 100;
-		const cost_price = t.cost + contingency + (cint(doc.include_financing) ? financing : 0);
-		const load = t.cost
-			? cost_price / t.cost
-			: 1 + (flt(doc.contingency_pct) + (cint(doc.include_financing) ? flt(doc.financing_pct) : 0)) / 100;
+		const total_cost = t.items + t.tagged + untagged;
+		const financing_on = cint(doc.include_financing);
+		const contingency = (total_cost * flt(doc.contingency_pct)) / 100;
+		const financing = (total_cost * flt(doc.financing_pct)) / 100;
+		const cost_price = total_cost + contingency + (financing_on ? financing : 0);
+		const pct_load = 1 + (flt(doc.contingency_pct) + (financing_on ? flt(doc.financing_pct) : 0)) / 100;
+		const load = t.sections ? cost_price / t.sections : pct_load;
 
 		let main = 0;
 		let separate = 0;
 		let optional = 0;
 		Object.values(sections).forEach((s) => {
 			const margin = cint(s.override_margin) ? flt(s.margin_pct) : flt(doc.profit_pct);
+			const base = s.total_cost * (s.pricing_mode === OPTIONAL ? pct_load : load);
 			s.selling_price = flt(
-				alantech.estimation.apply_margin(s.total_cost * load, margin, doc.margin_basis, doc.round_to),
+				alantech.estimation.apply_margin(base, margin, doc.margin_basis, doc.round_to),
 				precision("selling_price", s)
 			);
 			if (s.pricing_mode === OPTIONAL) optional += s.selling_price;
 			else if (s.pricing_mode === SEPARATE) separate += s.selling_price;
 			else main += s.selling_price;
 		});
+		if (!t.sections && cost_price) {
+			main += alantech.estimation.apply_margin(cost_price, doc.profit_pct, doc.margin_basis, doc.round_to);
+		}
 
 		const selling = main + separate;
 		const commission = (selling * flt(doc.sales_commission_pct)) / 100;
@@ -78,10 +102,11 @@ if (!alantech.estimation.loaded) {
 		Object.assign(doc, {
 			total_amount: t.amount,
 			total_addon: t.addon,
-			total_cost: t.cost,
-			equipment_cost: t.Equipment,
-			manpower_cost: t.Manpower,
-			general_cost: t.Other,
+			total_item_cost: t.items,
+			manpower_cost: manpower,
+			general_cost: other,
+			total_other_expenses: t.tagged + untagged,
+			total_cost: total_cost,
 			contingency_amount: contingency,
 			financing_amount: financing,
 			cost_price: cost_price,
@@ -96,13 +121,24 @@ if (!alantech.estimation.loaded) {
 		frm.refresh_fields();
 	};
 
-	// Section dropdown of the cost items = titles in the Sub Assemblies table
+	// Section dropdown of the items and expenses = titles in the Sub Assemblies table
 	alantech.estimation.sync_sections = function (frm) {
 		const titles = (frm.doc.sections || []).map((s) => s.section_title).filter(Boolean);
-		frm.fields_dict.items.grid.update_docfield_property("section", "options", [""].concat(titles));
+		["items", "expenses"].forEach((table) => {
+			if (frm.fields_dict[table]) {
+				frm.fields_dict[table].grid.update_docfield_property("section", "options", [""].concat(titles));
+			}
+		});
 		frm._alt_section_titles = {};
 		(frm.doc.sections || []).forEach((s) => (frm._alt_section_titles[s.name] = s.section_title));
 		frm.refresh_field("items");
+		frm.refresh_field("expenses");
+	};
+
+	// Sub Assembly column of an item / expense row follows its section
+	const set_row_sub_assembly = (frm, row) => {
+		const s = (frm.doc.sections || []).find((x) => x.section_title === row.section);
+		row.sub_assembly = (s && s.sub_assembly) || null;
 	};
 
 	const recalc = (frm) => alantech.estimation.calculate(frm);
@@ -122,12 +158,12 @@ if (!alantech.estimation.loaded) {
 
 	frappe.ui.form.on("Estimation Section", {
 		section_title(frm, cdt, cdn) {
-			// rename the section on its cost items too
+			// rename the section on its items and expenses too
 			const row = locals[cdt][cdn];
 			const old_title = (frm._alt_section_titles || {})[cdn];
 			if (old_title && row.section_title && old_title !== row.section_title) {
-				(frm.doc.items || []).forEach((item) => {
-					if (item.section === old_title) item.section = row.section_title;
+				[...(frm.doc.items || []), ...(frm.doc.expenses || [])].forEach((r) => {
+					if (r.section === old_title) r.section = row.section_title;
 				});
 			}
 			alantech.estimation.sync_sections(frm);
@@ -135,6 +171,9 @@ if (!alantech.estimation.loaded) {
 		},
 		sub_assembly(frm, cdt, cdn) {
 			const row = locals[cdt][cdn];
+			[...(frm.doc.items || []), ...(frm.doc.expenses || [])].forEach((r) => {
+				if (r.section === row.section_title) r.sub_assembly = row.sub_assembly || null;
+			});
 			if (!row.sub_assembly) return;
 			frappe.db
 				.get_value("Sub Assembly", row.sub_assembly, ["cost_type", "offer_title", "price_description"])
@@ -147,14 +186,20 @@ if (!alantech.estimation.loaded) {
 				});
 		},
 		sections_remove(frm) {
-			// cost items of a removed section go with it
+			// items of a removed section go with it; its expenses become untagged
 			const titles = new Set((frm.doc.sections || []).map((s) => s.section_title));
 			const before = (frm.doc.items || []).length;
 			frm.doc.items = (frm.doc.items || []).filter((item) => !item.section || titles.has(item.section));
 			frm.doc.items.forEach((item, i) => (item.idx = i + 1));
+			(frm.doc.expenses || []).forEach((e) => {
+				if (e.section && !titles.has(e.section)) {
+					e.section = null;
+					e.sub_assembly = null;
+				}
+			});
 			const removed = before - frm.doc.items.length;
 			if (removed) {
-				frappe.show_alert({ message: __("Removed {0} cost items of the deleted section", [removed]), indicator: "orange" });
+				frappe.show_alert({ message: __("Removed {0} items of the deleted section", [removed]), indicator: "orange" });
 			}
 			alantech.estimation.sync_sections(frm);
 			recalc(frm);
@@ -174,21 +219,33 @@ if (!alantech.estimation.loaded) {
 			if (prev && prev.section) row.section = prev.section;
 			else if (sections.length) row.section = sections[sections.length - 1].section_title;
 			const section = sections.find((s) => s.section_title === row.section);
-			row.addon_pct = section && section.cost_type === "Manpower" ? 0 : flt(frm.doc.default_addon_pct);
+			row.addon_pct = section && section.cost_type === MANPOWER ? 0 : flt(frm.doc.default_addon_pct);
+			set_row_sub_assembly(frm, row);
 			frm.refresh_field("items");
 		},
-		item_code(frm, cdt, cdn) {
-			const row = locals[cdt][cdn];
-			if (!row.item_code || flt(row.unit_cost)) return;
-			frappe.db.get_value("Item", row.item_code, ["last_purchase_rate", "valuation_rate"]).then(({ message }) => {
-				const rate = message && (flt(message.last_purchase_rate) || flt(message.valuation_rate));
-				if (rate) frappe.model.set_value(cdt, cdn, "unit_cost", rate);
-			});
+		section(frm, cdt, cdn) {
+			set_row_sub_assembly(frm, locals[cdt][cdn]);
+			recalc(frm);
 		},
 		items_remove: recalc,
-		section: recalc,
 		qty: recalc,
 		unit_cost: recalc,
 		addon_pct: recalc,
+	});
+
+	frappe.ui.form.on("Estimation Expense", {
+		expenses_add(frm, cdt, cdn) {
+			const row = locals[cdt][cdn];
+			if (!flt(row.qty)) row.qty = 1;
+			frm.refresh_field("expenses");
+		},
+		section(frm, cdt, cdn) {
+			set_row_sub_assembly(frm, locals[cdt][cdn]);
+			recalc(frm);
+		},
+		expenses_remove: recalc,
+		expense_type: recalc,
+		qty: recalc,
+		rate: recalc,
 	});
 }
