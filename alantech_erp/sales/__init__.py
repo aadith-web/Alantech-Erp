@@ -11,6 +11,11 @@ Internal approval, value based and routed up the sales hierarchy (sales/hierarch
            company currency, grand total) also need the Sales Director above the creator
            (role "Quotation Level 2 Approver"). With no limit set, Level 1 is final.
   Either level can reject with remarks; the salesperson corrects and resubmits (back to Level 1).
+  Approve opens a remarks popup (optional): the changes the salesperson must make before sending.
+
+Approved (still a draft): only the quotation's owner can edit it, to apply the approver's remarks;
+items, prices, discounts and taxes stay as approved (a price change needs Reject / Resubmit).
+Send to Client submits it: from then on nothing can be edited.
 
 Client decision: the salesperson records Client Accepted / Requested Revision / Rejected.
 A revision cancels the Quotation; the amended version goes back through the same chain and keeps
@@ -42,11 +47,15 @@ CLIENT_APPROVED = "Client Approved"
 REVISION_REQUESTED = "Revision Requested"
 LOST = "Lost"
 
-# Submitted states in which the quoted prices are fixed
+# States in which the quoted prices are fixed (Approved: editable by the owner except the prices)
 LOCKED_STATES = (APPROVED, SENT_TO_CLIENT, CLIENT_APPROVED)
 
 # Workflow action that needs remarks
 REJECT_ACTION = "Reject"
+# Workflow action with optional approval remarks (Level 1 and Level 2)
+APPROVE_ACTION = "Approve"
+# Quotation fields holding the approval remarks of each level
+APPROVAL_REMARKS_FIELDS = {LEVEL_1: "alt_level_1_remarks", LEVEL_2: "alt_level_2_remarks"}
 
 # --------------------------------------------------------------------------- Deal sales stages
 # The Deal (Opportunity) is only made from a Quotation, so its Sales Stage follows the quotation
@@ -96,3 +105,13 @@ def workflow_is_active():
 	from frappe.model.workflow import get_workflow_name
 
 	return get_workflow_name("Quotation") == WORKFLOW_NAME
+
+# --------------------------------------------------------------------------- Customer rules (CRM-F04)
+# Customer Type: Company / Partnership (Zoho Account) or Individual (Zoho Contact).
+INDIVIDUAL = "Individual"
+# Mobile No and Email ID mandatory and unique across customers; GSTIN unique (sales/customer_unique.py).
+# Cleaned-up copies of the customer's mobile and email, unique in the database.
+MOBILE_KEY_FIELD = "alt_mobile_key"
+EMAIL_KEY_FIELD = "alt_email_key"
+# Customer Type, Tax Type and GSTIN are fixed after the first submitted transaction, except for:
+LOCKED_FIELD_EDITORS = (SALES_MANAGER, "System Manager")

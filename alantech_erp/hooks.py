@@ -307,11 +307,28 @@ doc_events = {
 	"Attendance Request": {
 		"before_submit": "alantech_erp.setup.attendance_request.check_approver",  # own Leave Approver or HR
 	},
-    # Tax Type: Local (GSTIN + GST address mandatory) / Overseas (alantech_erp/sales/customer.py)
+    # CRM-F04 Customer Creation Management
+    # Customer Type / Tax Type / lifecycle rules (alantech_erp/sales/customer.py); mobile, email,
+    # GSTIN and name duplicates (alantech_erp/sales/customer_unique.py)
     "Customer": {
-        "before_validate": "alantech_erp.sales.customer.before_validate",
-        "validate": "alantech_erp.sales.customer.validate",
+        "before_validate": [
+            "alantech_erp.sales.customer.before_validate",
+            "alantech_erp.sales.customer_unique.before_validate",
+        ],
+        "validate": [
+            "alantech_erp.sales.customer_unique.validate",
+            "alantech_erp.sales.customer.validate",
+        ],
         "onload": "alantech_erp.sales.customer.onload",
+    },
+    # a customer's contact cannot take another customer's mobile / email
+    "Contact": {
+        "validate": "alantech_erp.sales.customer_unique.contact_validate",
+        "on_update": "alantech_erp.sales.customer_unique.contact_on_update",
+    },
+    # Local customer: billing address in India; Overseas: outside India
+    "Address": {
+        "validate": "alantech_erp.sales.customer.address_validate",
     },
     # Deal: no Prospect; Sales Stage follows the quotation (alantech_erp/sales/deal.py)
     "Opportunity": {
