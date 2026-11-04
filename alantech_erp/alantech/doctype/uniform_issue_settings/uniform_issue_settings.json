@@ -1,0 +1,98 @@
+{
+  "actions": [],
+  "creation": "2026-11-04 10:00:00.000000",
+  "description": "Defaults used by Employee Uniform Issue.",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "stock_section",
+    "default_source_warehouse",
+    "uniform_item_group",
+    "accounting_section",
+    "uniform_expense_account",
+    "default_cost_center",
+    "reissue_section",
+    "reissue_warning_days"
+  ],
+  "fields": [
+    {
+      "fieldname": "stock_section",
+      "fieldtype": "Section Break",
+      "label": "Stock"
+    },
+    {
+      "description": "Warehouse from which uniforms are issued by default.",
+      "fieldname": "default_source_warehouse",
+      "fieldtype": "Link",
+      "label": "Default Source Warehouse",
+      "options": "Warehouse"
+    },
+    {
+      "description": "Items in this Item Group (and its child groups) are treated as uniform items.",
+      "fieldname": "uniform_item_group",
+      "fieldtype": "Link",
+      "label": "Uniform Item Group",
+      "options": "Item Group"
+    },
+    {
+      "fieldname": "accounting_section",
+      "fieldtype": "Section Break",
+      "label": "Accounting"
+    },
+    {
+      "description": "Expense account used on the Material Issue Stock Entry created for a uniform issue.",
+      "fieldname": "uniform_expense_account",
+      "fieldtype": "Link",
+      "label": "Uniform Expense Account",
+      "options": "Account"
+    },
+    {
+      "description": "Cost center used for accounting allocation when uniforms are issued.",
+      "fieldname": "default_cost_center",
+      "fieldtype": "Link",
+      "label": "Default Cost Center",
+      "options": "Cost Center"
+    },
+    {
+      "fieldname": "reissue_section",
+      "fieldtype": "Section Break",
+      "label": "Re-issue"
+    },
+    {
+      "default": "0",
+      "description": "Minimum number of days before another uniform issue to the same employee triggers a warning. 0 disables the warning.",
+      "fieldname": "reissue_warning_days",
+      "fieldtype": "Int",
+      "label": "Re-issue Warning Days"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "issingle": 1,
+  "links": [],
+  "modified": "2026-11-04 10:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "AlanTech",
+  "name": "Uniform Issue Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "email": 1,
+      "print": 1,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "read": 1,
+      "role": "HR Manager",
+      "write": 1
+    }
+  ],
+  "row_format": "Dynamic",
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}
