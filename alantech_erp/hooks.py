@@ -230,6 +230,10 @@ fixtures = [
 ]
 
 doc_events = {
+    # a Stock Entry made by an Employee Uniform Issue is cancelled through that issue only
+    "Stock Entry": {
+        "before_cancel": "alantech_erp.alantech.doctype.employee_uniform_issue.employee_uniform_issue.stock_entry_before_cancel",
+    },
     "Employee": {
         "before_insert": [
             # blank Employee Number (form or Data Import) -> next E### number
@@ -426,6 +430,8 @@ after_migrate = [
     # HR User prepares Payroll Entries; payroll payable account of type Payable
     "alantech_erp.setup.payroll.execute",
     "alantech_erp.setup.asset_handover.execute",
+    # Employee / Employee Uniform Issue on the Stock Entry made by a uniform issue
+    "alantech_erp.setup.uniform_issue.execute",
     # Quotation approval workflow (Sales Manager, Level 2 above the Selling Settings limit)
     "alantech_erp.setup.sales_flow.execute",
     # Sales Person for every active employee in the Sales department

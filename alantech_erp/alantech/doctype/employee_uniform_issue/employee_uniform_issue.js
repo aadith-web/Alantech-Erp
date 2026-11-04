@@ -6,6 +6,9 @@ const ITEM_API = "alantech_erp.alantech.doctype.employee_uniform_issue.employee_
 
 frappe.ui.form.on("Employee Uniform Issue", {
   setup(frm) {
+    // the Stock Entry is made on submit and cancelled with this document: skip the "cancel all linked" prompt
+    frm.ignore_doctypes_on_cancel_all = ["Stock Entry"];
+
     frm.set_query("employee", () => ({ filters: { status: "Active" } }));
 
     frm.set_query("source_warehouse", () => {
