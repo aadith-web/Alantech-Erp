@@ -10,7 +10,8 @@ Lead -> Customer (Company / Individual) -> Estimation (optional, Sales Manager) 
 Deal: optional, created from the Quotation (Create Deal); its amount and Sales Stage follow the
 quotation (the Alantech sales stages replace ERPNext's pre-quote ones such as Prospecting).
 Prospect: not used (sales/prospect.py); left to System Managers only.
-Customer: Tax Type Local (GSTIN + GST address mandatory) or Overseas (sales/customer.py).
+Customer: Tax Type Local (GSTIN + GST address mandatory) or Overseas (sales/customer.py); Mobile No
+and Email ID mandatory and unique, Company / Individual rules (CRM-F04, sales/customer_unique.py).
 
 Runs on every `bench migrate` (see after_migrate in hooks.py). Safe to re-run: the workflow is
 created once and then left alone, so changes made in the Workflow form are kept. A workflow
@@ -20,6 +21,7 @@ by the sales hierarchy) is upgraded once.
 
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
+from frappe.utils import cstr
 
 from alantech_erp.sales import (
 	APPROVED,
@@ -168,6 +170,24 @@ CUSTOM_FIELDS = {
 			"depends_on": f"eval:doc.alt_approval_level == '{LEVEL_2}'",
 			**_APPROVAL_FIELD,
 		},
+		{
+			"fieldname": "alt_level_1_remarks",
+			"label": "Level 1 Approval Remarks",
+			"fieldtype": "Small Text",
+			"insert_after": "alt_level_2_approved_on",
+			"depends_on": "eval:doc.alt_level_1_remarks",
+			"description": "Changes the Sales Manager asked for when approving",
+			**_APPROVAL_FIELD,
+		},
+		{
+			"fieldname": "alt_level_2_remarks",
+			"label": "Level 2 Approval Remarks",
+			"fieldtype": "Small Text",
+			"insert_after": "alt_level_1_remarks",
+			"depends_on": "eval:doc.alt_level_2_remarks",
+			"description": "Changes the Sales Director asked for when approving",
+			**_APPROVAL_FIELD,
+		},
 	],
 	"Opportunity": [
 		{
@@ -270,7 +290,9 @@ STATES = [
 	(PENDING_MANAGER, "0", SALES_MANAGER),
 	(PENDING_LEVEL_2, "0", LEVEL_2_ROLE),
 	(REJECTED, "0", SALES_USER),
-	(APPROVED, "1", SALES_USER),
+	# Approved stays a draft so the owner can apply the approver's remarks (prices fixed,
+	# sales/quotation.py); Send to Client submits it
+	(APPROVED, "0", SALES_USER),
 	(SENT_TO_CLIENT, "1", SALES_USER),
 	(CLIENT_APPROVED, "1", SALES_USER),
 	(REVISION_REQUESTED, "2", SALES_USER),
@@ -319,6 +341,7 @@ def execute():
 	_hide_unused_fields()
 	_set_customer_stages()
 	_set_customer_tax_types()
+	_customer_form_rules()
 	_create_sales_stages()
 	_deal_stage_follows_quotation()
 	_retire_prospect()
@@ -353,11 +376,27 @@ def _create_workflow_actions():
 			).insert(ignore_permissions=True)
 
 
+def _approved_stays_draft(workflow):
+	"""Workflows made before CRM-F07 approval remarks submitted the quotation on Approve; now Approved
+	is a draft the owner can edit and Send to Client submits it. Changed once (True: changed)."""
+	changed = False
+	for row in workflow.states:
+		if row.state == APPROVED and cstr(row.doc_status) != "0":
+			row.doc_status = "0"
+			row.allow_edit = SALES_USER
+			changed = True
+	return changed
+
+
 def _create_workflow():
 	if frappe.db.exists("Workflow", WORKFLOW_NAME):
 		workflow = frappe.get_doc("Workflow", WORKFLOW_NAME)
 		if any("doc.owner" in (row.condition or "") for row in workflow.transitions):
-			return  # current version: leave any changes made in the Workflow form alone
+			# current version: leave any changes made in the Workflow form alone, except this one
+			if _approved_stays_draft(workflow):
+				workflow.save(ignore_permissions=True)
+				print(f"{WORKFLOW_NAME}: Approved is now editable by the owner; Send to Client submits the quotation.")
+			return
 		# created before Level 2 / hierarchy approvers existed: rebuild the states and transitions once
 		_set_states_and_transitions(workflow)
 		workflow.save(ignore_permissions=True)
@@ -525,6 +564,52 @@ def _retire_prospect():
 		}
 	).insert(ignore_permissions=True)
 	frappe.clear_cache(doctype="Prospect")
+
+
+# --------------------------------------------------------------------------- Customer rules (CRM-F04)
+_NOT_INDIVIDUAL = "eval:doc.customer_type!='Individual'"
+_NEW = "eval:doc.__islocal"
+# (field, property, value, property type): rules also checked server side (sales/customer*.py)
+CUSTOMER_PROPERTIES = [
+	# Mobile No / Email ID: entered on a new customer (the Primary Contact is made from them),
+	# then shown from the Primary Contact as before
+	("mobile_no", "fieldtype", "Data", "Select"),
+	# plain Data: Frappe's Phone / Email checks would block saving customers whose old contact
+	# values are irregular; new and changed values are checked in sales/customer_unique.py
+	("mobile_no", "options", "", "Text"),
+	("mobile_no", "read_only_depends_on", "eval:!doc.__islocal", "Code"),
+	("mobile_no", "mandatory_depends_on", _NEW, "Code"),
+	("mobile_no", "description", "With country code, e.g. +91 98470 12345. Unique: one customer per mobile number.", "Small Text"),
+	("email_id", "fieldtype", "Data", "Select"),
+	("email_id", "options", "", "Text"),
+	("email_id", "read_only_depends_on", "eval:!doc.__islocal", "Code"),
+	("email_id", "mandatory_depends_on", _NEW, "Code"),
+	("email_id", "description", "Unique: one customer per email.", "Small Text"),
+	# Company / Partnership: Territory and Industry mandatory; Individual: no Industry
+	("territory", "mandatory_depends_on", _NOT_INDIVIDUAL, "Code"),
+	("territory", "allow_in_quick_entry", "1", "Check"),
+	("industry", "mandatory_depends_on", _NOT_INDIVIDUAL, "Code"),
+	("industry", "depends_on", _NOT_INDIVIDUAL, "Code"),
+	("industry", "allow_in_quick_entry", "1", "Check"),
+	# Overseas: Default Currency mandatory
+	("default_currency", "mandatory_depends_on", "eval:doc.alt_tax_type=='Overseas'", "Code"),
+	("default_currency", "depends_on", "eval:doc.alt_tax_type=='Overseas' || doc.default_currency", "Code"),
+	("default_currency", "allow_in_quick_entry", "1", "Check"),
+]
+
+
+def _customer_form_rules():
+	from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+
+	from alantech_erp.sales.customer_unique import setup_keys
+
+	meta = frappe.get_meta("Customer")
+	for field, prop, value, prop_type in CUSTOMER_PROPERTIES:
+		df = meta.get_field(field)
+		if df and cstr(df.get(prop)) != value:
+			make_property_setter("Customer", field, prop, value, prop_type, validate_fields_for_doctype=False)
+	frappe.clear_cache(doctype="Customer")
+	setup_keys()
 
 
 # --------------------------------------------------------------------------- Customer tax type

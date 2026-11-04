@@ -9,6 +9,23 @@ const ALT_REJECTED = "Rejected";
 const ALT_PENDING_MANAGER = "Pending Manager Approval";
 const ALT_PENDING_LEVEL_2 = "Pending Level 2 Approval";
 const ALT_REJECT_ACTION = "Reject";
+const ALT_APPROVE_ACTION = "Approve";
+const ALT_APPROVED = "Approved";
+// fixed once approved (alantech_erp/sales/quotation.py check_approved_changes)
+const ALT_APPROVED_FIXED_FIELDS = [
+	"quotation_to",
+	"party_name",
+	"currency",
+	"conversion_rate",
+	"selling_price_list",
+	"items",
+	"taxes_and_charges",
+	"taxes",
+	"apply_discount_on",
+	"additional_discount_percentage",
+	"discount_amount",
+	"coupon_code",
+];
 
 frappe.ui.form.on("Quotation", {
 	setup(frm) {
@@ -48,6 +65,7 @@ frappe.ui.form.on("Quotation", {
 		}, 0);
 
 		alt_show_approval_intro(frm);
+		alt_lock_approved(frm);
 	},
 
 	party_name(frm) {
@@ -55,8 +73,10 @@ frappe.ui.form.on("Quotation", {
 		if (frm.doc.alt_technical_offer) frm.set_value("alt_technical_offer", null);
 	},
 
-	// Reject needs remarks: ask for them, store them, then let the workflow action run.
+	// Reject needs remarks; Approve asks for optional remarks (changes to make before sending).
+	// Ask for them, store them, then let the workflow action run.
 	before_workflow_action(frm) {
+		if (frm.selected_workflow_action === ALT_APPROVE_ACTION) return alt_ask_approval_remarks(frm);
 		if (frm.selected_workflow_action !== ALT_REJECT_ACTION) return;
 
 		frappe.dom.unfreeze(); // the workflow froze the page; the dialog has to be usable
@@ -93,9 +113,86 @@ frappe.ui.form.on("Quotation", {
 	},
 });
 
+function alt_ask_approval_remarks(frm) {
+	frappe.dom.unfreeze(); // the workflow froze the page; the dialog has to be usable
+	return new Promise((resolve, reject) => {
+		let done = false;
+		const dialog = new frappe.ui.Dialog({
+			title: __("Approve Quotation {0}", [frm.doc.name]),
+			fields: [
+				{
+					fieldname: "remarks",
+					fieldtype: "Small Text",
+					label: __("Approval Remarks / Changes Required"),
+					description: __(
+						"Optional. Changes the salesperson must make before sending it to the client (validity, payment terms, delivery, notes...). Items and prices stay as approved."
+					),
+				},
+			],
+			primary_action_label: __("Approve"),
+			primary_action({ remarks }) {
+				done = true;
+				dialog.hide();
+				frappe
+					.call({
+						method: "alantech_erp.sales.quotation.set_approval_remarks",
+						args: { name: frm.doc.name, remarks: remarks || "" },
+						freeze: true,
+					})
+					.then(() => {
+						frappe.dom.freeze(); // balanced by the workflow's own unfreeze
+						resolve();
+					}, reject);
+			},
+		});
+		dialog.onhide = () => {
+			if (!done) reject(); // cancelled: no workflow action
+		};
+		dialog.show();
+	});
+}
+
+// Approved, not yet sent: the owner may change the other details, not the approved prices.
+function alt_lock_approved(frm) {
+	if (frm.doc.workflow_state !== ALT_APPROVED || frm.doc.docstatus !== 0) return;
+	const owner = frm.doc.owner === frappe.session.user || frappe.user.has_role("System Manager");
+	if (!owner) {
+		frm.disable_form();
+		return;
+	}
+	for (const field of ALT_APPROVED_FIXED_FIELDS) {
+		if (frm.fields_dict[field]) frm.set_df_property(field, "read_only", 1);
+	}
+}
+
 function alt_show_approval_intro(frm) {
 	const esc = frappe.utils.escape_html;
 	const state = frm.doc.workflow_state;
+
+	if (state === ALT_APPROVED && frm.doc.docstatus === 0) {
+		const approvers = [frm.doc.alt_level_1_approver, frm.doc.alt_level_2_approver]
+			.filter(Boolean)
+			.map((user) => esc(frappe.user.full_name(user) || user))
+			.join(", ");
+		const remarks = [
+			frm.doc.alt_level_1_remarks ? `${__("Level 1")}: ${esc(frm.doc.alt_level_1_remarks)}` : "",
+			frm.doc.alt_level_2_remarks ? `${__("Level 2")}: ${esc(frm.doc.alt_level_2_remarks)}` : "",
+		]
+			.filter(Boolean)
+			.join("<br>");
+		const owner = frm.doc.owner === frappe.session.user;
+		let message = __("Approved by {0}.", [approvers || __("the approver")]);
+		if (remarks) message += `<br><b>${__("Remarks")}:</b><br>${remarks}`;
+		message +=
+			"<br>" +
+			(owner
+				? __("Make any changes asked for (items and prices are fixed), save, then use <b>Send to Client</b>. After that it cannot be edited.")
+				: __("Only {0} can change it before it is sent to the client.", [
+						esc(frappe.user.full_name(frm.doc.owner) || frm.doc.owner),
+				  ]));
+		frm.set_intro(message, remarks ? "orange" : "green");
+		return;
+	}
 
 	if (state === ALT_REJECTED && frm.doc.alt_rejection_remarks) {
 		frm.set_intro(

@@ -710,6 +710,21 @@ def _customers(company):
 			customer.gst_category = "Overseas" if overseas else "Registered Regular"
 			if gstin:
 				customer.gstin = gstin
+		if overseas and _has_field("Customer", "default_currency") and frappe.db.exists("Currency", "AED"):
+			customer.default_currency = "AED"  # Overseas customers need a currency
+		# Mobile No and Email ID are mandatory and unique (sales/customer_unique.py); ERPNext makes the
+		# Primary Contact from them
+		first, last = contact
+		number = list(CUSTOMERS).index(name) + 1
+		slug = frappe.scrub(name.replace(DEMO_TAG, "")).strip("_").replace("_", "")[:20]
+		customer.update(
+			{
+				"first_name": first,
+				"last_name": last,
+				"email_id": f"{first.lower()}@{slug}.example",
+				"mobile_no": f"+971-50000{number:04d}" if overseas else f"+91-94470{number:05d}",
+			}
+		)
 		sales_person = _sales_person_of(company, owner_no)
 		if sales_person:
 			customer.append("sales_team", {"sales_person": sales_person, "allocated_percentage": 100})
@@ -719,21 +734,9 @@ def _customers(company):
 		customer.insert(ignore_permissions=True)
 		_set_owner(customer, owner)
 
-		first, last = contact
-		slug = frappe.scrub(name.replace(DEMO_TAG, "")).strip("_").replace("_", "")[:20]
-		email = f"{first.lower()}@{slug}.example"
-		contact_doc = frappe.get_doc(
-			{
-				"doctype": "Contact",
-				"first_name": first,
-				"last_name": last,
-				"designation": "Plant Head",
-				"email_ids": [{"email_id": email, "is_primary": 1}],
-				"phone_nos": [{"phone": "+971 50 000 0001" if overseas else "+91 94470 00001", "is_primary_mobile_no": 1}],
-				"links": [{"link_doctype": "Customer", "link_name": customer.name}],
-			}
-		)
-		contact_doc.insert(ignore_permissions=True)
+		contact_name = frappe.db.get_value("Customer", customer.name, "customer_primary_contact")
+		if contact_name:
+			frappe.db.set_value("Contact", contact_name, "designation", "Plant Head", update_modified=False)
 
 		address = {
 			"doctype": "Address",
@@ -754,7 +757,6 @@ def _customers(company):
 		if frappe.db.exists("Country", address["country"]):
 			frappe.get_doc(address).insert(ignore_permissions=True)
 
-		customer.db_set({"customer_primary_contact": contact_doc.name}, update_modified=False)
 		created += 1
 	return f"{created} created"
 
