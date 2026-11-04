@@ -13,6 +13,7 @@
   "section_detail_section",
   "amount",
   "addon_amount",
+  "expense_cost",
   "override_margin",
   "margin_pct",
   "column_break_section_detail",
@@ -61,7 +62,8 @@
    "options": "currency",
    "read_only": 1,
    "in_list_view": 1,
-   "columns": 2
+   "columns": 2,
+   "description": "Items incl. add-on + other expenses tagged to this section"
   },
   {
    "fieldname": "selling_price",
@@ -80,14 +82,21 @@
   {
    "fieldname": "amount",
    "fieldtype": "Currency",
-   "label": "Amount",
+   "label": "Items Amount",
    "options": "currency",
    "read_only": 1
   },
   {
    "fieldname": "addon_amount",
    "fieldtype": "Currency",
-   "label": "Transport",
+   "label": "Items Add-on",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "expense_cost",
+   "fieldtype": "Currency",
+   "label": "Other Expenses",
    "options": "currency",
    "read_only": 1
   },
@@ -120,7 +129,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-26 13:30:00.000000",
+ "modified": "2026-11-03 14:30:00.000000",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Estimation Section",

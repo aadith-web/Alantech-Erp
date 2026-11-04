@@ -405,14 +405,14 @@
  {
   "alt_default_department": "Sales - E",
   "alt_reports_to": "Managing Director",
-  "alt_role_profile": "ALT Sales Head",
+  "alt_role_profile": "ALT Sales Director",
   "appraisal_template": null,
   "description": null,
-  "designation_name": "Sales Head",
+  "designation_name": "Sales Director",
   "docstatus": 0,
   "doctype": "Designation",
-  "modified": "2026-10-16 18:24:06.849991",
-  "name": "Sales Head",
+  "modified": "2026-11-03 14:30:00.000000",
+  "name": "Sales Director",
   "skills": []
  },
  {
@@ -534,14 +534,14 @@
  },
  {
   "alt_default_department": "Sales - E",
-  "alt_reports_to": "Sales Head",
+  "alt_reports_to": "Sales Director",
   "alt_role_profile": "ALT Sales Manager",
   "appraisal_template": null,
   "description": null,
   "designation_name": "Sales Manager",
   "docstatus": 0,
   "doctype": "Designation",
-  "modified": "2026-10-16 18:24:06.861651",
+  "modified": "2026-11-03 14:30:00.000000",
   "name": "Sales Manager",
   "skills": []
  },
@@ -560,15 +560,28 @@
  },
  {
   "alt_default_department": "Sales - E",
-  "alt_reports_to": "Sales Manager",
+  "alt_reports_to": "Managing Director",
   "alt_role_profile": "ALT Proposal Engineer",
   "appraisal_template": null,
   "description": null,
   "designation_name": "Proposal Engineer",
   "docstatus": 0,
   "doctype": "Designation",
-  "modified": "2026-10-16 18:24:06.863709",
+  "modified": "2026-11-03 14:30:00.000000",
   "name": "Proposal Engineer",
+  "skills": []
+ },
+ {
+  "alt_default_department": "Sales - E",
+  "alt_reports_to": "Managing Director",
+  "alt_role_profile": "ALT Sales Coordinator",
+  "appraisal_template": null,
+  "description": null,
+  "designation_name": "Sales Co-ordinator",
+  "docstatus": 0,
+  "doctype": "Designation",
+  "modified": "2026-11-03 14:30:00.000000",
+  "name": "Sales Co-ordinator",
   "skills": []
  },
  {

@@ -13,6 +13,7 @@
 	.alt-cs tr.sec td { background: #f4b183; font-weight: 600; color: #2f6b1c; padding-left: 90px; }
 	.alt-cs tr.sub td { background: #9dc3e6; font-weight: 600; }
 	.alt-cs tr.tot td { background: #a9d18e; font-weight: 600; }
+	.alt-cs tr.exp td { background: #fbf7ea; }
 	.alt-cs .alt-cs-sum { width: 55%; margin: 10px 0 0 auto; font-size: 8.5pt; }
 	.alt-cs .alt-cs-sum td { border: 1px solid #999; padding: 3px 6px; }
 	.alt-cs .alt-cs-sum tr.b td { font-weight: 600; }
@@ -31,11 +32,11 @@
 	<table class="alt-cs-sheet">
 		<thead><tr>
 			<th>{{ _("SL NO") }}</th><th>{{ _("ITEM") }}</th><th>{{ _("TYPE & MODEL") }}</th><th>{{ _("MOC") }}</th><th>{{ _("Vendor") }}</th>
-			<th>{{ _("QTY") }}</th><th>{{ _("UNIT PRICE") }}</th><th>{{ _("TOTAL") }}</th><th>{{ _("TRANSPORT") }}</th><th>{{ _("TOTAL PRICE") }}</th>
+			<th>{{ _("QTY") }}</th><th>{{ _("UNIT PRICE") }}</th><th>{{ _("TOTAL") }}</th><th>{{ _("ADD-ON") }}</th><th>{{ _("TOTAL PRICE") }}</th>
 		</tr></thead>
 		<tbody>
 		{%- for g in cs.groups %}
-			<tr class="sec"><td colspan="10">{{ g.title }}{% if g.mode != "Included" %} ({{ _(g.mode) }}){% endif %}</td></tr>
+			<tr class="sec"><td colspan="10">{{ g.title }}{% if g.sub_assembly and g.sub_assembly != g.title %} <span style="font-weight: normal">({{ g.sub_assembly }})</span>{% endif %}{% if g.mode != "Included" %} - {{ _(g.mode) }}{% endif %}</td></tr>
 			{%- for r in g["items"] %}
 			<tr>
 				<td class="num">{{ r.sl }}</td><td>{{ r.item }}</td><td>{{ r.type_model }}</td><td>{{ r.moc }}</td><td>{{ r.make }}</td>
@@ -43,16 +44,35 @@
 				<td class="num">{{ r.transport }}</td><td class="num">{{ r.total }}</td>
 			</tr>
 			{%- endfor %}
-			<tr class="sub"><td></td><td colspan="6">{{ _("Sub Total") }}</td><td class="num">{{ g.amount }}</td><td class="num">{{ g.transport }}</td><td class="num">{{ g.total }}</td></tr>
+			{%- for r in g["expenses"] %}
+			<tr class="exp">
+				<td class="num">{{ r.sl }}</td><td colspan="4">{{ r.description }} <i>({{ _(r.expense_type) }})</i></td>
+				<td class="num">{{ r.qty }}</td><td class="num">{{ r.rate }}</td><td class="num">{{ r.amount }}</td>
+				<td class="num"></td><td class="num">{{ r.amount }}</td>
+			</tr>
+			{%- endfor %}
+			<tr class="sub"><td></td><td colspan="6">{{ _("Sub Total") }}{% if g["expenses"] and g["items"] %} ({{ _("items") }} {{ g.item_total }} + {{ _("other expenses") }} {{ g.expense_cost }}){% endif %}</td><td class="num">{{ g.amount }}</td><td class="num">{{ g.transport }}</td><td class="num">{{ g.total }}</td></tr>
 		{%- endfor %}
-			<tr class="tot"><td></td><td colspan="6">{{ _("TOTAL COST") }}</td><td class="num">{{ t.total_amount }}</td><td class="num">{{ t.total_addon }}</td><td class="num">{{ t.total_cost }}</td></tr>
+		{%- if cs.general_expenses %}
+			<tr class="sec"><td colspan="10">{{ _("Other Expenses (general)") }}</td></tr>
+			{%- for r in cs.general_expenses %}
+			<tr class="exp">
+				<td class="num">{{ r.sl }}</td><td colspan="4">{{ r.description }} <i>({{ _(r.expense_type) }})</i></td>
+				<td class="num">{{ r.qty }}</td><td class="num">{{ r.rate }}</td><td class="num">{{ r.amount }}</td>
+				<td class="num"></td><td class="num">{{ r.amount }}</td>
+			</tr>
+			{%- endfor %}
+			<tr class="sub"><td></td><td colspan="8">{{ _("Sub Total") }}</td><td class="num">{{ cs.general_total }}</td></tr>
+		{%- endif %}
+			<tr class="tot"><td></td><td colspan="8">{{ _("TOTAL COST") }}</td><td class="num">{{ t.total_cost }}</td></tr>
 		</tbody>
 	</table>
 
 	<table class="alt-cs-sum">
-		<tr><td>{{ _("Equipment") }}</td><td class="num">{{ t.equipment_cost }}</td></tr>
-		<tr><td>{{ _("Manpower") }}</td><td class="num">{{ t.manpower_cost }}</td></tr>
-		<tr><td>{{ _("General & Services") }}</td><td class="num">{{ t.general_cost }}</td></tr>
+		<tr><td>{{ _("Total Item Cost") }}</td><td class="num">{{ t.total_item_cost }}</td></tr>
+		<tr><td>&nbsp;&nbsp;{{ _("Manpower") }}</td><td class="num">{{ t.manpower_cost }}</td></tr>
+		<tr><td>&nbsp;&nbsp;{{ _("Transport, Travel & Other") }}</td><td class="num">{{ t.general_cost }}</td></tr>
+		<tr><td>{{ _("Total Other Expenses") }}</td><td class="num">{{ t.total_other_expenses }}</td></tr>
 		<tr class="b"><td>{{ _("Total Cost") }}</td><td class="num">{{ t.total_cost }}</td></tr>
 		<tr><td>{{ _("Contingencies") }} ({{ doc.get_formatted("contingency_pct") }})</td><td class="num">{{ t.contingency_amount }}</td></tr>
 		<tr><td>{{ _("Financing Cost") }} ({{ doc.get_formatted("financing_pct") }}){% if not doc.include_financing %} - {{ _("not added") }}{% endif %}</td><td class="num">{{ t.financing_amount }}</td></tr>

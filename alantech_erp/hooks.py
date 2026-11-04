@@ -41,6 +41,8 @@ app_include_css = [
 app_include_js = [
     # country code picker of Phone fields opens on saved records too
     "/assets/alantech_erp/js/phone_control.js",
+    # Customer quick entry: Tax Type Local -> GSTIN and the address fields are mandatory
+    "/assets/alantech_erp/js/customer_quick_entry.js",
 ]
 
 # include js, css files in header of web template
@@ -70,6 +72,7 @@ doctype_js = {
     "Lead": "public/js/lead.js",
     "Opportunity": "public/js/opportunity.js",
     "Quotation": "public/js/quotation.js",
+    "Customer": "public/js/customer.js",
     # live cost sheet calculation of the Estimation form
     "Estimation": "public/js/estimation_pricing.js",
     # approver lookup without an employee yet (Frappe v16 link validation)
@@ -167,6 +170,9 @@ jinja = {
 # -----------
 # Permissions evaluated in scripted ways
 
+# Sales records by the Sales Person tree (alantech_erp/sales/hierarchy.py): engineers see their
+# own, managers their team's, the Sales Director everything
+_SALES_HIERARCHY = "alantech_erp.sales.hierarchy"
 permission_query_conditions = {
     "Document": "alantech_erp.alantech.doctype.document.document.get_permission_query_conditions",
 	"Session Log": "alantech_erp.alantech.doctype.session_log.session_log.get_permission_query_conditions",
@@ -174,6 +180,13 @@ permission_query_conditions = {
 	"Company Policy": "alantech_erp.alantech.doctype.company_policy.company_policy.get_permission_query_conditions",
 	"Salary Structure Assignment": "alantech_erp.setup.salary_access.salary_structure_assignment_query_conditions",
 	"Salary Slip": "alantech_erp.setup.salary_access.salary_slip_query_conditions",
+	"Lead": f"{_SALES_HIERARCHY}.lead_query",
+	"Customer": f"{_SALES_HIERARCHY}.customer_query",
+	"Opportunity": f"{_SALES_HIERARCHY}.opportunity_query",
+	"Estimation": f"{_SALES_HIERARCHY}.estimation_query",
+	"Technical Offer": f"{_SALES_HIERARCHY}.technical_offer_query",
+	"Quotation": f"{_SALES_HIERARCHY}.quotation_query",
+	"Sales Order": f"{_SALES_HIERARCHY}.sales_order_query",
 }
 has_permission = {
 	"Document": "alantech_erp.alantech.doctype.document.document.has_permission",
@@ -182,6 +195,10 @@ has_permission = {
 	"Company Policy": "alantech_erp.alantech.doctype.company_policy.company_policy.has_permission",
 	"Salary Structure Assignment": "alantech_erp.setup.salary_access.has_permission",
 	"Salary Slip": "alantech_erp.setup.salary_access.has_permission",
+	**{
+		doctype: f"{_SALES_HIERARCHY}.has_permission"
+		for doctype in ("Lead", "Customer", "Opportunity", "Estimation", "Technical Offer", "Quotation", "Sales Order")
+	},
 }
 # DocType Class
 # ---------------
@@ -290,7 +307,21 @@ doc_events = {
 	"Attendance Request": {
 		"before_submit": "alantech_erp.setup.attendance_request.check_approver",  # own Leave Approver or HR
 	},
-    # Sales flow: Deal -> Estimation -> Quotation (manager + client approval) -> Sales Order
+    # Tax Type: Local (GSTIN + GST address mandatory) / Overseas (alantech_erp/sales/customer.py)
+    "Customer": {
+        "before_validate": "alantech_erp.sales.customer.before_validate",
+        "validate": "alantech_erp.sales.customer.validate",
+        "onload": "alantech_erp.sales.customer.onload",
+    },
+    # Deal: no Prospect; Sales Stage follows the quotation (alantech_erp/sales/deal.py)
+    "Opportunity": {
+        "validate": "alantech_erp.sales.deal.validate_opportunity",
+    },
+    # Prospect flow not used (alantech_erp/sales/prospect.py)
+    "Prospect": {
+        "before_insert": "alantech_erp.sales.prospect.before_insert",
+    },
+    # Sales flow: Lead -> Customer -> Estimation -> Quotation (manager + client approval) -> Sales Order
     "Quotation": {
         "validate": "alantech_erp.sales.quotation.validate",
         "before_submit": "alantech_erp.sales.quotation.before_submit",
@@ -301,6 +332,9 @@ doc_events = {
     },
     "Sales Order": {
         "validate": "alantech_erp.sales.sales_order.validate",
+        "before_submit": "alantech_erp.sales.sales_order.before_submit",
+        "on_submit": "alantech_erp.sales.sales_order.on_submit",
+        "on_cancel": "alantech_erp.sales.sales_order.on_cancel",
     },
 }
 
@@ -339,6 +373,10 @@ override_whitelisted_methods = {
 # override_doctype_dashboards = {
 # 	"Task": "alantech_erp.task.get_dashboard_data"
 # }
+override_doctype_dashboards = {
+	"Customer": "alantech_erp.sales.dashboards.customer",
+	"Lead": "alantech_erp.sales.dashboards.lead",
+}
 
 # exempt linked doctypes from being automatically cancelled
 #

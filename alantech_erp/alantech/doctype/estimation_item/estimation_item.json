@@ -5,8 +5,8 @@
  "engine": "InnoDB",
  "field_order": [
   "section",
+  "sub_assembly",
   "cost_head",
-  "item_code",
   "type_model",
   "moc",
   "make",
@@ -27,23 +27,26 @@
    "fieldtype": "Select",
    "label": "Section",
    "in_list_view": 1,
-   "columns": 2
+   "columns": 1
+  },
+  {
+   "fieldname": "sub_assembly",
+   "fieldtype": "Link",
+   "label": "Sub Assembly",
+   "options": "Sub Assembly",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2,
+   "description": "From the section's Sub Assembly"
   },
   {
    "fieldname": "cost_head",
-   "fieldtype": "Data",
-   "label": "Item / Cost Head",
+   "fieldtype": "Small Text",
+   "label": "Item Description",
    "reqd": 1,
    "in_list_view": 1,
-   "columns": 2,
-   "fetch_from": "item_code.item_name",
-   "fetch_if_empty": 1
-  },
-  {
-   "fieldname": "item_code",
-   "fieldtype": "Link",
-   "label": "Item",
-   "options": "Item"
+   "columns": 3,
+   "description": "Free text, not an Item master record"
   },
   {
    "fieldname": "type_model",
@@ -78,11 +81,8 @@
   },
   {
    "fieldname": "uom",
-   "fieldtype": "Link",
-   "label": "UOM",
-   "options": "UOM",
-   "fetch_from": "item_code.stock_uom",
-   "fetch_if_empty": 1
+   "fieldtype": "Data",
+   "label": "UOM"
   },
   {
    "fieldname": "cost_section",
@@ -111,19 +111,19 @@
   {
    "fieldname": "addon_pct",
    "fieldtype": "Percent",
-   "label": "Transport %"
+   "label": "Add-on %"
   },
   {
    "fieldname": "addon_amount",
    "fieldtype": "Currency",
-   "label": "Transport",
+   "label": "Add-on",
    "options": "currency",
    "read_only": 1
   },
   {
    "fieldname": "total_cost",
    "fieldtype": "Currency",
-   "label": "Total Cost",
+   "label": "Amount incl. Add-on",
    "options": "currency",
    "read_only": 1,
    "in_list_view": 1,
@@ -131,7 +131,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-26 13:30:00.000000",
+ "modified": "2026-11-03 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Estimation Item",
