@@ -1,0 +1,87 @@
+{
+ "actions": [],
+ "creation": "2026-10-30 12:30:00.000000",
+ "modified": "2026-10-30 12:30:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "module": "AlanTech",
+ "name": "Employee Asset Handover Item",
+ "owner": "Administrator",
+ "modified_by": "Administrator",
+ "field_order": [
+  "asset",
+  "asset_name",
+  "current_location",
+  "column_break_item",
+  "condition",
+  "issue_description",
+  "asset_repair"
+ ],
+ "fields": [
+  {
+   "fieldname": "asset",
+   "fieldtype": "Link",
+   "label": "Asset",
+   "options": "Asset",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "asset_name",
+   "fieldtype": "Data",
+   "label": "Asset Name",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "current_location",
+   "fieldtype": "Link",
+   "label": "Current Location",
+   "options": "Location",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "column_break_item",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "condition",
+   "fieldtype": "Select",
+   "label": "Condition",
+   "options": "\nGood\nDamaged",
+   "in_list_view": 1,
+   "columns": 1,
+   "depends_on": "eval:parent.transaction_type=='Receipt' && parent.inspection_required"
+  },
+  {
+   "fieldname": "issue_description",
+   "fieldtype": "Small Text",
+   "label": "Issue / Damage Details",
+   "in_list_view": 1,
+   "columns": 2,
+   "depends_on": "eval:doc.condition=='Damaged'",
+   "mandatory_depends_on": "eval:doc.condition=='Damaged'"
+  },
+  {
+   "fieldname": "asset_repair",
+   "fieldtype": "Link",
+   "label": "Asset Repair",
+   "options": "Asset Repair",
+   "read_only": 1,
+   "no_copy": 1,
+   "in_list_view": 1,
+   "columns": 1
+  }
+ ],
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

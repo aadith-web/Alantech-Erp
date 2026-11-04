@@ -8,11 +8,24 @@
  "engine": "InnoDB",
  "field_order": [
   "document_type_name",
-  "expiry_required",
-  "alert_days_before",
+  "description",
   "column_break_1",
   "disabled",
-  "description"
+  "number_section",
+  "number_format",
+  "number_pattern",
+  "column_break_number",
+  "number_example",
+  "number_mandatory",
+  "issue_date_section",
+  "issue_date_required",
+  "column_break_issue",
+  "issue_date_mandatory",
+  "expiry_date_section",
+  "expiry_required",
+  "alert_days_before",
+  "column_break_expiry",
+  "expiry_date_mandatory"
  ],
  "fields": [
   {
@@ -24,33 +37,117 @@
    "unique": 1
   },
   {
-   "default": "0",
-   "fieldname": "expiry_required",
-   "fieldtype": "Check",
-   "in_list_view": 1,
-   "label": "Expiry Required"
-  },
-  {
-   "default": "30",
-   "fieldname": "alert_days_before",
-   "fieldtype": "Int",
-   "label": "Alert Days Before Expiry"
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
   },
   {
    "fieldname": "column_break_1",
-   "fieldtype": "Column Break",
-   "label": " "
+   "fieldtype": "Column Break"
   },
   {
    "default": "0",
    "fieldname": "disabled",
    "fieldtype": "Check",
-   "label": "Disabled"
+   "label": "Disabled",
+   "description": "Disabled types cannot be chosen for new documents."
   },
   {
-   "fieldname": "description",
+   "fieldname": "number_section",
+   "fieldtype": "Section Break",
+   "label": "Number"
+  },
+  {
+   "fieldname": "number_format",
+   "fieldtype": "Select",
+   "label": "Number Format",
+   "options": "\nAadhaar\nPAN\nIndian Passport\nIndian Driving Licence\nEmirates ID\nCustom Pattern",
+   "description": "Checks the number on documents of this type. Leave empty for no check."
+  },
+  {
+   "fieldname": "number_pattern",
    "fieldtype": "Data",
-   "label": "Description"
+   "label": "Number Pattern",
+   "depends_on": "eval:doc.number_format=='Custom Pattern'",
+   "mandatory_depends_on": "eval:doc.number_format=='Custom Pattern'",
+   "description": "Regular expression for the whole number, e.g. [A-Z]{2}[0-9]{6} for two letters and six digits."
+  },
+  {
+   "fieldname": "column_break_number",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "number_example",
+   "fieldtype": "Data",
+   "label": "Number Example",
+   "description": "Shown under the number on the document and in the error message."
+  },
+  {
+   "default": "0",
+   "fieldname": "number_mandatory",
+   "fieldtype": "Check",
+   "label": "Number Mandatory",
+   "description": "A document of this type cannot be saved without a number."
+  },
+  {
+   "fieldname": "issue_date_section",
+   "fieldtype": "Section Break",
+   "label": "Issue Date"
+  },
+  {
+   "default": "1",
+   "fieldname": "issue_date_required",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Show Issue Date",
+   "description": "Documents of this type have an Issue Date field."
+  },
+  {
+   "fieldname": "column_break_issue",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.issue_date_required",
+   "fieldname": "issue_date_mandatory",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Issue Date Mandatory",
+   "description": "A document of this type cannot be saved without an Issue Date."
+  },
+  {
+   "fieldname": "expiry_date_section",
+   "fieldtype": "Section Break",
+   "label": "Expiry Date"
+  },
+  {
+   "default": "0",
+   "fieldname": "expiry_required",
+   "fieldtype": "Check",
+   "label": "Show Expiry Date",
+   "description": "Documents of this type have an Expiry Date field and get expiry alerts.",
+   "in_list_view": 1
+  },
+  {
+   "default": "30",
+   "fieldname": "alert_days_before",
+   "fieldtype": "Int",
+   "label": "Alert Days Before Expiry",
+   "depends_on": "eval:doc.expiry_required",
+   "description": "Days before the Expiry Date to send the alert."
+  },
+  {
+   "fieldname": "column_break_expiry",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.expiry_required",
+   "fieldname": "expiry_date_mandatory",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Expiry Date Mandatory",
+   "description": "A document of this type cannot be saved without an Expiry Date."
   }
  ],
  "grid_page_length": 50,

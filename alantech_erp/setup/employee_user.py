@@ -15,6 +15,7 @@ import frappe
 from frappe import _
 from frappe.permissions import add_user_permission
 from frappe.utils import cint, validate_email_address
+from typing import cast
 
 from alantech_erp.setup import approvers
 from alantech_erp.setup.access import FULL_ACCESS_DESIGNATIONS, FULL_ACCESS_ROLES
@@ -57,6 +58,8 @@ def create_user(employee: str, email: str | None = None, create_user_permission:
 			"send_welcome_email": 1 if outgoing_email_configured() else 0,
 		}
 	)
+	# welcome email through the Email Queue: a mail server that is down must not fail the save
+	user.flags.delay_emails = True
 	emp.db_set("user_id", email)
 	user.append("roles", {"role": "Employee"})
 	user.insert(ignore_permissions=True)  # the one real difference from ERPNext
@@ -105,9 +108,18 @@ def outgoing_email_configured():
 
 
 # ---------------------------------------------------------------------- Employee doc_events
-# Every employee with an email gets a user, whether added in the form or by Data Import, ticked
-# "Create User Automatically" or not. ERPNext's own after_insert would call its create_user, which
-# needs User create permission, so the request is taken over here and done with ours.
+# "Create User Automatically" is ticked by default (employee_fields.py), in the form and in Data
+# Import rows without that column; untick it to add the employee without a user. ERPNext's own
+# after_insert would call its create_user, which needs User create permission, so the request is
+# taken over here and done with ours.
+
+
+class AlantechEmployee:
+	"""extend_doctype_class: ticked without an email adds the employee without a user (with a
+	message) instead of ERPNext's error, as the box is now ticked by default."""
+
+	def validate_auto_user_creation(self):
+		pass
 
 
 def employee_email(doc):
@@ -115,17 +127,91 @@ def employee_email(doc):
 
 
 def employee_before_insert(doc, method=None):
-	if not doc.get("user_id") and employee_email(doc):
+	if not cint(doc.get("create_user_automatically")) or doc.get("user_id"):
+		return
+	doc.create_user_automatically = 0  # keeps ERPNext's after_insert out of it
+	if employee_email(doc):
 		doc.flags.alt_create_user = True
-		doc.create_user_automatically = 0  # keeps ERPNext's after_insert out of it
+	else:
+		user_not_created(doc, _("no email"))
 
 
 def employee_after_insert(doc, method=None):
 	if not doc.flags.pop("alt_create_user", None):
 		return
+	start = len(frappe.local.message_log)
 	if auto_create_user(doc):
 		doc.db_set("create_user_automatically", 1, update_modified=False)
 		doc.reload()
+		if frappe.flags.in_import:
+			# one "Welcome email sent" per row would pile up; the import summary says it once
+			welcome = _("Welcome email sent")
+			added = frappe.local.message_log[start:]
+			del frappe.local.message_log[start:]
+			frappe.local.message_log.extend(m for m in added if m.get("message") != welcome)
+			add_import_note(
+				doc,
+				user=doc.user_id,
+				welcome_email=any(m.get("message") == welcome for m in added),
+			)
+
+
+def user_not_created(doc, reason):
+	"""In the form: an alert now. In Data Import: a line in the summary shown once all rows are in."""
+	if frappe.flags.in_import:
+		add_import_note(doc, reason=reason)
+		return
+	frappe.msgprint(
+		_("No user created for {0}: {1}.").format(doc.employee_name or doc.first_name or doc.name, reason),
+		indicator="orange",
+		alert=True,
+	)
+
+
+# ---------------------------------------------------------------------- Data Import summary
+# Rows run one by one (in a background job outside developer mode), so what happened to each
+# row's user is kept in Redis under the running Data Import, and public/js/data_import.js shows
+# it once that import is done. Keyed per import so an earlier import's notes never mix in.
+
+
+def import_notes_key(data_import):
+	return f"alt_employee_import_notes|{data_import}"
+
+
+def running_employee_import():
+	# the importer sets "In Progress" before the first row and its final status after the last
+	return frappe.db.get_value(
+		"Data Import",
+		{"reference_doctype": "Employee", "status": "In Progress"},
+		"name",
+		order_by="modified desc",
+	)
+
+
+def add_import_note(doc, **note):
+	data_import = running_employee_import()
+	if not data_import:
+		return
+	note["employee"] = doc.employee_name or doc.first_name or doc.name
+	key = import_notes_key(data_import)
+	cache = frappe.cache
+	if cache is None:
+		return
+	cache.rpush(key, frappe.as_json(note))
+	cache.expire(cache.make_key(key), 24 * 3600)  # import dialog closed early
+
+
+@frappe.whitelist()
+def pop_import_notes(data_import: str) -> list[dict]:
+	frappe.get_doc("Data Import", data_import).check_permission("read")
+	key = import_notes_key(data_import)
+	cache = frappe.cache
+	if cache is None:
+		return []
+	raw_notes = cast(list[bytes | str], cache.lrange(key, 0, -1))
+	notes = [cast(dict, frappe.parse_json(frappe.safe_decode(n))) for n in raw_notes]
+	cache.delete_value(key)
+	return notes
 
 
 def auto_create_user(doc):
@@ -148,11 +234,7 @@ def auto_create_user(doc):
 			approvers.user_changed(doc, None)
 			return True
 	if reason:
-		frappe.msgprint(
-			_("No user created for {0}: {1}.").format(doc.employee_name or doc.name, reason),
-			indicator="orange",
-			alert=True,
-		)
+		user_not_created(doc, reason)
 		return False
 	create_user(doc.name, email=email, create_user_permission=doc.get("create_user_permission"))
 	return True
