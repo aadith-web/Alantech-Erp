@@ -192,3 +192,38 @@ def format_mobile_number(number, region=None):
     if isinstance(number, str):
         number = phonenumbers.parse(number, region)
     return f"+{number.country_code}-{phonenumbers.national_significant_number(number)}"
+
+
+# Needed to create an employee (form and Data Import). New employees only, so existing records
+# that miss one can still be saved. Department and Reports To may come from the designation
+# (org_structure.apply_designation_defaults, which runs before this). Same list in employee.js.
+REQUIRED_ON_CREATE = (
+    "first_name", "gender", "date_of_birth", "date_of_joining", "company", "status",
+    "department", "designation", "branch", "reports_to", "employment_type", "cell_number",
+    "default_shift",
+)
+
+
+def validate_required_on_create(doc, method=None):
+    """Employee.validate: refuse a new employee without the fields in REQUIRED_ON_CREATE and an email."""
+    if not doc.is_new():
+        return
+    # tests create bare employees; a test of this rule sets the flag
+    if frappe.flags.in_test and not frappe.flags.alt_check_employee_required:
+        return
+    from alantech_erp.org_structure import TOP_DESIGNATION
+
+    meta = frappe.get_meta("Employee")
+    missing = [
+        _(meta.get_label(field))
+        for field in REQUIRED_ON_CREATE
+        if not doc.get(field) and not (field == "reports_to" and doc.designation == TOP_DESIGNATION)
+    ]
+    if not any((doc.get(field) or "").strip() for field in EMAIL_FIELDS):
+        missing.append(_("Company Email or Personal Email"))
+    if missing:
+        frappe.throw(
+            _("Enter these to create the employee: {0}").format(", ".join(frappe.bold(m) for m in missing)),
+            frappe.MandatoryError,
+            title=_("Missing Fields"),
+        )

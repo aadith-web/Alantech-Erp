@@ -244,6 +244,8 @@ doc_events = {
             # after apply_designation_defaults, which may fill Reports To
             "alantech_erp.setup.approvers.employee_validate",
             "alantech_erp.setup.shifts.employee_holiday_list",
+            # last: Department / Reports To may be filled from the designation above
+            "alantech_erp.setup.employee_validation.validate_required_on_create",
         ],
         "on_update": [
             "alantech_erp.org_structure.sync_user_role_profile",

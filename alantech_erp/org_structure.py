@@ -300,6 +300,16 @@ def apply_designation_defaults(doc, method=None):
 TOP_DESIGNATION = "Managing Director"
 
 
+@frappe.whitelist()
+def designation_defaults(designation: str, company: str | None = None) -> dict:
+    """Employee form: the Department and Reports To that apply_designation_defaults fills on save,
+    so they are shown (and the mandatory check passes) as soon as the designation is picked."""
+    frappe.has_permission("Employee", "create", throw=True)
+    doc = frappe._dict(designation=designation, company=company, name="", department=None, reports_to=None)
+    apply_designation_defaults(doc)
+    return {"department": doc.department, "reports_to": doc.reports_to}
+
+
 def fill_vacant_post(doc, method=None):
     """Employee.on_update: someone now holds a post that was vacant. The employees under that post
     who were given the Managing Director as a stand-in move to them, if they are its only holder."""
