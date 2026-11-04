@@ -1,0 +1,188 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "allow_rename": 1,
+ "autoname": "field:policy_code",
+ "creation": "2026-11-03 10:50:28.018109",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "policy_title",
+  "policy_code",
+  "category",
+  "version",
+  "effective_date",
+  "summary",
+  "policy_document_section",
+  "policy_file",
+  "publication_section",
+  "status",
+  "applicability_section",
+  "applies_to_all",
+  "applicable_departments",
+  "applicable_designations",
+  "applicable_branches"
+ ],
+ "fields": [
+  {
+   "fieldname": "policy_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Policy Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "policy_code",
+   "fieldtype": "Data",
+   "label": "Policy Code",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Category",
+   "options": "Policy Category",
+   "reqd": 1
+  },
+  {
+   "fieldname": "version",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Version",
+   "reqd": 1
+  },
+  {
+   "fieldname": "effective_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Effective Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "summary",
+   "fieldtype": "Small Text",
+   "label": "Summary"
+  },
+  {
+   "fieldname": "policy_document_section",
+   "fieldtype": "Section Break",
+   "label": "Policy Document"
+  },
+  {
+   "fieldname": "policy_file",
+   "fieldtype": "Attach",
+   "label": "Policy File"
+  },
+  {
+   "fieldname": "publication_section",
+   "fieldtype": "Section Break",
+   "label": "Publication"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nPublished\nArchived"
+  },
+  {
+   "fieldname": "applicability_section",
+   "fieldtype": "Section Break",
+   "label": "Applicability"
+  },
+  {
+   "default": "0",
+   "fieldname": "applies_to_all",
+   "fieldtype": "Check",
+   "label": "Applies to All"
+  },
+  {
+   "depends_on": "eval:!doc.applies_to_all",
+   "fieldname": "applicable_departments",
+   "fieldtype": "Table",
+   "label": "Applicable Departments",
+   "options": "Company Policy Department"
+  },
+  {
+   "depends_on": "eval:!doc.applies_to_all",
+   "fieldname": "applicable_designations",
+   "fieldtype": "Table",
+   "label": "Applicable Designations",
+   "options": "Company Policy Designation"
+  },
+  {
+   "depends_on": "eval:!doc.applies_to_all",
+   "fieldname": "applicable_branches",
+   "fieldtype": "Table",
+   "label": "Applicable Branches",
+   "options": "Company Policy Branch"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-11-03 11:49:40.039311",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Company Policy",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

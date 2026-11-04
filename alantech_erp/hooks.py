@@ -168,9 +168,10 @@ jinja = {
 # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
-	"Document": "alantech_erp.alantech.doctype.document.document.get_permission_query_conditions",
+    "Document": "alantech_erp.alantech.doctype.document.document.get_permission_query_conditions",
 	"Session Log": "alantech_erp.alantech.doctype.session_log.session_log.get_permission_query_conditions",
 	"Holiday List": "alantech_erp.setup.shifts.holiday_list_query_conditions",
+	"Company Policy": "alantech_erp.alantech.doctype.company_policy.company_policy.get_permission_query_conditions",
 	"Salary Structure Assignment": "alantech_erp.setup.salary_access.salary_structure_assignment_query_conditions",
 	"Salary Slip": "alantech_erp.setup.salary_access.salary_slip_query_conditions",
 }
@@ -178,6 +179,7 @@ has_permission = {
 	"Document": "alantech_erp.alantech.doctype.document.document.has_permission",
 	"Session Log": "alantech_erp.alantech.doctype.session_log.session_log.has_permission",
 	"Holiday List": "alantech_erp.setup.shifts.holiday_list_has_permission",
+	"Company Policy": "alantech_erp.alantech.doctype.company_policy.company_policy.has_permission",
 	"Salary Structure Assignment": "alantech_erp.setup.salary_access.has_permission",
 	"Salary Slip": "alantech_erp.setup.salary_access.has_permission",
 }
@@ -416,6 +418,7 @@ after_migrate = [
     "alantech_erp.setup.session_log_fields.execute",
     "alantech_erp.setup.shifts.execute",
     "alantech_erp.setup.leave_fields.execute",
+    "alantech_erp.setup.sales_flow.execute",
     "alantech_erp.org_structure.fill_missing_reports_to",
     "alantech_erp.setup.approvers.execute",
     "alantech_erp.setup.leave_workflow.execute",
