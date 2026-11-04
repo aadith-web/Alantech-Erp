@@ -555,6 +555,10 @@ def _employees(company):
 				"cell_number": f"+91 98470 {int(number):05d}",
 				"company_email": email,
 				"prefered_contact_email": "Company Email" if email else "",
+				# an email is needed to create an employee (employee_validation.REQUIRED_ON_CREATE);
+				# employees without a login get a personal one and no user
+				"personal_email": None if email else f"{first}.{last}.{number}@{EMAIL_DOMAIN}".lower(),
+				"create_user_automatically": 1 if email else 0,
 				# department, Reports To, approvers, user and role profile come from the Employee hooks
 			}
 		)

@@ -136,3 +136,94 @@ def fill_missing_employee_numbers():
         filled.append(f"{name}: {number}")
     frappe.db.commit()
     return filled
+
+
+
+# Mobile is a Phone field (country picker + number, see employee_fields.py), saved as +971-501234567.
+MOBILE_TYPES = ("MOBILE", "FIXED_LINE_OR_MOBILE")
+
+
+def validate_mobile_number(doc, method=None):
+    """Employee.validate: Mobile must have a country code and be a mobile number of that country.
+    Checked for new employees and changed numbers only (old numbers: patches/v16/employee_mobile_country_code)."""
+    if not doc.cell_number or not (doc.is_new() or doc.has_value_changed("cell_number")):
+        return
+    error = check_mobile_number(doc.cell_number)
+    if error:
+        frappe.throw(error, frappe.InvalidPhoneNumberError, title=_("Invalid Mobile Number"))
+    doc.cell_number = format_mobile_number(doc.cell_number)
+
+
+@frappe.whitelist()
+def check_mobile_number(mobile):
+    """The reason the mobile number is not valid for its country code, or None if it is."""
+    import phonenumbers
+
+    mobile = (mobile or "").strip()
+    if not mobile:
+        return None
+    if not mobile.startswith("+"):
+        return _("Select the country code for Mobile {0}.").format(frappe.bold(mobile))
+    try:
+        number = phonenumbers.parse(mobile)
+    except phonenumbers.NumberParseException:
+        return _("Mobile {0} has no valid country code.").format(frappe.bold(mobile))
+
+    region = phonenumbers.region_code_for_number(number) or phonenumbers.region_code_for_country_code(number.country_code)
+    number_type = phonenumbers.PhoneNumberType.to_string(phonenumbers.number_type(number))
+    if phonenumbers.is_valid_number(number) and number_type in MOBILE_TYPES:
+        return None
+
+    country = frappe.db.get_value("Country", {"code": (region or "").lower()}, "name") or region
+    example = phonenumbers.example_number_for_type(region, phonenumbers.PhoneNumberType.MOBILE)
+    return _("{0} is not a valid {1} mobile number (+{2}).{3}").format(
+        frappe.bold(mobile),
+        country or _("country code"),
+        number.country_code,
+        " " + _("Example: {0}").format(frappe.bold(format_mobile_number(example))) if example else "",
+    )
+
+
+def format_mobile_number(number, region=None):
+    """+971-501234567, the way the Phone field shows the country code and number.
+    `number` is a phonenumbers.PhoneNumber or a string (with + or a country code in `region`)."""
+    import phonenumbers
+
+    if isinstance(number, str):
+        number = phonenumbers.parse(number, region)
+    return f"+{number.country_code}-{phonenumbers.national_significant_number(number)}"
+
+
+# Needed to create an employee (form and Data Import). New employees only, so existing records
+# that miss one can still be saved. Department and Reports To may come from the designation
+# (org_structure.apply_designation_defaults, which runs before this). Same list in employee.js.
+REQUIRED_ON_CREATE = (
+    "first_name", "gender", "date_of_birth", "date_of_joining", "company", "status",
+    "department", "designation", "branch", "reports_to", "employment_type", "cell_number",
+    "default_shift",
+)
+
+
+def validate_required_on_create(doc, method=None):
+    """Employee.validate: refuse a new employee without the fields in REQUIRED_ON_CREATE and an email."""
+    if not doc.is_new():
+        return
+    # tests create bare employees; a test of this rule sets the flag
+    if frappe.flags.in_test and not frappe.flags.alt_check_employee_required:
+        return
+    from alantech_erp.org_structure import TOP_DESIGNATION
+
+    meta = frappe.get_meta("Employee")
+    missing = [
+        _(meta.get_label(field))
+        for field in REQUIRED_ON_CREATE
+        if not doc.get(field) and not (field == "reports_to" and doc.designation == TOP_DESIGNATION)
+    ]
+    if not any((doc.get(field) or "").strip() for field in EMAIL_FIELDS):
+        missing.append(_("Company Email or Personal Email"))
+    if missing:
+        frappe.throw(
+            _("Enter these to create the employee: {0}").format(", ".join(frappe.bold(m) for m in missing)),
+            frappe.MandatoryError,
+            title=_("Missing Fields"),
+        )

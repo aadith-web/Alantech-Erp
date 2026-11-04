@@ -148,7 +148,26 @@ def check_number(document_type: str, number: str | None = None, name: str | None
 			error = _("{0} Number {1} is already on {2} ({3}).").format(
 				document_type, frappe.bold(value), duplicate.name, duplicate.reference_title
 			)
-	return {"value": value, "error": error, "example": example_for(rules), "mandatory": rules.get("number_mandatory")}
+	return {
+		"value": value,
+		"error": error,
+		"example": example_for(rules),
+		"mandatory": rules.get("number_mandatory"),
+		"rules": live_rules(rules),
+	}
+
+
+def live_rules(rules):
+	"""Pattern and check digit for document.js, which checks the number on every key press
+	(same rules as clean_number; the server still checks again on save)."""
+	fmt = rules.get("number_format")
+	if fmt in FORMATS:
+		spec = FORMATS[fmt]
+		check_digit = {verhoeff_ok: "verhoeff", luhn_ok: "luhn"}.get(spec.get("check"))
+		return {"pattern": spec["pattern"], "compact": 1, "check_digit": check_digit}
+	if fmt == CUSTOM and rules.get("number_pattern"):
+		return {"pattern": rules.number_pattern, "compact": 0}
+	return {}
 
 
 def validate_pattern(pattern):

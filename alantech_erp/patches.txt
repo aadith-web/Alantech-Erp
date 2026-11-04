@@ -8,3 +8,5 @@ alantech_erp.patches.v16.estimation_sub_assemblies
 alantech_erp.patches.v16.document_type_date_rules
 alantech_erp.patches.v16.document_type_number_formats
 alantech_erp.patches.v16.demo_data
+alantech_erp.patches.v16.employee_mobile_country_code
+alantech_erp.patches.v16.document_attachments_table

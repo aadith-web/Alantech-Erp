@@ -26,7 +26,7 @@
   "expiry_date",
   "issuing_country",
   "attachment_section",
-  "attachment",
+  "attachments",
   "remarks",
   "approval_section",
   "approval_status",
@@ -166,12 +166,13 @@
   {
    "fieldname": "attachment_section",
    "fieldtype": "Section Break",
-   "label": "Attachment"
+   "label": "Attachments"
   },
   {
-   "fieldname": "attachment",
-   "fieldtype": "Attach",
-   "label": "Document File",
+   "fieldname": "attachments",
+   "fieldtype": "Table",
+   "label": "Document Files",
+   "options": "Document Attachment",
    "reqd": 1
   },
   {
@@ -227,7 +228,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-16 16:28:19.562285",
+ "modified": "2026-11-04 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Document",

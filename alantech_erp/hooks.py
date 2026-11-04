@@ -38,6 +38,10 @@ app_include_css = [
         "/assets/alantech_erp/js/alantech_documents.js",
 ]
 # app_include_js = "/assets/alantech_erp/js/alantech_erp.js"
+app_include_js = [
+    # country code picker of Phone fields opens on saved records too
+    "/assets/alantech_erp/js/phone_control.js",
+]
 
 # include js, css files in header of web template
 web_include_css = [
@@ -164,14 +168,20 @@ jinja = {
 # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
-	"Document": "alantech_erp.alantech.doctype.document.document.get_permission_query_conditions",
+    "Document": "alantech_erp.alantech.doctype.document.document.get_permission_query_conditions",
 	"Session Log": "alantech_erp.alantech.doctype.session_log.session_log.get_permission_query_conditions",
 	"Holiday List": "alantech_erp.setup.shifts.holiday_list_query_conditions",
+	"Company Policy": "alantech_erp.alantech.doctype.company_policy.company_policy.get_permission_query_conditions",
+	"Salary Structure Assignment": "alantech_erp.setup.salary_access.salary_structure_assignment_query_conditions",
+	"Salary Slip": "alantech_erp.setup.salary_access.salary_slip_query_conditions",
 }
 has_permission = {
 	"Document": "alantech_erp.alantech.doctype.document.document.has_permission",
 	"Session Log": "alantech_erp.alantech.doctype.session_log.session_log.has_permission",
 	"Holiday List": "alantech_erp.setup.shifts.holiday_list_has_permission",
+	"Company Policy": "alantech_erp.alantech.doctype.company_policy.company_policy.has_permission",
+	"Salary Structure Assignment": "alantech_erp.setup.salary_access.has_permission",
+	"Salary Slip": "alantech_erp.setup.salary_access.has_permission",
 }
 # DocType Class
 # ---------------
@@ -231,10 +241,13 @@ doc_events = {
             "alantech_erp.org_structure.apply_designation_defaults",
             "alantech_erp.setup.employee_validation.validate_unique_employee",
             "alantech_erp.setup.employee_validation.validate_unique_email",
+            "alantech_erp.setup.employee_validation.validate_mobile_number",
             "alantech_erp.setup.access.employee_validate",
             # after apply_designation_defaults, which may fill Reports To
             "alantech_erp.setup.approvers.employee_validate",
             "alantech_erp.setup.shifts.employee_holiday_list",
+            # last: Department / Reports To may be filled from the designation above
+            "alantech_erp.setup.employee_validation.validate_required_on_create",
         ],
         "on_update": [
             "alantech_erp.org_structure.sync_user_role_profile",
@@ -273,6 +286,9 @@ doc_events = {
 	},
 	"Leave Allocation": {
 		"validate": "alantech_erp.setup.leave_validation.validate_leave_allocation",
+	},
+	"Attendance Request": {
+		"before_submit": "alantech_erp.setup.attendance_request.check_approver",  # own Leave Approver or HR
 	},
     # Sales flow: Deal -> Estimation -> Quotation (manager + client approval) -> Sales Order
     "Quotation": {
@@ -402,9 +418,13 @@ after_migrate = [
     "alantech_erp.setup.session_log_fields.execute",
     "alantech_erp.setup.shifts.execute",
     "alantech_erp.setup.leave_fields.execute",
+    "alantech_erp.setup.sales_flow.execute",
     "alantech_erp.org_structure.fill_missing_reports_to",
     "alantech_erp.setup.approvers.execute",
     "alantech_erp.setup.leave_workflow.execute",
+    "alantech_erp.setup.attendance_request.execute",
+    # HR User prepares Payroll Entries; payroll payable account of type Payable
+    "alantech_erp.setup.payroll.execute",
     "alantech_erp.setup.asset_handover.execute",
     # Quotation approval workflow (Sales Manager, Level 2 above the Selling Settings limit)
     "alantech_erp.setup.sales_flow.execute",

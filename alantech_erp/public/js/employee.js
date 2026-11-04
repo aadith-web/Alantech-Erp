@@ -46,10 +46,18 @@ const alt_employee_docs = {
 		frappe.db
 			.get_list("Document", {
 				filters: { reference_doctype: "Employee", reference_name: frm.doc.name },
-				fields: ["name", "document_type", "card_number", "issue_date", "expiry_date", "approval_status", "attachment", "submitted_by"],
+				fields: ["name", "document_type", "card_number", "issue_date", "expiry_date", "approval_status", "submitted_by"],
 				order_by: "modified desc",
 				limit: 200,
 			})
+			.then((rows) =>
+				// several files per document (Document Files table)
+				frappe
+					.xcall("alantech_erp.alantech.doctype.document.document.get_files", {
+						names: rows.map((r) => r.name),
+					})
+					.then((files) => rows.map((r) => ({ ...r, files: files[r.name] || [] })))
+			)
 			.then((rows) => {
 				$toolbar.find(".alt-doc-count").text(__("{0} document(s)", [rows.length]));
 				if (!rows.length) {
@@ -61,10 +69,10 @@ const alt_employee_docs = {
 					e.preventDefault();
 					frappe.set_route("Form", "Document", $(e.currentTarget).attr("data-doc"));
 				});
-				$list.find("[data-file]").on("click", (e) => {
+				$list.find("[data-files]").on("click", (e) => {
 					e.preventDefault();
-					const $btn = $(e.currentTarget);
-					alt_employee_docs.preview($btn.attr("data-file"), $btn.attr("data-title"));
+					const row = rows.find((r) => r.name === $(e.currentTarget).attr("data-files"));
+					if (row) alt_employee_docs.preview(row.files, `${row.document_type || ""} - ${row.name}`);
 				});
 				$list.find("[data-review]").on("click", (e) => {
 					e.preventDefault();
@@ -98,9 +106,10 @@ const alt_employee_docs = {
 					<td>${expiry}</td>
 					<td>${status}</td>
 					<td>${
-						r.attachment
-							? `<button class="btn btn-default btn-xs" data-file="${esc(r.attachment)}"
-								data-title="${esc((r.document_type || "") + " - " + r.name)}">${__("View")}</button>`
+						r.files.length
+							? `<button class="btn btn-default btn-xs" data-files="${esc(r.name)}">${
+									r.files.length > 1 ? __("View ({0})", [r.files.length]) : __("View")
+								}</button>`
 							: `<span class="text-muted">${__("No file")}</span>`
 					}</td>
 					<td style="white-space:nowrap;">${
@@ -160,40 +169,58 @@ const alt_employee_docs = {
 		}
 	},
 
-	// Show the attached file: images and PDFs inline, anything else as a download link
-	preview(file_url, title) {
+	// Show the document's files: images and PDFs inline, anything else as a download link.
+	// With several files, a button per file switches between them.
+	preview(files, title) {
 		const esc = frappe.utils.escape_html;
-		if (!/^(\/files\/|\/private\/files\/|https?:\/\/)/i.test(file_url || "")) {
+		const valid = (files || []).filter((f) => /^(\/files\/|\/private\/files\/|https?:\/\/)/i.test(f.file || ""));
+		if (!valid.length) {
 			frappe.msgprint(__("This attachment cannot be previewed."));
 			return;
 		}
-		const url = encodeURI(file_url);
-		const ext = (file_url.split("?")[0].split(".").pop() || "").toLowerCase();
-		const is_image = ["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"].includes(ext);
-		const is_pdf = ext === "pdf";
-
-		let body;
-		if (is_image) {
-			body = `<div style="text-align:center;"><img src="${url}" alt="${esc(title)}"
-				style="max-width:100%; max-height:70vh; border-radius:var(--border-radius);"></div>`;
-		} else if (is_pdf) {
-			body = `<iframe src="${url}" style="width:100%; height:70vh; border:0;"></iframe>`;
-		} else {
-			body = `<p>${__("Preview is not available for this file type.")}</p>`;
-		}
+		let current = valid[0];
 
 		const dialog = new frappe.ui.Dialog({
 			title: esc(title || __("Document File")),
 			size: "large",
 			fields: [{ fieldname: "preview", fieldtype: "HTML" }],
 			primary_action_label: __("Open in New Tab"),
-			primary_action: () => window.open(url, "_blank"),
+			primary_action: () => window.open(encodeURI(current.file), "_blank"),
 		});
-		dialog.fields_dict.preview.$wrapper.html(
-			`${body}<p class="text-muted small" style="margin-top:var(--margin-sm);">
-				<a href="${url}" target="_blank" download>${__("Download")}</a> · ${esc(file_url.split("/").pop())}
-			</p>`
-		);
+		const $wrapper = dialog.fields_dict.preview.$wrapper;
+		const $switcher = $(`<div style="margin-bottom:var(--margin-sm);"></div>`).appendTo($wrapper);
+		const $body = $(`<div></div>`).appendTo($wrapper);
+		const label = (f, i) => f.description || __("File {0}", [i + 1]);
+
+		const show = (index) => {
+			current = valid[index];
+			const url = encodeURI(current.file);
+			const ext = (current.file.split("?")[0].split(".").pop() || "").toLowerCase();
+			let body;
+			if (["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"].includes(ext)) {
+				body = `<div style="text-align:center;"><img src="${url}" alt="${esc(label(current, index))}"
+					style="max-width:100%; max-height:70vh; border-radius:var(--border-radius);"></div>`;
+			} else if (ext === "pdf") {
+				body = `<iframe src="${url}" style="width:100%; height:70vh; border:0;"></iframe>`;
+			} else {
+				body = `<p>${__("Preview is not available for this file type.")}</p>`;
+			}
+			$body.html(
+				`${body}<p class="text-muted small" style="margin-top:var(--margin-sm);">
+					<a href="${url}" target="_blank" download>${__("Download")}</a> · ${esc(current.file.split("/").pop())}
+				</p>`
+			);
+			$switcher.find("button").each((i, btn) => $(btn).toggleClass("btn-primary", i === index));
+		};
+
+		if (valid.length > 1) {
+			valid.forEach((f, i) => {
+				$(`<button class="btn btn-default btn-xs" style="margin:0 4px 4px 0;">${esc(label(f, i))}</button>`)
+					.on("click", () => show(i))
+					.appendTo($switcher);
+			});
+		}
+		show(0);
 		dialog.show();
 	},
 };
@@ -232,3 +259,122 @@ frappe.ui.form.on("Employee", {
 			});
 	},
 });
+
+// Mobile: pick the country, then type the number (Phone field). Checked against the country code
+// as soon as it is entered; the same check runs again on save (employee_validation.validate_mobile_number).
+frappe.ui.form.on("Employee", {
+	onload(frm) {
+		frm.set_df_property("cell_number", "description", __("Select the country code, then enter the number"));
+	},
+	cell_number(frm) {
+		// The Phone field sets the typed digits first and adds the country code ("+91-...") right
+		// after: only the value with the code is checked (a number left without one fails on save)
+		const mobile = frm.doc.cell_number || "";
+		const field = frm.fields_dict.cell_number;
+		const show = (error) => {
+			field.df.invalid = !!error;
+			field.set_invalid();
+			field.set_description(
+				error
+					? `<span class="text-danger">${error}</span>`
+					: __("Select the country code, then enter the number")
+			);
+		};
+		if (!mobile.startsWith("+")) {
+			if (!mobile) show(null);
+			return;
+		}
+		frappe
+			.xcall("alantech_erp.setup.employee_validation.check_mobile_number", { mobile })
+			.then((error) => frm.doc.cell_number === mobile && show(error));
+	},
+});
+
+// New employee: fields needed to create it, marked mandatory. The server checks the same list
+// (employee_validation.REQUIRED_ON_CREATE); existing employees are not affected.
+// Department and Reports To are filled from the designation as soon as it is picked.
+const ALT_EMPLOYEE_REQUIRED = [
+	"first_name", "gender", "date_of_birth", "date_of_joining", "company", "status",
+	"department", "designation", "branch", "reports_to", "employment_type", "cell_number",
+	"default_shift",
+];
+const ALT_TOP_DESIGNATION = "Managing Director"; // reports to no one (org_structure.TOP_DESIGNATION)
+
+frappe.ui.form.on("Employee", {
+	setup() {
+		alt_employee_required.merge_email_in_missing_fields();
+	},
+	refresh(frm) {
+		alt_employee_required.toggle(frm);
+	},
+	designation(frm) {
+		alt_employee_required.toggle(frm);
+		alt_employee_required.fill_from_designation(frm);
+	},
+	company(frm) {
+		alt_employee_required.fill_from_designation(frm);
+	},
+	company_email(frm) {
+		alt_employee_required.toggle_email(frm);
+	},
+	personal_email(frm) {
+		alt_employee_required.toggle_email(frm);
+	},
+});
+
+const alt_employee_required = {
+	toggle(frm) {
+		const is_new = frm.is_new();
+		ALT_EMPLOYEE_REQUIRED.forEach((field) => frm.toggle_reqd(field, is_new));
+		if (is_new && frm.doc.designation === ALT_TOP_DESIGNATION) frm.toggle_reqd("reports_to", false);
+		const hint = is_new ? __("Company Email or Personal Email is required.") : "";
+		["company_email", "personal_email"].forEach((field) => frm.set_df_property(field, "description", hint));
+		alt_employee_required.toggle_email(frm);
+	},
+
+	// One email is enough: both are mandatory while both are empty, so Frappe's own check on save
+	// lists them with the other missing fields ("Company Email is required.")
+	toggle_email(frm) {
+		const fields = ["company_email", "personal_email"];
+		const none = frm.is_new() && fields.every((field) => !(frm.doc[field] || "").trim());
+		fields.forEach((field) => frm.toggle_reqd(field, none));
+	},
+
+	// On save, Frappe's "Missing Fields" list shows one line for the two emails:
+	// "Company Email or Personal Email is required." (labels are put back right after the check)
+	merge_email_in_missing_fields() {
+		const check_mandatory = frappe.ui.form.check_mandatory;
+		if (check_mandatory.__alt_employee_email) return;
+		frappe.ui.form.check_mandatory = function (frm) {
+			// the field copies check_mandatory reads (same ones frm.toggle_reqd changes)
+			const get = (field) => frappe.meta.get_docfield("Employee", field, frm.docname);
+			const company = frm.doctype === "Employee" && get("company_email");
+			const personal = company && get("personal_email");
+			if (!personal || !company.reqd) return check_mandatory.apply(this, arguments);
+			const label = company.label;
+			company.label = __("Company Email or Personal Email");
+			personal.reqd = 0;
+			try {
+				return check_mandatory.apply(this, arguments);
+			} finally {
+				company.label = label;
+				alt_employee_required.toggle_email(frm);
+				frm.refresh_field("company_email");
+			}
+		};
+		frappe.ui.form.check_mandatory.__alt_employee_email = true;
+	},
+
+	// same defaults the server fills on save (org_structure.apply_designation_defaults)
+	fill_from_designation(frm) {
+		const { designation, company } = frm.doc;
+		if (!frm.is_new() || !designation || (frm.doc.department && frm.doc.reports_to)) return;
+		frappe
+			.xcall("alantech_erp.org_structure.designation_defaults", { designation, company })
+			.then((r) => {
+				if (frm.doc.designation !== designation) return;
+				if (!frm.doc.department && r.department) frm.set_value("department", r.department);
+				if (!frm.doc.reports_to && r.reports_to) frm.set_value("reports_to", r.reports_to);
+			});
+	},
+};

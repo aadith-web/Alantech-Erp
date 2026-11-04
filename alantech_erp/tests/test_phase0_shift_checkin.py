@@ -26,6 +26,7 @@ from alantech_erp.setup import approvers
 from alantech_erp.setup.employee_user import create_user
 from alantech_erp.setup.shifts import DEFAULT_SHIFT, holiday_list_name
 from alantech_erp.tests.test_phase0_employee_user import AUTOMATIC_ROLES, COMPANY, employee_doc, make_user
+from alantech_erp.tests.test_phase0_session_log import overtime_off, set_shift_overtime
 
 SHIFT = "12 Hour Shift"
 
@@ -103,6 +104,7 @@ class TestPhase0ShiftCheckin(TestCase):
 		super().setUpClass()
 		frappe.flags.mute_emails = True
 		cleanup()
+		cls.shift_overtime = overtime_off()
 		# like Phase 0: every test user gets its own Employee (HRMS v16 drops the Employee role
 		# otherwise) and no designation (its role profile would replace the roles under test)
 		cls.employee_of = {}
@@ -140,6 +142,7 @@ class TestPhase0ShiftCheckin(TestCase):
 
 	@classmethod
 	def tearDownClass(cls):
+		set_shift_overtime(cls.shift_overtime)
 		cleanup()
 		frappe.flags.mute_emails = False
 		super().tearDownClass()

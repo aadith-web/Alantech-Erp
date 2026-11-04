@@ -1,0 +1,40 @@
+{
+ "actions": [],
+ "creation": "2026-11-04 12:00:00.000000",
+ "modified": "2026-11-04 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "module": "AlanTech",
+ "name": "Document Attachment",
+ "owner": "Administrator",
+ "modified_by": "Administrator",
+ "field_order": [
+  "file",
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "file",
+   "fieldtype": "Attach",
+   "label": "File",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 6
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "label": "Description",
+   "description": "e.g. Front side, Back side, Page 2",
+   "in_list_view": 1,
+   "columns": 4
+  }
+ ],
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

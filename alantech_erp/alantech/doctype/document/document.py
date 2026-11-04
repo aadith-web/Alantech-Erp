@@ -15,7 +15,7 @@ PENDING, APPROVED, REJECTED = "Pending Approval", "Approved", "Rejected"
 APPROVAL_FIELDS = ("approval_status", "submitted_by", "reviewed_by", "reviewed_on", "rejection_reason")
 # A change to any of these counts as an edit
 CONTENT_FIELDS = ("reference_doctype", "reference_name", "document_type", "card_number", "issue_date",
-                  "place_of_issue", "expiry_date", "issuing_country", "attachment", "remarks")
+                  "place_of_issue", "expiry_date", "issuing_country", "remarks")
 
 
 class Document(Document):
@@ -112,6 +112,8 @@ class Document(Document):
 		before = self.get_doc_before_save()
 		if not before:
 			return True
+		if _files(self) != _files(before):
+			return True
 		return any(_norm(self.get(f)) != _norm(before.get(f)) for f in CONTENT_FIELDS)
 
 	def restore_approval_fields(self):
@@ -191,6 +193,10 @@ class Document(Document):
 # --- small helpers -------------------------------------------------------
 def _norm(value):
 	return "" if value in (None, "") else str(value)
+
+
+def _files(doc):
+	return [(row.file or "", row.description or "") for row in doc.get("attachments") or []]
 
 
 def has_unrestricted_role(user=None):
@@ -349,3 +355,19 @@ def review_document(name, action, reason=None):
 	else:
 		frappe.throw(_("Invalid action."))
 	return doc.approval_status
+
+
+@frappe.whitelist()
+def get_files(names: list[str] | str) -> dict:
+	"""Files of the given documents, for the Employee Documents section (only documents the user may read)."""
+	names = frappe.parse_json(names) if isinstance(names, str) else names
+	allowed = frappe.get_list(DOCTYPE, filters={"name": ["in", names or []]}, pluck="name")
+	files = {}
+	for row in frappe.get_all(
+		"Document Attachment",
+		filters={"parenttype": DOCTYPE, "parent": ["in", allowed or [""]]},
+		fields=["parent", "file", "description"],
+		order_by="idx asc",
+	):
+		files.setdefault(row.parent, []).append({"file": row.file, "description": row.description})
+	return files

@@ -15,6 +15,7 @@ import frappe
 from frappe import _
 from frappe.permissions import add_user_permission
 from frappe.utils import cint, validate_email_address
+from typing import cast
 
 from alantech_erp.setup import approvers
 from alantech_erp.setup.access import FULL_ACCESS_DESIGNATIONS, FULL_ACCESS_ROLES
@@ -193,16 +194,23 @@ def add_import_note(doc, **note):
 		return
 	note["employee"] = doc.employee_name or doc.first_name or doc.name
 	key = import_notes_key(data_import)
-	frappe.cache.rpush(key, frappe.as_json(note))
-	frappe.cache.expire(frappe.cache.make_key(key), 24 * 3600)  # import dialog closed early
+	cache = frappe.cache
+	if cache is None:
+		return
+	cache.rpush(key, frappe.as_json(note))
+	cache.expire(cache.make_key(key), 24 * 3600)  # import dialog closed early
 
 
 @frappe.whitelist()
 def pop_import_notes(data_import: str) -> list[dict]:
 	frappe.get_doc("Data Import", data_import).check_permission("read")
 	key = import_notes_key(data_import)
-	notes = [frappe.parse_json(frappe.safe_decode(n)) for n in frappe.cache.lrange(key, 0, -1)]
-	frappe.cache.delete_value(key)
+	cache = frappe.cache
+	if cache is None:
+		return []
+	raw_notes = cast(list[bytes | str], cache.lrange(key, 0, -1))
+	notes = [cast(dict, frappe.parse_json(frappe.safe_decode(n))) for n in raw_notes]
+	cache.delete_value(key)
 	return notes
 
 
