@@ -1,6 +1,16 @@
+// Lead: a verified lead becomes a Customer (Company or Individual) before any estimation or quote.
+// No Deal or Quotation straight from the Lead: the Deal is made from the Quotation (Create Deal).
+// No Prospect flow either (alantech_erp/sales/prospect.py).
 frappe.ui.form.on("Lead", {
   refresh(frm) {
     if (frm.is_new()) return;
+    // ERPNext adds its Create / Action buttons after this handler runs
+    setTimeout(() => {
+      frm.remove_custom_button(__("Opportunity"), __("Create"));
+      frm.remove_custom_button(__("Quotation"), __("Create"));
+      frm.remove_custom_button(__("Prospect"), __("Create"));
+      frm.remove_custom_button(__("Add to Prospect"), __("Action"));
+    }, 0);
     frm.add_custom_button(__("Call"), () => open_activity_dialog(frm, "Call"), __("Activity"));
     frm.add_custom_button(__("Meeting"), () => open_activity_dialog(frm, "Meeting"), __("Activity"));
   },
@@ -90,4 +100,4 @@ function open_activity_dialog(frm, category) {
   });
 
   d.show();
-}
+}

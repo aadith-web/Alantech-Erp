@@ -1,14 +1,16 @@
 """Costing and technical offers for water treatment plants.
 
 Library (masters):
-    Sub Assembly    one block of a plant (Multimedia Filter, RO System, Direct Labour...):
-                    standard cost items + standard offer text (components with spec tables)
+    Sub Assembly    one block of a plant (Multimedia Filter, RO System, Installation...):
+                    standard free-text items and other expenses (manpower, transport...) +
+                    standard offer text (components with spec tables)
     Plant Assembly  a plant type: ordered Sub Assemblies + costing and offer defaults
     Proposal Settings  company-wide texts, terms, bank details, letter head
 
 Transactions:
-    Estimation      costing for a Deal. Assembly -> sub assemblies -> items, then contingencies,
-                    financing and margin give the selling price (see estimation.py)
+    Estimation      costing for a Customer. Plant Assembly -> Sub Assemblies -> free-text Items,
+                    plus Other Expenses; contingencies, financing and margin on the total cost
+                    give the selling price (see estimation.py)
     Technical Offer the proposal document (detailed or single page), built from the same
                     sub assemblies; printed on its own or with its Quotation
 
@@ -25,7 +27,36 @@ INCLUDED = "Included"
 SEPARATE = "Separate Line"
 OPTIONAL = "Optional"
 
+# Sub Assembly cost types
 MANPOWER = "Manpower"
+EQUIPMENT = "Equipment"
+
+# Other Expenses: expense types (Estimation Expense / Sub Assembly Expense)
+EXPENSE_MANPOWER = "Manpower"
+EXPENSE_OTHER = "Other"
+
+# Costing rows (free text, never Item master records): Sub Assembly Item -> Estimation Item
+ITEM_FIELDS = ("cost_head", "type_model", "moc", "make", "qty", "uom", "unit_cost", "addon_pct")
+# Sub Assembly Expense -> Estimation Expense
+EXPENSE_FIELDS = ("expense_type", "description", "qty", "uom", "rate")
+
+
+def item_row_as_expense(row, cost_type):
+	"""An old cost item of a Manpower / General / Services block, as an Other Expenses row.
+
+	The add-on goes into the rate so the cost stays the same.
+	"""
+	from frappe.utils import flt
+
+	text = " - ".join(p for p in (row.get("cost_head"), row.get("type_model"), row.get("make")) if p)
+	rate = flt(row.get("unit_cost")) * (1 + flt(row.get("addon_pct")) / 100)
+	return {
+		"expense_type": EXPENSE_MANPOWER if cost_type in (MANPOWER, "Services") else EXPENSE_OTHER,
+		"description": text or "-",
+		"qty": row.get("qty"),
+		"uom": row.get("uom"),
+		"rate": rate,
+	}
 
 DETAILED = "Detailed Proposal"
 SINGLE_PAGE = "Single Page Offer"

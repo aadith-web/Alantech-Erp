@@ -2,6 +2,8 @@
 
 Data: setup/data/water_treatment_library.json, taken from the costing workbook
 ("Water Treatment costing template 2026") and the UF + RO + EDI 160 m³/h proposal.
+Equipment lines become free-text Items; Manpower / General / Services lines become Other
+Expenses (as_master).
 
     bench --site <site> execute alantech_erp.setup.proposal_library.load
 
@@ -32,7 +34,7 @@ def load():
 	for sub in data.get("sub_assemblies", []):
 		if frappe.db.exists("Sub Assembly", sub["sub_assembly_name"]):
 			continue
-		doc = frappe.get_doc({"doctype": "Sub Assembly", **sub})
+		doc = frappe.get_doc({"doctype": "Sub Assembly", **as_master(sub)})
 		doc.flags.ignore_links = True
 		doc.insert(ignore_permissions=True)
 		counts["sub_assemblies"] += 1
@@ -57,3 +59,17 @@ def load():
 	settings.flags.ignore_links = True
 	settings.save()
 	return counts
+
+
+def as_master(sub):
+	"""Workbook block -> Sub Assembly: Manpower / General / Services lines are Other Expenses,
+	equipment lines stay free-text Items (02-Nov change: Items + Other Expenses tables)."""
+	from alantech_erp.proposal import EQUIPMENT, item_row_as_expense
+
+	cost_type = sub.get("cost_type") or EQUIPMENT
+	if cost_type == EQUIPMENT or sub.get("expenses"):
+		return sub
+	sub = dict(sub)
+	sub["expenses"] = [item_row_as_expense(row, cost_type) for row in sub.get("items") or []]
+	sub["items"] = []
+	return sub

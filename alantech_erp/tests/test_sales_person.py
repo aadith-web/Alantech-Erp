@@ -123,3 +123,72 @@ class TestSalesPerson(TestCase):
 		name = sales_person_of(emp.name)
 		frappe.delete_doc("Employee", emp.name, ignore_permissions=True, force=True)
 		self.assertIsNone(frappe.db.get_value("Sales Person", name, "employee"))
+
+
+class TestSalesHierarchy(TestCase):
+	"""Sales Director -> Sales Manager -> Sales Engineer (alantech_erp.sales.hierarchy)."""
+
+	@classmethod
+	def setUpClass(cls):
+		super().setUpClass()
+		cls.company = _company()
+		cls.sales = _department("Sales", cls.company)
+		if not cls.sales or not frappe.db.exists("Designation", "Sales Director"):
+			raise Exception("Run bench migrate first: Sales department / Sales Director designation missing")
+
+	def tearDown(self):
+		frappe.db.rollback()
+		from alantech_erp.sales.hierarchy import clear_cache
+
+		clear_cache()
+
+	def make(self, number, first, designation, reports_to=None):
+		email = f"test-sh-{number}@example.com"
+		if not frappe.db.exists("User", email):
+			frappe.get_doc(
+				{"doctype": "User", "email": email, "first_name": first, "send_welcome_email": 0}
+			).insert(ignore_permissions=True)
+		emp = TestSalesPerson.make_employee(self, f"H{number}", first, designation, self.sales, reports_to)
+		emp.db_set("user_id", email)
+		return emp, email
+
+	def build(self):
+		from alantech_erp.sales.hierarchy import clear_cache
+
+		director, d_user = self.make("01", "Shdir", "Sales Director")
+		manager, m_user = self.make("02", "Shman", "Sales Manager", director.name)
+		engineer, e_user = self.make("03", "Sheng", "Sales Engineer", manager.name)
+		other_manager, om_user = self.make("04", "Shman2", "Sales Manager", director.name)
+		other_engineer, oe_user = self.make("05", "Sheng2", "Sales Engineer", other_manager.name)
+		clear_cache()
+		return {"director": d_user, "manager": m_user, "engineer": e_user, "other_manager": om_user, "other_engineer": oe_user,
+				"sp": {k: sales_person_of(v.name) for k, v in (("director", director), ("manager", manager), ("engineer", engineer))}}
+
+	def test_01_tree(self):
+		t = self.build()
+		sp = t["sp"]
+		self.assertEqual(frappe.db.get_value("Sales Person", sp["director"], "parent_sales_person"), root_sales_person())
+		self.assertEqual(frappe.db.get_value("Sales Person", sp["manager"], "parent_sales_person"), sp["director"])
+		self.assertEqual(frappe.db.get_value("Sales Person", sp["engineer"], "parent_sales_person"), sp["manager"])
+		self.assertEqual(frappe.db.get_value("Sales Person", sp["director"], "is_group"), 1)
+
+	def test_02_approvers(self):
+		from alantech_erp.sales.hierarchy import approvers_for
+
+		t = self.build()
+		self.assertEqual(approvers_for(t["engineer"]), (t["manager"], t["director"]))
+		# a manager's own quotation: the director approves Level 1 (and that covers Level 2)
+		self.assertEqual(approvers_for(t["manager"]), (t["director"], t["director"]))
+		self.assertEqual(approvers_for(t["other_engineer"]), (t["other_manager"], t["director"]))
+
+	def test_03_visibility(self):
+		from alantech_erp.sales.hierarchy import visible_users
+
+		t = self.build()
+		self.assertEqual(visible_users(t["engineer"]), {t["engineer"]})
+		self.assertEqual(visible_users(t["manager"]), {t["manager"], t["engineer"]})
+		self.assertIsNone(visible_users(t["director"]))  # sees everything
+
+	def test_04_proposal_engineer_not_in_tree(self):
+		emp = TestSalesPerson.make_employee(self, "H06", "Shprop", "Proposal Engineer", self.sales)
+		self.assertFalse(sales_person_of(emp.name))

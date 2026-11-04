@@ -1,13 +1,16 @@
 // Copyright (c) 2026, JincyTricta and contributors
 // For license information, please see license.txt
 // Costing formulas live in public/js/estimation_pricing.js.
+// Estimation is made for a Customer (Company / Individual); the Quotation is made from it once submitted.
 
 const ALT_EST_METHOD = "alantech_erp.alantech.doctype.estimation.estimation";
 
 frappe.ui.form.on("Estimation", {
 	setup(frm) {
-		frm.set_query("opportunity", () => ({
-			filters: { status: ["not in", ["Lost", "Closed", "Converted"]] },
+		frm.set_query("customer", () => ({ filters: { disabled: 0 } }));
+		frm.set_query("contact_person", () => ({
+			query: "frappe.contacts.doctype.contact.contact.contact_query",
+			filters: { link_doctype: "Customer", link_name: frm.doc.customer || "" },
 		}));
 		frm.set_query("plant_assembly", () => ({ filters: { disabled: 0 } }));
 		frm.set_query("quote_item", () => ({ filters: { is_sales_item: 1, disabled: 0 } }));
@@ -19,7 +22,7 @@ frappe.ui.form.on("Estimation", {
 
 		if (frm.doc.docstatus === 0) {
 			frm.add_custom_button(__("Add Sub Assembly"), () => add_sub_assembly(frm), __("Cost Sheet"));
-			if ((frm.doc.items || []).length) {
+			if ((frm.doc.items || []).length || (frm.doc.expenses || []).length) {
 				frm.add_custom_button(__("Remove Unused Rows"), () => remove_zero_rows(frm), __("Cost Sheet"));
 			}
 		}
@@ -44,6 +47,10 @@ frappe.ui.form.on("Estimation", {
 		}
 	},
 
+	customer(frm) {
+		frm.set_value("contact_person", null);
+	},
+
 	plant_assembly(frm) {
 		if (!frm.doc.plant_assembly || frm.doc.docstatus !== 0) return;
 		const load = () =>
@@ -57,9 +64,9 @@ frappe.ui.form.on("Estimation", {
 				});
 			});
 
-		if ((frm.doc.items || []).length || (frm.doc.sections || []).length) {
+		if ((frm.doc.items || []).length || (frm.doc.expenses || []).length || (frm.doc.sections || []).length) {
 			frappe.confirm(
-				__("Replace the sub assemblies and cost items with Plant Assembly {0}?", [
+				__("Replace the sub assemblies, items and other expenses with Plant Assembly {0}?", [
 					frappe.utils.escape_html(frm.doc.plant_assembly),
 				]),
 				load
@@ -119,7 +126,7 @@ function add_sub_assembly(frm) {
 }
 
 function remove_zero_rows(frm) {
-	frappe.confirm(__("Remove cost items with no quantity or no unit cost?"), () =>
+	frappe.confirm(__("Remove items and expenses with no quantity or no cost?"), () =>
 		frm.call("remove_zero_rows").then(({ message }) => {
 			frm.dirty();
 			frm.refresh_fields();

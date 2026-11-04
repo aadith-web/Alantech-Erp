@@ -5,7 +5,6 @@
  "engine": "InnoDB",
  "field_order": [
   "cost_head",
-  "item_code",
   "type_model",
   "moc",
   "make",
@@ -13,24 +12,17 @@
   "qty",
   "uom",
   "unit_cost",
-  "addon_pct"
+  "addon_pct",
+  "amount"
  ],
  "fields": [
   {
    "fieldname": "cost_head",
-   "fieldtype": "Data",
-   "label": "Item / Cost Head",
+   "fieldtype": "Small Text",
+   "label": "Item Description",
    "reqd": 1,
    "in_list_view": 1,
-   "columns": 3,
-   "fetch_from": "item_code.item_name",
-   "fetch_if_empty": 1
-  },
-  {
-   "fieldname": "item_code",
-   "fieldtype": "Link",
-   "label": "Item",
-   "options": "Item"
+   "columns": 3
   },
   {
    "fieldname": "type_model",
@@ -67,11 +59,8 @@
   },
   {
    "fieldname": "uom",
-   "fieldtype": "Link",
-   "label": "UOM",
-   "options": "UOM",
-   "fetch_from": "item_code.stock_uom",
-   "fetch_if_empty": 1
+   "fieldtype": "Data",
+   "label": "UOM"
   },
   {
    "fieldname": "unit_cost",
@@ -83,14 +72,21 @@
   {
    "fieldname": "addon_pct",
    "fieldtype": "Percent",
-   "label": "Transport %",
+   "label": "Add-on %",
    "in_list_view": 1,
    "columns": 1,
    "description": "Transportation / add-on on the unit cost (2% in the costing sheet)"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount",
+   "read_only": 1,
+   "in_list_view": 1
   }
  ],
  "links": [],
- "modified": "2026-10-26 13:30:00.000000",
+ "modified": "2026-11-03 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Sub Assembly Item",

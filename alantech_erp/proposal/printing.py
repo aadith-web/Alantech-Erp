@@ -151,36 +151,68 @@ def price_schedule(offer):
 
 
 def get_cost_sheet_context(est):
-	"""Estimation grouped by section with sub totals, like the costing workbook."""
+	"""Estimation grouped by section (Sub Assembly) with sub totals, like the costing workbook:
+	free-text items, then the other expenses tagged to the section; untagged expenses last."""
 	if isinstance(est, str):
 		est = frappe.get_doc("Estimation", est)
 	cur = est.currency
-	by_section = {}
+	items_of, expenses_of, general = {}, {}, []
 	for row in est.items:
-		by_section.setdefault(row.section, []).append(row)
-	groups = []
+		items_of.setdefault(row.section, []).append(row)
+	titles = {s.section_title for s in est.sections}
+	for row in est.get("expenses") or []:
+		if row.section and row.section in titles:
+			expenses_of.setdefault(row.section, []).append(row)
+		else:
+			general.append(row)
+
 	sl = 0
+
+	def expense_rows(rows):
+		nonlocal sl
+		out = []
+		for row in rows:
+			sl += 1
+			qty = frappe.format(row.qty, {"fieldtype": "Float"})
+			out.append({
+				"sl": sl, "description": escape_html(row.description or ""), "expense_type": row.expense_type or "",
+				"qty": f"{qty} {escape_html(row.uom or '')}".strip(), "rate": money(row.rate, cur, 2),
+				"amount": money(row.amount, cur, 2),
+			})
+		return out
+
+	groups = []
 	for s in est.sections:
 		items = []
-		for row in by_section.get(s.section_title, []):
+		for row in items_of.get(s.section_title, []):
 			sl += 1
 			items.append({
-				"sl": sl, "item": row.cost_head, "type_model": row.type_model or "", "moc": row.moc or "",
-				"make": row.make or "", "qty": frappe.format(row.qty, {"fieldtype": "Float"}),
+				"sl": sl, "item": escape_html(row.cost_head or "").replace("\n", "<br>"), "type_model": row.type_model or "",
+				"moc": row.moc or "", "make": row.make or "", "qty": frappe.format(row.qty, {"fieldtype": "Float"}),
 				"unit_cost": money(row.unit_cost, cur, 2), "amount": money(row.amount, cur, 2),
 				"transport": money(row.addon_amount, cur, 2), "total": money(row.total_cost, cur, 2),
 			})
 		groups.append({
-			"title": s.section_title, "mode": s.pricing_mode, "cost_type": s.cost_type, "items": items,
+			"title": s.section_title, "sub_assembly": s.sub_assembly, "mode": s.pricing_mode, "cost_type": s.cost_type,
+			"items": items, "expenses": expense_rows(expenses_of.get(s.section_title, [])),
 			"amount": money(s.amount, cur, 2), "transport": money(s.addon_amount, cur, 2),
+			"item_total": money(flt(s.amount) + flt(s.addon_amount), cur, 2),
+			"expense_cost": money(s.get("expense_cost"), cur, 2),
 			"total": money(s.total_cost, cur, 2), "selling": money(s.selling_price, cur, 0),
 		})
+	general_rows = expense_rows(general)
 	totals = {
 		field: money(est.get(field), cur, 0 if field in ("main_price", "selling_price", "optional_price", "grand_selling_price") else 2)
 		for field in (
-			"total_amount", "total_addon", "total_cost", "equipment_cost", "manpower_cost", "general_cost",
-			"contingency_amount", "financing_amount", "cost_price", "main_price", "selling_price",
+			"total_amount", "total_addon", "total_item_cost", "manpower_cost", "general_cost", "total_other_expenses",
+			"total_cost", "contingency_amount", "financing_amount", "cost_price", "main_price", "selling_price",
 			"optional_price", "sales_commission_amount", "profit_amount", "grand_selling_price",
 		)
 	}
-	return {"groups": groups, "currency": cur, "totals": totals}
+	return {
+		"groups": groups,
+		"general_expenses": general_rows,
+		"general_total": money(sum(flt(r.amount) for r in general), cur, 2),
+		"currency": cur,
+		"totals": totals,
+	}

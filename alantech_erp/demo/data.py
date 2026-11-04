@@ -30,6 +30,7 @@ import frappe
 from frappe.utils import add_days, getdate, today
 from frappe.utils.nestedset import get_root_of
 
+from alantech_erp.sales import SALES_STAGES
 from alantech_erp.setup.shifts import COMPANY as ALANTECH_COMPANY
 
 DEMO_TAG = "(Demo)"
@@ -78,7 +79,7 @@ EMPLOYEES = [
 	("003", "Divya", "Thomas", "Female", "HR Executive", HEAD_OFFICE, "hr.executive", 40000, None),
 	("004", "Suresh", "Pillai", "Male", "Finance Manager", HEAD_OFFICE, "finance", 110000, None),
 	("005", "Neethu", "Joseph", "Female", "Accounts Executive", HEAD_OFFICE, "accounts", 35000, None),
-	("006", "Arun", "Kumar", "Male", "Sales Head", HEAD_OFFICE, "sales.head", 150000, None),
+	("006", "Arun", "Kumar", "Male", "Sales Director", HEAD_OFFICE, "sales.head", 150000, None),
 	("007", "Vivek", "Raghavan", "Male", "Sales Manager", HEAD_OFFICE, "sales.manager", 100000, None),
 	("008", "Akhil", "Das", "Male", "Sales Engineer", "Thevara", "sales.kerala", 45000, None),
 	("009", "Sneha", "Reddy", "Female", "Sales Engineer", "Puliyanam", "sales.hyderabad", 45000, None),
@@ -104,7 +105,7 @@ INDUSTRIES = [
 ]
 LEAD_SOURCES = ["Website", "Referral", "Exhibition", "Cold Call", "Existing Customer", "IndiaMART"]
 OPPORTUNITY_TYPES = ["New Plant", "AMC", "Spares", "Retrofit"]
-SALES_STAGES = ["Prospecting", "Qualification", "Needs Analysis", "Proposal/Price Quote", "Negotiation/Review"]
+# Deal sales stages: SALES_STAGES from alantech_erp.sales (they follow the quotation; no Prospecting)
 LOST_REASONS = ["Price too high", "Lost to competitor", "Project dropped", "Delivery time"]
 
 ITEM_GROUPS = ["Water Treatment Plants", "Services", "Spares"]
@@ -147,10 +148,10 @@ LEADS = [
 
 # deal: (from, party, type, stage, item, qty, owner employee no., days to close)
 DEALS = [
-	("Customer", f"Kerala Pharma Industries {DEMO_TAG}", "New Plant", "Needs Analysis", "WTP-RO-10", 1, "008", 30),
-	("Customer", f"Deccan Foods Pvt Ltd {DEMO_TAG}", "New Plant", "Proposal/Price Quote", "STP-MBBR-100", 1, "009", 21),
-	("Lead", f"Emirates Bottling Co {DEMO_TAG}", "New Plant", "Qualification", "WTP-UF-20", 1, "007", 45),
-	("Customer", f"Garden City Hotels {DEMO_TAG}", "AMC", "Negotiation/Review", "AMC-WTP", 1, "009", 14),
+	("Customer", f"Kerala Pharma Industries {DEMO_TAG}", "New Plant", "Quotation Draft", "WTP-RO-10", 1, "008", 30),
+	("Customer", f"Deccan Foods Pvt Ltd {DEMO_TAG}", "New Plant", "Quotation Approval", "STP-MBBR-100", 1, "009", 21),
+	("Lead", f"Emirates Bottling Co {DEMO_TAG}", "New Plant", "Quotation Draft", "WTP-UF-20", 1, "007", 45),
+	("Customer", f"Garden City Hotels {DEMO_TAG}", "AMC", "Quotation Sent", "AMC-WTP", 1, "009", 14),
 ]
 
 # Quotations above this grand total need Level 2 approval (only set when the site has no limit):
@@ -669,6 +670,23 @@ def _sales_person_of(company, number):
 	return frappe.db.get_value("Sales Person", {"employee": emp.name}, "name") if emp else None
 
 
+GST_STATE_CODES = {"Kerala": "32", "Karnataka": "29", "Telangana": "36"}
+_GSTIN_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+def _demo_gstin(state, number):
+	"""A well-formed (checksum valid) demo GSTIN for the state: <code>AADCA<0000+n>A1Z<check>."""
+	code = GST_STATE_CODES.get(state)
+	if not code:
+		return None
+	base = f"{code}AADCA{number:04d}A1Z"
+	total = 0
+	for idx, char in enumerate(base):
+		product = _GSTIN_CHARS.index(char) * (2 if idx % 2 else 1)
+		total += product // 36 + product % 36
+	return base + _GSTIN_CHARS[(36 - total % 36) % 36]
+
+
 def _customers(company):
 	created = 0
 	for name, (group, territory, industry, owner_no, contact, city, state, pincode) in CUSTOMERS.items():
@@ -685,8 +703,13 @@ def _customers(company):
 				"industry": industry,
 			}
 		)
-		if overseas and _has_field("Customer", "gst_category"):
-			customer.gst_category = "Overseas"
+		gstin = None if overseas else _demo_gstin(state, list(CUSTOMERS).index(name) + 1)
+		if _has_field("Customer", "alt_tax_type"):
+			customer.alt_tax_type = "Overseas" if overseas else "Local"
+		if _has_field("Customer", "gst_category"):
+			customer.gst_category = "Overseas" if overseas else "Registered Regular"
+			if gstin:
+				customer.gstin = gstin
 		sales_person = _sales_person_of(company, owner_no)
 		if sales_person:
 			customer.append("sales_team", {"sales_person": sales_person, "allocated_percentage": 100})
@@ -724,8 +747,10 @@ def _customers(company):
 		}
 		if state:
 			address.update({"state": state, "pincode": pincode})
-		if overseas and _has_field("Address", "gst_category"):
-			address["gst_category"] = "Overseas"
+		if _has_field("Address", "gst_category"):
+			address["gst_category"] = "Overseas" if overseas else "Registered Regular"
+			if gstin:
+				address["gstin"] = gstin  # Local customers need an address with their GSTIN
 		if frappe.db.exists("Country", address["country"]):
 			frappe.get_doc(address).insert(ignore_permissions=True)
 

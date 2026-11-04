@@ -1,15 +1,21 @@
-"""Quotation approval workflow and Quotation fields for the sales flow (CRM-F07).
+"""Sales flow setup: Quotation approval workflow and the CRM fields (Alantech CRM requirements).
 
-Lead -> Deal (Opportunity) -> Estimation (Sales Manager) -> Quotation
-  Level 1: Sales Manager approves every quotation before it is sent
-  Level 2: above the limit in Selling Settings, a Quotation Level 2 Approver (Sales Head / MD) also approves
+Lead -> Customer (Company / Individual) -> Estimation (optional, Sales Manager) -> Technical Offer
+-> Quotation
+  Level 1: the creator's Sales Manager (Sales Person tree) approves every quotation before it is sent
+  Level 2: above the limit in Selling Settings, the Sales Director above the creator also approves
   Reject (either level) needs remarks; the salesperson resubmits and it starts again at Level 1
   Client: accepts / asks for revision / rejects (recorded by the salesperson)
--> Sales Order (only from a Client Approved quotation)
+-> Sales Order (only from a Client Approved quotation, with the client's LPO)
+Deal: optional, created from the Quotation (Create Deal); its amount and Sales Stage follow the
+quotation (the Alantech sales stages replace ERPNext's pre-quote ones such as Prospecting).
+Prospect: not used (sales/prospect.py); left to System Managers only.
+Customer: Tax Type Local (GSTIN + GST address mandatory) or Overseas (sales/customer.py).
 
 Runs on every `bench migrate` (see after_migrate in hooks.py). Safe to re-run: the workflow is
 created once and then left alone, so changes made in the Workflow form are kept. A workflow
-created by an older version of this file (without the Level 2 state) is upgraded once.
+created by an older version of this file (without Level 2, or approving by role only instead of
+by the sales hierarchy) is upgraded once.
 """
 
 import frappe
@@ -30,8 +36,13 @@ from alantech_erp.sales import (
 	REJECTED,
 	REVISION_REQUESTED,
 	SALES_MANAGER,
+	SALES_STAGES,
 	SALES_USER,
 	SENT_TO_CLIENT,
+	STAGE_DRAFT,
+	TAX_LOCAL,
+	TAX_OVERSEAS,
+	TAX_TYPE_FIELD,
 	WORKFLOW_NAME,
 )
 
@@ -94,9 +105,36 @@ CUSTOM_FIELDS = {
 			**_APPROVAL_FIELD,
 		},
 		{
+			"fieldname": "alt_sales_person",
+			"label": "Sales Person (Creator)",
+			"fieldtype": "Link",
+			"options": "Sales Person",
+			"insert_after": "alt_rejected_by",
+			"in_standard_filter": 1,
+			**_APPROVAL_FIELD,
+		},
+		{
+			"fieldname": "alt_level_1_user",
+			"label": "Level 1 Approver (Sales Manager)",
+			"fieldtype": "Link",
+			"options": "User",
+			"insert_after": "alt_sales_person",
+			"description": "From the Sales Person tree; empty: any Sales Manager",
+			**_APPROVAL_FIELD,
+		},
+		{
+			"fieldname": "alt_level_2_user",
+			"label": "Level 2 Approver (Sales Director)",
+			"fieldtype": "Link",
+			"options": "User",
+			"insert_after": "alt_level_1_user",
+			"depends_on": f"eval:doc.alt_approval_level == '{LEVEL_2}'",
+			**_APPROVAL_FIELD,
+		},
+		{
 			"fieldname": "alt_approval_column",
 			"fieldtype": "Column Break",
-			"insert_after": "alt_rejected_by",
+			"insert_after": "alt_level_2_user",
 		},
 		{
 			"fieldname": "alt_level_1_approver",
@@ -129,6 +167,66 @@ CUSTOM_FIELDS = {
 			"insert_after": "alt_level_2_approver",
 			"depends_on": f"eval:doc.alt_approval_level == '{LEVEL_2}'",
 			**_APPROVAL_FIELD,
+		},
+	],
+	"Opportunity": [
+		{
+			"fieldname": "alt_quotation",
+			"label": "Quotation",
+			"fieldtype": "Link",
+			"options": "Quotation",
+			"insert_after": "expected_closing",
+			"read_only": 1,
+			"no_copy": 1,
+			"description": "The Deal was created from this quotation; its amount follows the quotation",
+		},
+	],
+	"Customer": [
+		{
+			"fieldname": "alt_customer_stage",
+			"label": "Customer Stage",
+			"fieldtype": "Select",
+			"options": "Account\nCustomer",
+			"default": "Account",
+			"insert_after": "customer_type",
+			"read_only": 1,
+			"no_copy": 1,
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"description": "Account until the first submitted Sales Order, then Customer",
+		},
+		{
+			"fieldname": TAX_TYPE_FIELD,
+			"label": "Tax Type",
+			"fieldtype": "Select",
+			"options": f"\n{TAX_LOCAL}\n{TAX_OVERSEAS}",
+			"insert_after": "alt_customer_stage",
+			"reqd": 1,
+			"allow_in_quick_entry": 1,
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"description": (
+				"Local: GSTIN is mandatory and the customer needs an address with that GSTIN. "
+				"Overseas: GST Category Overseas, no GSTIN."
+			),
+		},
+	],
+	"Sales Order": [
+		{
+			"fieldname": "alt_lpo_attachment",
+			"label": "LPO Attachment",
+			"fieldtype": "Attach",
+			"insert_after": "po_date",
+			"allow_on_submit": 0,
+			"description": "The client's LPO; LPO number, date and attachment are needed to confirm the order",
+		},
+		{
+			"fieldname": "alt_order_category",
+			"label": "Order For",
+			"fieldtype": "Select",
+			"options": "\nProject\nIndividual Item Order",
+			"insert_after": "alt_lpo_attachment",
+			"in_standard_filter": 1,
 		},
 	],
 	"Selling Settings": [
@@ -179,19 +277,31 @@ STATES = [
 	(LOST, "1", SALES_USER),
 ]
 
-NEEDS_LEVEL_2 = f"doc.alt_approval_level == '{LEVEL_2}'"
-LEVEL_1_ONLY = f"doc.alt_approval_level != '{LEVEL_2}'"
+# Approvers from the Sales Person tree (sales/hierarchy.py); empty = anyone with the role.
+# Frappe also evaluates these as the user who just acted, to create the next Workflow Actions
+# (the creator on submit, the Level 1 approver on Level 1 approval), so that user passes too;
+# sales/quotation.py check_approver stops anyone else server-side.
+LEVEL_1_USER = (
+	"(not doc.alt_level_1_user or frappe.session.user in (doc.alt_level_1_user, doc.owner)"
+	")"
+)
+LEVEL_2_USER = (
+	"(not doc.alt_level_2_user or frappe.session.user in (doc.alt_level_2_user, doc.alt_level_1_user)"
+	")"
+)
+NEEDS_LEVEL_2 = f"doc.alt_approval_level == '{LEVEL_2}' and {LEVEL_1_USER}"
+LEVEL_1_ONLY = f"doc.alt_approval_level != '{LEVEL_2}' and {LEVEL_1_USER}"
 
 # (from state, action, to state, allowed role, allow self approval, condition)
 TRANSITIONS = [
 	(DRAFT, "Submit for Approval", PENDING_MANAGER, SALES_USER, 1, None),
-	# Level 1: Sales Manager (never the person who created the quotation)
+	# Level 1: the creator's Sales Manager (never the person who created the quotation)
 	(PENDING_MANAGER, "Approve", APPROVED, SALES_MANAGER, 0, LEVEL_1_ONLY),
 	(PENDING_MANAGER, "Approve", PENDING_LEVEL_2, SALES_MANAGER, 0, NEEDS_LEVEL_2),
-	(PENDING_MANAGER, REJECT_ACTION, REJECTED, SALES_MANAGER, 1, None),
-	# Level 2: above the Selling Settings limit
-	(PENDING_LEVEL_2, "Approve", APPROVED, LEVEL_2_ROLE, 0, None),
-	(PENDING_LEVEL_2, REJECT_ACTION, REJECTED, LEVEL_2_ROLE, 1, None),
+	(PENDING_MANAGER, REJECT_ACTION, REJECTED, SALES_MANAGER, 0, LEVEL_1_USER),
+	# Level 2: above the Selling Settings limit, the Sales Director
+	(PENDING_LEVEL_2, "Approve", APPROVED, LEVEL_2_ROLE, 0, LEVEL_2_USER),
+	(PENDING_LEVEL_2, REJECT_ACTION, REJECTED, LEVEL_2_ROLE, 0, LEVEL_2_USER),
 	(REJECTED, "Resubmit", PENDING_MANAGER, SALES_USER, 1, None),
 	(APPROVED, "Send to Client", SENT_TO_CLIENT, SALES_USER, 1, None),
 	# Client decision, recorded by the salesperson
@@ -206,6 +316,12 @@ def execute():
 		return  # ERPNext not installed on this site
 
 	create_custom_fields(CUSTOM_FIELDS, update=True)
+	_hide_unused_fields()
+	_set_customer_stages()
+	_set_customer_tax_types()
+	_create_sales_stages()
+	_deal_stage_follows_quotation()
+	_retire_prospect()
 	_create_role()
 	_create_workflow_states()
 	_create_workflow_actions()
@@ -240,12 +356,12 @@ def _create_workflow_actions():
 def _create_workflow():
 	if frappe.db.exists("Workflow", WORKFLOW_NAME):
 		workflow = frappe.get_doc("Workflow", WORKFLOW_NAME)
-		if any(row.state == PENDING_LEVEL_2 for row in workflow.states):
+		if any("doc.owner" in (row.condition or "") for row in workflow.transitions):
 			return  # current version: leave any changes made in the Workflow form alone
-		# created before Level 2 existed: rebuild the states and transitions once
+		# created before Level 2 / hierarchy approvers existed: rebuild the states and transitions once
 		_set_states_and_transitions(workflow)
 		workflow.save(ignore_permissions=True)
-		print(f"{WORKFLOW_NAME}: added Level 2 approval and reject remarks.")
+		print(f"{WORKFLOW_NAME}: approvals now follow the Sales Person tree (Level 1 Sales Manager, Level 2 Sales Director).")
 		return
 
 	if frappe.db.exists("Workflow", {"document_type": "Quotation", "is_active": 1}):
@@ -295,3 +411,134 @@ def _set_states_and_transitions(workflow):
 				"condition": condition,
 			},
 		)
+
+
+# Quotation fields Alantech did not use in Zoho CRM (requirements: coupon, incoterm, shipping rule, UTM...)
+HIDDEN_QUOTATION_FIELDS = ("coupon_code", "incoterm", "named_place", "shipping_rule", "utm_medium", "utm_content")
+
+
+def _hide_unused_fields():
+	from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+
+	meta = frappe.get_meta("Quotation")
+	for field in HIDDEN_QUOTATION_FIELDS:
+		df = meta.get_field(field)
+		if df and not df.hidden and not df.reqd:
+			make_property_setter("Quotation", field, "hidden", 1, "Check", validate_fields_for_doctype=False)
+
+
+def _set_customer_stages():
+	"""Customers with a submitted Sales Order are at stage Customer; the rest are Accounts."""
+	if not frappe.db.has_column("Customer", "alt_customer_stage"):
+		return
+	ordered = frappe.get_all("Sales Order", filters={"docstatus": 1}, pluck="customer", distinct=True)
+	if ordered:
+		frappe.db.set_value(
+			"Customer",
+			{"name": ["in", ordered], "alt_customer_stage": ["!=", "Customer"]},
+			"alt_customer_stage",
+			"Customer",
+			update_modified=False,
+		)
+	frappe.db.set_value(
+		"Customer",
+		{"alt_customer_stage": ["is", "not set"]},
+		"alt_customer_stage",
+		"Account",
+		update_modified=False,
+	)
+
+
+# --------------------------------------------------------------------------- Deal sales stages
+def _create_sales_stages():
+	for stage in SALES_STAGES:
+		if not frappe.db.exists("Sales Stage", stage):
+			frappe.get_doc({"doctype": "Sales Stage", "stage_name": stage}).insert(ignore_permissions=True)
+
+
+def _deal_stage_follows_quotation():
+	"""Opportunity.sales_stage: Alantech default (not Prospecting), read only on a Deal from a
+	quotation, and every such Deal moved to the stage of its quotation."""
+	from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+
+	from alantech_erp.sales.deal import sales_stage_for
+
+	meta = frappe.get_meta("Opportunity")
+	if not meta.has_field("sales_stage"):
+		return
+	df = meta.get_field("sales_stage")
+	for prop, value, prop_type in (
+		("default", STAGE_DRAFT, "Data"),
+		("read_only_depends_on", "eval:doc.alt_quotation", "Code"),
+		("description", "Follows the quotation (approval, client, revision)", "Small Text"),
+	):
+		if (df.get(prop) or "") != value:
+			make_property_setter("Opportunity", "sales_stage", prop, value, prop_type, validate_fields_for_doctype=False)
+
+	if not meta.has_field("alt_quotation"):
+		return
+	deals = frappe.get_all(
+		"Opportunity",
+		filters={"alt_quotation": ["is", "set"], "status": ["!=", "Closed"]},
+		fields=["name", "alt_quotation", "sales_stage"],
+	)
+	for deal in deals:
+		if not frappe.db.exists("Quotation", deal.alt_quotation):
+			continue
+		stage = sales_stage_for(frappe.get_doc("Quotation", deal.alt_quotation))
+		if stage and stage != deal.sales_stage:
+			frappe.db.set_value("Opportunity", deal.name, "sales_stage", stage, update_modified=False)
+
+
+# --------------------------------------------------------------------------- Prospect (not used)
+def _retire_prospect():
+	"""Hide the Prospect flow: Customer "From Prospect" hidden, Prospect left to System Managers.
+
+	Prospect permissions become a single System Manager row (Custom DocPerm) the first time, so it
+	drops out of the CRM menus and search for everyone else; Role Permissions Manager > Reset to
+	Default brings the standard ones back.
+	"""
+	from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+
+	df = frappe.get_meta("Customer").get_field("prospect_name")
+	if df and not df.hidden:
+		make_property_setter("Customer", "prospect_name", "hidden", 1, "Check", validate_fields_for_doctype=False)
+
+	if not frappe.db.exists("DocType", "Prospect") or frappe.db.exists("Custom DocPerm", {"parent": "Prospect"}):
+		return
+	frappe.get_doc(
+		{
+			"doctype": "Custom DocPerm",
+			"parent": "Prospect",
+			"parenttype": "DocType",
+			"parentfield": "permissions",
+			"role": "System Manager",
+			"permlevel": 0,
+			"read": 1,
+			"write": 1,
+			"delete": 1,
+			"report": 1,
+			"export": 1,
+			"print": 1,
+			"email": 1,
+			"share": 1,
+		}
+	).insert(ignore_permissions=True)
+	frappe.clear_cache(doctype="Prospect")
+
+
+# --------------------------------------------------------------------------- Customer tax type
+def _set_customer_tax_types():
+	"""Existing customers without a Tax Type: Overseas from GST Category, Local from a GSTIN."""
+	from alantech_erp.sales.customer import tax_type_from_gst
+
+	if not frappe.db.has_column("Customer", TAX_TYPE_FIELD) or not frappe.db.has_column("Customer", "gst_category"):
+		return
+	for row in frappe.get_all(
+		"Customer",
+		filters={TAX_TYPE_FIELD: ["is", "not set"]},
+		fields=["name", "gst_category", "gstin"],
+	):
+		tax_type = tax_type_from_gst(row.gst_category, row.gstin)
+		if tax_type:
+			frappe.db.set_value("Customer", row.name, TAX_TYPE_FIELD, tax_type, update_modified=False)

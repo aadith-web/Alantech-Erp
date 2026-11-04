@@ -14,16 +14,19 @@
   "valid_till",
   "revision",
   "estimation",
+  "quote_item",
   "amended_from",
   "client_section",
-  "opportunity",
+  "customer",
   "customer_name",
+  "contact_person",
   "kind_attn",
   "your_ref",
   "column_break_client",
   "project_name",
   "project_location",
   "subject",
+  "sales_user",
   "signature_section",
   "company",
   "currency",
@@ -146,6 +149,15 @@
    "in_standard_filter": 1
   },
   {
+   "fieldname": "quote_item",
+   "fieldtype": "Link",
+   "label": "Quotation Item",
+   "options": "Item",
+   "fetch_from": "plant_assembly.quote_item",
+   "fetch_if_empty": 1,
+   "description": "Item quoted when the Quotation is made from this offer without an Estimation"
+  },
+  {
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
@@ -160,26 +172,33 @@
    "label": "Client"
   },
   {
-   "fieldname": "opportunity",
+   "fieldname": "customer",
    "fieldtype": "Link",
-   "label": "Deal",
-   "options": "Opportunity",
+   "label": "Customer",
+   "options": "Customer",
+   "in_standard_filter": 1,
    "search_index": 1,
-   "in_standard_filter": 1
+   "description": "Fetched from the Estimation; required before submit"
   },
   {
    "fieldname": "customer_name",
    "fieldtype": "Data",
    "label": "Client Name",
    "in_list_view": 1,
-   "fetch_from": "opportunity.customer_name",
+   "fetch_from": "customer.customer_name",
    "fetch_if_empty": 1
+  },
+  {
+   "fieldname": "contact_person",
+   "fieldtype": "Link",
+   "label": "Contact Person",
+   "options": "Contact"
   },
   {
    "fieldname": "kind_attn",
    "fieldtype": "Data",
    "label": "Kind Attn",
-   "fetch_from": "opportunity.contact_display",
+   "fetch_from": "contact_person.full_name",
    "fetch_if_empty": 1
   },
   {
@@ -206,6 +225,12 @@
    "fieldname": "subject",
    "fieldtype": "Data",
    "label": "Subject"
+  },
+  {
+   "fieldname": "sales_user",
+   "fieldtype": "Link",
+   "label": "Salesperson",
+   "options": "User"
   },
   {
    "fieldname": "signature_section",
@@ -464,7 +489,7 @@
    "link_fieldname": "alt_technical_offer"
   }
  ],
- "modified": "2026-10-26 13:30:00.000000",
+ "modified": "2026-11-03 14:30:00.000000",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Technical Offer",

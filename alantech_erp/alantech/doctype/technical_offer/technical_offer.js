@@ -2,7 +2,6 @@
 // For license information, please see license.txt
 
 const ALT_FILL_RE = /\[\[([\s\S]*?)\]\]/g;
-const ALT_EST = "alantech_erp.alantech.doctype.estimation.estimation";
 
 // Fields that may hold [[ ]] (same list as alantech_erp/proposal/__init__.py)
 const ALT_OFFER_TEXT_FIELDS = [
@@ -27,8 +26,14 @@ frappe.ui.form.on("Technical Offer", {
 	setup(frm) {
 		frm.set_query("plant_assembly", () => ({ filters: { disabled: 0 } }));
 		frm.set_query("estimation", () => ({
-			filters: { docstatus: ["<", 2], ...(frm.doc.opportunity ? { opportunity: frm.doc.opportunity } : {}) },
+			filters: { docstatus: ["<", 2], ...(frm.doc.customer ? { customer: frm.doc.customer } : {}) },
 		}));
+		frm.set_query("customer", () => ({ filters: { disabled: 0 } }));
+		frm.set_query("contact_person", () => ({
+			query: "frappe.contacts.doctype.contact.contact.contact_query",
+			filters: { link_doctype: "Customer", link_name: frm.doc.customer || "" },
+		}));
+		frm.set_query("quote_item", () => ({ filters: { is_sales_item: 1, disabled: 0 } }));
 		frm.set_query("sub_assembly", "sections", () => ({ filters: { disabled: 0 } }));
 		["scope_of_supply_terms", "commercial_terms_template"].forEach((f) =>
 			frm.set_query(f, () => ({ filters: { disabled: 0 } }))
@@ -47,20 +52,18 @@ frappe.ui.form.on("Technical Offer", {
 			}
 		}
 
-		if (frm.doc.docstatus === 1 && frm.doc.estimation && frappe.model.can_create("Quotation")) {
-			frappe.db.get_value("Estimation", frm.doc.estimation, "docstatus").then(({ message }) => {
-				if (!message || message.docstatus !== 1) return;
-				frm.add_custom_button(
-					__("Quotation"),
-					() =>
-						frappe.model.open_mapped_doc({
-							method: `${ALT_EST}.make_quotation`,
-							source_name: frm.doc.estimation,
-							args: { technical_offer: frm.doc.name },
-						}),
-					__("Create")
-				);
-			});
+		if (frm.doc.docstatus === 1 && frappe.model.can_create("Quotation")) {
+			// through the submitted Estimation when there is one, else from the price schedule
+			frm.add_custom_button(
+				__("Quotation"),
+				() =>
+					frappe.model.open_mapped_doc({
+						method: "alantech_erp.alantech.doctype.technical_offer.technical_offer.make_quotation",
+						frm,
+					}),
+				__("Create")
+			);
+			frm.page.set_inner_btn_group_as_primary(__("Create"));
 		}
 	},
 
@@ -99,13 +102,20 @@ frappe.ui.form.on("Technical Offer", {
 	estimation(frm) {
 		if (!frm.doc.estimation) return;
 		frappe.db
-			.get_value("Estimation", frm.doc.estimation, ["opportunity", "customer_name", "company", "currency"])
+			.get_value("Estimation", frm.doc.estimation, [
+				"customer", "customer_name", "contact_person", "sales_user", "quote_item", "company", "currency",
+			])
 			.then(({ message }) => {
 				if (!message) return;
-				["opportunity", "customer_name", "company", "currency"].forEach((f) => {
+				["customer", "customer_name", "contact_person", "sales_user", "quote_item", "company", "currency"].forEach((f) => {
 					if (!frm.doc[f] && message[f]) frm.set_value(f, message[f]);
 				});
 			});
+	},
+
+	customer(frm) {
+		if (frm.doc.estimation) return;
+		frm.set_value("contact_person", null);
 	},
 
 	scope_of_supply_terms(frm) {
