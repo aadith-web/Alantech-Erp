@@ -2,6 +2,7 @@
 // For license information, please see license.txt
 
 const SETTINGS_API = "alantech_erp.alantech.doctype.uniform_issue_settings.uniform_issue_settings.get_uniform_defaults";
+const EMPLOYEE_API = "alantech_erp.alantech.doctype.employee_uniform_issue.employee_uniform_issue.get_employee_details";
 const ITEM_API = "alantech_erp.alantech.doctype.employee_uniform_issue.employee_uniform_issue.get_item_details";
 
 frappe.ui.form.on("Employee Uniform Issue", {
@@ -28,6 +29,10 @@ frappe.ui.form.on("Employee Uniform Issue", {
   },
 
   onload(frm) {
+    // Amend copies the cancelled original's Stock Entry; the amended issue gets its own on submit
+    if (frm.is_new() && frm.doc.stock_entry) {
+      frm.doc.stock_entry = null;
+    }
     if (frm.is_new() && !frm.doc.company) {
       frm.set_value("company", frappe.defaults.get_user_default("Company"));
     }
@@ -36,6 +41,21 @@ frappe.ui.form.on("Employee Uniform Issue", {
 
   company(frm) {
     if (frm.is_new()) load_defaults(frm, true);
+  },
+
+  // not fetch_from: Stock roles may only select employees, so the details come from the server
+  employee(frm) {
+    if (!frm.doc.employee) {
+      frm.set_value({ employee_name: "", department: "", designation: "" });
+      return;
+    }
+    frappe.call({ method: EMPLOYEE_API, args: { employee: frm.doc.employee } }).then(({ message }) => {
+      frm.set_value({
+        employee_name: message.employee_name || "",
+        department: message.department || "",
+        designation: message.designation || "",
+      });
+    });
   },
 
   source_warehouse(frm) {

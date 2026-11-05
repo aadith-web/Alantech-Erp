@@ -60,7 +60,7 @@
     },
     {
       "default": "0",
-      "description": "Minimum number of days before another uniform issue to the same employee triggers a warning. 0 disables the warning.",
+      "description": "Warn when the same item was issued to the same employee within this many days before the issue date. 0 disables the warning.",
       "fieldname": "reissue_warning_days",
       "fieldtype": "Int",
       "label": "Re-issue Warning Days"

@@ -4,13 +4,14 @@
 
 On submit a Material Issue Stock Entry takes the items out of the source warehouse and books them
 to the Uniform Expense Account (debit expense, credit the warehouse's stock account); cancelling
-this document cancels that Stock Entry. The re-issue warning and register report are separate subtasks.
+this document cancels that Stock Entry. A non-blocking warning shows when an item was already issued to the employee within the
+Re-issue Warning Days of Uniform Issue Settings. The register report is a separate subtask.
 """
 
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, get_link_to_form, nowtime
+from frappe.utils import add_days, flt, get_link_to_form, getdate, nowtime
 from frappe.utils.nestedset import get_descendants_of
 from erpnext.stock.utils import get_stock_balance
 
@@ -20,6 +21,14 @@ from alantech_erp.alantech.doctype.uniform_issue_settings.uniform_issue_settings
 
 
 class EmployeeUniformIssue(Document):
+	def _validate_links(self):
+		# Amend copies no_copy fields too, so an amended draft arrives with the cancelled
+		# original's Stock Entry. Link validation runs before every hook, so clear it here:
+		# a draft never has a Stock Entry (a new one is made on submit).
+		if self.docstatus == 0:
+			self.stock_entry = None
+		super()._validate_links()
+
 	def before_validate(self):
 		self.set_defaults()
 
@@ -30,6 +39,7 @@ class EmployeeUniformIssue(Document):
 		self.set_rates_and_amounts()
 		self.calculate_totals()
 		self.validate_stock_availability()
+		self.warn_recent_reissue()
 
 	def before_submit(self):
 		# checked before anything is posted, so a missing account never leaves a half-done submit
@@ -52,13 +62,17 @@ class EmployeeUniformIssue(Document):
 			self.source_warehouse = get_uniform_defaults(company=self.company).default_source_warehouse
 
 	def validate_employee(self):
-		status = frappe.db.get_value("Employee", self.employee, "status")
-		if status != "Active":
+		emp = get_employee_details(self.employee, _check_permission=False)
+		if emp.status != "Active":
 			frappe.throw(
 				_("Employee {0} is {1}. Uniforms can only be issued to Active employees.").format(
-					frappe.bold(self.employee), frappe.bold(_(status or "not found"))
+					frappe.bold(self.employee), frappe.bold(_(emp.status or "not found"))
 				)
 			)
+		# set here, not by fetch_from: Stock roles may only select employees, not read them
+		self.employee_name = emp.employee_name
+		self.department = emp.department
+		self.designation = emp.designation
 
 	def validate_warehouse(self):
 		if not self.source_warehouse:
@@ -140,6 +154,58 @@ class EmployeeUniformIssue(Document):
 				title=_("Insufficient Stock"),
 			)
 
+	def warn_recent_reissue(self):
+		"""Non-blocking: list submitted issues of the same item to the same employee dated within
+		Re-issue Warning Days before (or on) this issue date. 0 days disables the check."""
+		days = get_uniform_defaults().reissue_warning_days
+		if not days or not self.employee or not self.issue_date:
+			return
+
+		item_codes = {row.item_code for row in self.items if row.item_code}
+		if not item_codes:
+			return
+
+		issue = frappe.qb.DocType("Employee Uniform Issue")
+		item = frappe.qb.DocType("Employee Uniform Issue Item")
+		previous = (
+			frappe.qb.from_(issue)
+			.join(item)
+			.on(item.parent == issue.name)
+			.select(item.item_code, issue.name, issue.issue_date)
+			.distinct()
+			.where(
+				(issue.docstatus == 1)
+				& (issue.employee == self.employee)
+				& (issue.name != self.name)
+				& (item.parenttype == "Employee Uniform Issue")
+				& (item.item_code.isin(list(item_codes)))
+				& (issue.issue_date.between(getdate(add_days(self.issue_date, -days)), getdate(self.issue_date)))
+			)
+			.orderby(item.item_code)
+			.orderby(issue.issue_date, order=frappe.qb.desc)
+			.run(as_dict=True)
+		)
+		if not previous:
+			return
+
+		lines = [
+			_("Item {0} was issued on {1} in {2}").format(
+				frappe.bold(row.item_code),
+				frappe.format(row.issue_date, "Date"),
+				get_link_to_form("Employee Uniform Issue", row.name),
+			)
+			for row in previous
+		]
+		frappe.msgprint(
+			_("{0} already received these items in the last {1} days:").format(
+				frappe.bold(self.employee_name or self.employee), days
+			)
+			+ "<br>"
+			+ "<br>".join(lines),
+			title=_("Recent Uniform Issue"),
+			indicator="orange",
+		)
+
 	# --- Stock Entry -------------------------------------------------------
 	def get_accounting_defaults(self):
 		"""Uniform Expense Account (required) and cost center from Uniform Issue Settings,
@@ -220,6 +286,22 @@ def stock_entry_before_cancel(doc, method=None):
 			),
 			title=_("Cancel the Uniform Issue"),
 		)
+
+
+@frappe.whitelist()
+def get_employee_details(employee, _check_permission=True):
+	"""Name, department, designation and status of an employee, for the form.
+
+	Stock User / Stock Manager can only select employees (no read on Employee), so the form gets
+	these through here instead of fetch_from; anyone who can make a uniform issue may call it.
+	"""
+	if _check_permission:
+		frappe.has_permission("Employee Uniform Issue", "create", throw=True)
+
+	emp = frappe.db.get_value(
+		"Employee", employee, ["employee_name", "department", "designation", "status"], as_dict=True
+	)
+	return emp or frappe._dict()
 
 
 @frappe.whitelist()

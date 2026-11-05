@@ -2,7 +2,8 @@
 # For license information, please see license.txt
 """Employee Uniform Issue: the doctype (ClickUp 14yr2e56y3m), its item filter and validations
 (ClickUp 14yr2e56y3n), the Stock Entry made on submit (ClickUp 14yr2e56y3p) and cancelled with
-it (ClickUp 14yr2e56y3q). Defaults taken from
+it (ClickUp 14yr2e56y3q), the re-issue warning (ClickUp 14yr2e56y3r), and Employee connections
+and role permissions (ClickUp 14yr2e56y3u). Defaults taken from
 Uniform Issue Settings (14yr2e56y3k) are checked here too.
 
 Run:
@@ -19,7 +20,7 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 from erpnext.accounts.utils import get_fiscal_year
-from frappe.utils import cint, flt, nowdate
+from frappe.utils import add_days, cint, flt, nowdate
 
 from alantech_erp.alantech.doctype.employee_uniform_issue.employee_uniform_issue import get_item_details
 
@@ -137,8 +138,9 @@ class IntegrationTestEmployeeUniformIssue(IntegrationTestCase):
 		self.addCleanup(patcher.stop)
 		self.set_settings(group=UNIFORMS)
 
-	def set_settings(self, group=None, warehouse=None, expense_account=True, cost_center=None):
+	def set_settings(self, group=None, warehouse=None, expense_account=True, cost_center=None, reissue_days=0):
 		settings = frappe.get_single("Uniform Issue Settings")
+		settings.reissue_warning_days = reissue_days
 		settings.uniform_item_group = group
 		settings.default_source_warehouse = warehouse
 		settings.default_cost_center = cost_center
@@ -175,13 +177,10 @@ class IntegrationTestEmployeeUniformIssue(IntegrationTestCase):
 		for field in ("issue_date", "employee", "company", "items"):
 			self.assertTrue(meta.get_field(field).reqd, field)
 		self.assertEqual(meta.get_field("issue_date").default, "Today")
-		for field, fetch_from in {
-			"employee_name": "employee.employee_name",
-			"department": "employee.department",
-			"designation": "employee.designation",
-		}.items():
+		# set by validate / get_employee_details, not fetch_from: Stock roles may only select employees
+		for field in ("employee_name", "department", "designation"):
 			df = meta.get_field(field)
-			self.assertEqual(df.fetch_from, fetch_from)
+			self.assertFalse(df.fetch_from, field)
 			self.assertTrue(df.read_only, field)
 		stock_entry = meta.get_field("stock_entry")
 		self.assertEqual((stock_entry.fieldtype, stock_entry.options), ("Link", "Stock Entry"))
@@ -251,15 +250,26 @@ class IntegrationTestEmployeeUniformIssue(IntegrationTestCase):
 	def test_amend_does_not_copy_stock_entry(self):
 		doc = self.make_doc().insert()
 		doc.submit()
+		doc.reload()
+		original_entry = doc.stock_entry
+		self.assertTrue(original_entry)
 		doc.cancel()
-		doc.stock_entry = "SE-TEST-0001"  # set by the Stock Entry subtask later
-		amended = frappe.copy_doc(doc, ignore_no_copy=False)  # like Amend in the form: no_copy fields left out
+		self.assertEqual(frappe.db.get_value("Stock Entry", original_entry, "docstatus"), 2)
+
+		# like Amend in the form: no_copy fields ARE copied, so the cancelled Stock Entry comes along
+		amended = frappe.copy_doc(doc, ignore_no_copy=True)
 		amended.amended_from = doc.name
 		amended.docstatus = 0
+		self.assertEqual(amended.stock_entry, original_entry)
+		amended.insert()  # must not fail with "Cannot link cancelled document"
 		self.assertFalse(amended.stock_entry)
-		amended.insert()
 		self.assertEqual(amended.amended_from, doc.name)
-		self.assertEqual(amended.docstatus, 0)
+
+		amended.submit()
+		amended.reload()
+		self.assertTrue(amended.stock_entry)
+		self.assertNotEqual(amended.stock_entry, original_entry)
+		self.assertEqual(frappe.db.get_value("Stock Entry", amended.stock_entry, "docstatus"), 1)
 
 	def test_company_defaults_when_empty(self):
 		doc = self.make_doc(company=None)
@@ -550,3 +560,202 @@ class IntegrationTestEmployeeUniformIssue(IntegrationTestCase):
 		entry.submit()
 		entry.cancel()
 		self.assertEqual(entry.docstatus, 2)
+
+	# --- 14yr2e56y3r: re-issue warning --------------------------------------
+	@property
+	def base(self):
+		"""Issue date for the re-issue tests: mid fiscal year, after the stock receipt and clear of
+		issues the site already has around today."""
+		return add_days(get_fiscal_year(nowdate(), company=self.company)[1], 100)
+
+	def issue_on(self, date, employee=None, item=SHIRT, submit=True):
+		doc = self.make_doc(issue_date=date, items=[{"item_code": item, "qty": 1}])
+		if employee:
+			doc.employee = employee
+		doc.insert()
+		if submit:
+			self.submit_for_reissue_test(doc)
+		return doc
+
+	def submit_for_reissue_test(self, doc):
+		# test data is rolled back per class, not per test: cancel at the end so the next
+		# re-issue test does not see this issue in its window
+		doc.submit()
+		self.addCleanup(lambda: doc.docstatus == 1 and doc.reload().docstatus == 1 and doc.cancel())
+
+	def reissue_warnings(self, doc):
+		"""Insert doc and return the re-issue warnings it raised (it must still save)."""
+		frappe.clear_messages()
+		doc.insert()
+		self.assertTrue(doc.name)
+		return [m for m in frappe.get_message_log() if m.get("title") == "Recent Uniform Issue"]
+
+	def test_reissue_warning_within_window(self):
+		self.set_settings(group=UNIFORMS, reissue_days=30)
+		previous = self.issue_on(add_days(self.base, -10))
+		warnings = self.reissue_warnings(self.make_doc(issue_date=self.base))
+		self.assertEqual(len(warnings), 1)
+		self.assertIn(previous.name, warnings[0].message)
+		self.assertIn(SHIRT, warnings[0].message)
+		self.assertIn(frappe.format(previous.issue_date, "Date"), warnings[0].message)
+
+	def test_reissue_warning_is_non_blocking_on_submit(self):
+		self.set_settings(group=UNIFORMS, reissue_days=30)
+		self.issue_on(add_days(self.base, -10))
+		doc = self.make_doc(issue_date=self.base)
+		doc.insert()
+		self.submit_for_reissue_test(doc)
+		self.assertEqual(doc.docstatus, 1)
+
+	def test_reissue_warning_on_window_boundary(self):
+		self.set_settings(group=UNIFORMS, reissue_days=30)
+		self.issue_on(add_days(self.base, -30))
+		self.assertEqual(len(self.reissue_warnings(self.make_doc(issue_date=self.base))), 1)
+
+	def test_no_reissue_warning_outside_window(self):
+		self.set_settings(group=UNIFORMS, reissue_days=30)
+		self.issue_on(add_days(self.base, -31))
+		self.assertFalse(self.reissue_warnings(self.make_doc(issue_date=self.base)))
+
+	def test_no_reissue_warning_for_later_issue(self):
+		self.set_settings(group=UNIFORMS, reissue_days=30)
+		self.issue_on(self.base)
+		self.assertFalse(self.reissue_warnings(self.make_doc(issue_date=add_days(self.base, -5))))
+
+	def test_no_reissue_warning_when_setting_is_zero(self):
+		self.set_settings(group=UNIFORMS, reissue_days=0)
+		self.issue_on(add_days(self.base, -1))
+		self.assertFalse(self.reissue_warnings(self.make_doc(issue_date=self.base)))
+
+	def test_no_reissue_warning_for_other_item_or_employee(self):
+		self.set_settings(group=UNIFORMS, reissue_days=30)
+		self.issue_on(add_days(self.base, -5), employee=self.other_employee.name)
+		self.assertFalse(self.reissue_warnings(self.make_doc(issue_date=self.base)))
+		self.issue_on(add_days(self.base, -5))
+		cap_only = self.make_doc(issue_date=self.base, items=[{"item_code": CAP, "qty": 1}])
+		self.assertFalse(self.reissue_warnings(cap_only))
+
+	def test_no_reissue_warning_for_draft_or_cancelled_issue(self):
+		self.set_settings(group=UNIFORMS, reissue_days=30)
+		self.issue_on(add_days(self.base, -5), submit=False)
+		self.issue_on(add_days(self.base, -5)).cancel()
+		self.assertFalse(self.reissue_warnings(self.make_doc(issue_date=self.base)))
+
+	# --- 14yr2e56y3u: Employee connections and permissions -----------------
+	def role_user(self, role):
+		email = f"_test-eui-{role.replace(' ', '-').lower()}@example.com"
+		if not frappe.db.exists("User", email):
+			frappe.get_doc(
+				{"doctype": "User", "email": email, "first_name": f"Test {role}", "send_welcome_email": 0}
+			).insert(ignore_permissions=True)
+		user = frappe.get_doc("User", email)
+		user.set("roles", [{"role": role}])
+		user.save(ignore_permissions=True)
+		self.addCleanup(frappe.set_user, "Administrator")
+		return email
+
+	def test_role_rights(self):
+		expected = {
+			"HR User": {"read", "create", "write"},
+			"Stock User": {"read", "create", "write"},
+			"HR Manager": {"read", "create", "write", "submit", "cancel", "amend", "delete"},
+			"Stock Manager": {"read", "create", "write", "submit", "cancel", "amend", "delete"},
+		}
+		for role, allowed in expected.items():
+			user = self.role_user(role)
+			for right in ("read", "create", "write", "submit", "cancel", "amend", "delete"):
+				with self.subTest(role=role, right=right):
+					self.assertEqual(
+						bool(frappe.has_permission("Employee Uniform Issue", right, user=user)), right in allowed
+					)
+
+	def test_users_prepare_and_managers_submit(self):
+		for preparer, manager in (("HR User", "HR Manager"), ("Stock User", "Stock Manager")):
+			with self.subTest(preparer=preparer):
+				frappe.set_user(self.role_user(preparer))
+				doc = self.make_doc().insert()
+				self.assertEqual(doc.employee_name, self.employee.employee_name)
+				doc.remarks = "edited"
+				doc.save()
+				with self.assertRaises(frappe.PermissionError):
+					doc.submit()
+
+				frappe.set_user(self.role_user(manager))
+				doc = frappe.get_doc("Employee Uniform Issue", doc.name)
+				doc.submit()
+				self.assertTrue(doc.stock_entry)
+				doc.cancel()
+				amended = frappe.copy_doc(doc, ignore_no_copy=True)
+				amended.amended_from = doc.name
+				amended.docstatus = 0
+				amended.insert()
+				self.assertFalse(amended.stock_entry)
+				frappe.set_user("Administrator")
+
+	def test_user_cannot_cancel(self):
+		doc = self.make_doc().insert()
+		doc.submit()
+		for role in ("HR User", "Stock User"):
+			with self.subTest(role=role):
+				frappe.set_user(self.role_user(role))
+				with self.assertRaises(frappe.PermissionError):
+					frappe.get_doc("Employee Uniform Issue", doc.name).cancel()
+				frappe.set_user("Administrator")
+		doc.reload()
+		doc.cancel()
+
+	def test_link_fields_selectable_by_every_role(self):
+		from frappe.desk.search import search_link
+
+		for role in ("HR User", "HR Manager", "Stock User", "Stock Manager"):
+			frappe.set_user(self.role_user(role))
+			for doctype in ("Employee", "Item", "Warehouse", "Company", "Department"):
+				with self.subTest(role=role, doctype=doctype):
+					search_link(doctype, "", page_length=1)  # raises PermissionError without select
+			frappe.set_user("Administrator")
+
+	def test_stock_roles_get_employee_details_without_reading_employee(self):
+		from alantech_erp.alantech.doctype.employee_uniform_issue.employee_uniform_issue import (
+			get_employee_details,
+		)
+
+		frappe.set_user(self.role_user("Stock User"))
+		self.assertFalse(frappe.has_permission("Employee", "read"))  # select only
+		details = get_employee_details(self.employee.name)
+		self.assertEqual(details.employee_name, self.employee.employee_name)
+		self.assertEqual(details.department, self.employee.department)
+
+	def test_employee_details_need_uniform_issue_access(self):
+		from alantech_erp.alantech.doctype.employee_uniform_issue.employee_uniform_issue import (
+			get_employee_details,
+		)
+
+		frappe.set_user(self.role_user("Accounts User"))
+		with self.assertRaises(frappe.PermissionError):
+			get_employee_details(self.employee.name)
+
+	def test_register_report_roles(self):
+		roles = set(frappe.get_all("Has Role", filters={"parent": "Employee Uniform Issue Register",
+			"parenttype": "Report"}, pluck="role"))
+		self.assertTrue({"HR User", "HR Manager", "Stock User", "Stock Manager"} <= roles)
+
+	def test_employee_connections(self):
+		data = frappe.get_meta("Employee").get_dashboard_data()
+		linked = {d for group in data.transactions for d in group["items"]}
+		self.assertIn("Employee Uniform Issue", linked)
+		self.assertIn("Employee Asset Handover", linked)
+
+		doc = self.make_doc().insert()
+		doc.submit()
+		from frappe.desk.notifications import get_open_count
+
+		counts = {c["doctype"]: c["count"] for c in get_open_count("Employee", self.employee.name)["count"]["external_links_found"]}
+		self.assertGreaterEqual(counts["Employee Uniform Issue"], 1)
+
+	def test_sidebar_links(self):
+		for module in ("Tenure", "Stock"):
+			name = frappe.db.get_value("Custom Sidebar", {"module": module, "user": ["in", ["", None]]})
+			self.assertTrue(name, module)
+			links = {(r.link_type, r.link_to) for r in frappe.get_doc("Custom Sidebar", name).sidebar_items}
+			self.assertIn(("DocType", "Employee Uniform Issue"), links)
+			self.assertIn(("Report", "Employee Uniform Issue Register"), links)
