@@ -13,7 +13,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, flt, get_link_to_form, getdate, nowtime
 from frappe.utils.nestedset import get_descendants_of
-from erpnext.stock.utils import get_stock_balance
+from erpnext.stock.stock_ledger import get_previous_sle
 
 from alantech_erp.alantech.doctype.uniform_issue_settings.uniform_issue_settings import (
 	get_uniform_defaults,
@@ -286,6 +286,17 @@ def stock_entry_before_cancel(doc, method=None):
 			),
 			title=_("Cancel the Uniform Issue"),
 		)
+
+
+def get_stock_balance(item_code, warehouse, posting_date):
+	"""Qty of the item in the warehouse at the posting date (and the current time), as erpnext's
+	get_stock_balance works it out. Not that function itself: it requires read access to Item, which
+	HR User / HR Manager do not have. Access to the uniform issue is the permission check here, as it
+	is for the Stock Entry made on submit."""
+	last_entry = get_previous_sle(
+		{"item_code": item_code, "warehouse": warehouse, "posting_date": posting_date, "posting_time": nowtime()}
+	)
+	return flt(last_entry.qty_after_transaction) if last_entry else 0.0
 
 
 @frappe.whitelist()
