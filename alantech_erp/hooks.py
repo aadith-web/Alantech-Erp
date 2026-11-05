@@ -221,6 +221,8 @@ has_permission = {
 # }
 
 fixtures = [
+    {"dt": "Print Format", "filters": [["name", "in", ["Offer Letter", "Appointment Letter"]]]},
+    {"dt": "Letter Head", "filters": [["name", "in", ["AlanTech"]]]},
     {"dt": "Custom Field", "or_filters": [
         ["fieldname", "like", "alt\\_%"],
         ["name", "in", [
@@ -231,6 +233,11 @@ fixtures = [
           "Event-custom_call_result",
           "Event-custom_section_break_i4ir3",
           "Event-custom_section_break_fxv5g",
+          "Employee-custom_ref_no",
+          "Employee-custom_job_description",
+          "Company-custom_hr_signatory_name",
+          "Company-custom_hr_email",
+          "Company-custom_hr_office_address",
         ]],
     ]},
     {"dt": "Property Setter", "or_filters": [
@@ -244,6 +251,7 @@ fixtures = [
     {"dt": "Designation"},
     {"dt": "Department", "filters": [["name", "!=", "All Departments"]]},
     {"dt": "Document Type Master"}
+    
 ]
 
 doc_events = {
