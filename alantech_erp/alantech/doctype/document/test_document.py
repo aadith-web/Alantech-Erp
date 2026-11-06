@@ -301,6 +301,59 @@ class IntegrationTestDocument(IntegrationTestCase):
 		doc = self.make_doc(save=False, employee=self.other_emp, document_type=ID_CARD, card_number="234567890124")
 		self.assert_refused(doc, first.name, frappe.DuplicateEntryError)
 
+	# --- one person per identity number (ClickUp 14yr2e57c6k) --------------
+	def test_number_typed_differently_refused_for_another_employee(self):
+		"""A type without a Number Format keeps the number as typed; it is still the same number."""
+		first = self.make_doc(document_type=PLAIN, card_number="DL-TEST-123456")
+		self.assertEqual(first.number_key, "DLTEST123456")
+		for typed in ("DL-TEST-123456", "dl test 123456", "DL/TEST/123456", " DL.TEST.123456 "):
+			doc = self.make_doc(save=False, employee=self.other_emp, document_type=PLAIN, card_number=typed)
+			self.assert_refused(
+				doc, "already exists for another employee. Duplicate not allowed.", frappe.DuplicateEntryError
+			)
+
+	def test_duplicate_message_for_hr_names_the_document(self):
+		first = self.make_doc(document_type=PLAIN, card_number="DL-TEST-123456")
+		doc = self.make_doc(save=False, employee=self.other_emp, document_type=PLAIN, card_number="DL-TEST-123456",
+			user=self.hr_user)
+		self.assert_refused(doc, first.name, frappe.DuplicateEntryError)
+
+	def test_duplicate_message_for_employee_hides_the_owner(self):
+		first = self.make_doc(employee=self.other_emp, document_type=PLAIN, card_number="DL-TEST-123456")
+		doc = self.make_doc(save=False, document_type=PLAIN, card_number="DL-TEST-123456", user=self.emp_user)
+		with self.assertRaises(frappe.DuplicateEntryError) as ctx:
+			doc.insert()
+		message = str(ctx.exception)
+		self.assertIn("already exists for another employee. Duplicate not allowed.", message)
+		self.assertNotIn(first.name, message)
+		self.assertNotIn(first.reference_title, message)
+
+	def test_same_number_twice_for_same_employee_refused(self):
+		first = self.make_doc(document_type=PLAIN, card_number="DL-TEST-123456")
+		doc = self.make_doc(save=False, document_type=PLAIN, card_number="dl-test-123456")
+		self.assert_refused(doc, "already exists for this employee", frappe.DuplicateEntryError)
+		self.assert_refused(doc, first.name, frappe.DuplicateEntryError)
+
+	def test_changing_number_to_a_used_one_refused(self):
+		self.make_doc(document_type=PLAIN, card_number="DL-TEST-123456")
+		doc = self.make_doc(employee=self.other_emp, document_type=PLAIN, card_number="DL-TEST-999999")
+		doc.card_number = "DL TEST 123456"
+		self.assert_refused(doc, "Duplicate not allowed", frappe.DuplicateEntryError)
+
+	def test_rejected_document_does_not_block_the_number(self):
+		wrong = self.make_doc(document_type=PLAIN, card_number="DL-TEST-123456", user=self.emp_user)
+		self.fresh(wrong, self.hr_manager2).reject("Not this employee's licence")
+		doc = self.make_doc(employee=self.other_emp, document_type=PLAIN, card_number="DL-TEST-123456")
+		self.assertEqual(doc.number_key, "DLTEST123456")
+
+	def test_check_number_reports_duplicate_while_typing(self):
+		from alantech_erp.alantech.doctype.document.document_number import check_number
+
+		self.make_doc(document_type=PLAIN, card_number="DL-TEST-123456")
+		result = check_number(PLAIN, "dl test 123456", reference_doctype="Employee", reference_name=self.other_emp)
+		self.assertIn("already exists for another employee", result["error"])
+		self.assertIsNone(check_number(PLAIN, "DL-TEST-000001")["error"])
+
 	def test_same_number_allowed_for_another_type(self):
 		self.make_doc(document_type=ID_CARD, card_number=AADHAAR)
 		doc = self.make_doc(employee=self.other_emp, document_type=PLAIN, card_number=AADHAAR)
@@ -536,14 +589,59 @@ class IntegrationTestDocument(IntegrationTestCase):
 	def test_expiry_alert_before_and_on_expiry_day(self):
 		soon = self.expiring(30)  # PASSPORT alerts 30 days before
 		due = self.expiring(0, employee=self.other_emp)
-		later = self.expiring(29, employee=self.hr_emp)
+		outside = self.expiring(31, employee=self.hr_emp)
 		send_expiry_alerts()
 
 		soon_users = {n.for_user for n in self.notifications(soon)}
 		self.assertTrue({self.emp_user, self.hr_manager, self.hr_manager2} <= soon_users)
 		self.assertIn("expires in 30 days", self.notifications(soon, self.emp_user)[0].subject)
 		self.assertIn("expires today", self.notifications(due, self.other_user)[0].subject)
-		self.assertFalse(self.notifications(later))
+		self.assertFalse(self.notifications(outside))
+
+	# --- alert once for documents already inside the window (ClickUp 14yr2e57cqm) ---
+	def test_expiry_alert_for_document_added_inside_window(self):
+		"""Added with 6 days left (the 30-day point has passed): alerted on the next run, once."""
+		late = self.expiring(6)
+		send_expiry_alerts()
+		subjects = [n.subject for n in self.notifications(late, self.emp_user)]
+		self.assertEqual(len(subjects), 1)
+		self.assertIn("expires in 6 days", subjects[0])
+		self.assertEqual(str(frappe.db.get_value("Document", late.name, "expiry_alert_sent_for")),
+			str(late.expiry_date))
+
+		send_expiry_alerts()  # next day's run (same date here): no second advance alert
+		self.assertEqual(len(self.notifications(late, self.emp_user)), 1)
+
+	def test_expiry_alert_tomorrow_wording(self):
+		doc = self.expiring(1)
+		send_expiry_alerts()
+		self.assertIn("expires tomorrow", self.notifications(doc, self.emp_user)[0].subject)
+
+	def test_expiry_day_alert_even_after_advance_alert(self):
+		doc = self.expiring(0)
+		doc.db_set("expiry_alert_sent_for", doc.expiry_date)  # advance alert sent earlier
+		send_expiry_alerts()
+		self.assertIn("expires today", self.notifications(doc, self.emp_user)[0].subject)
+
+	def test_renewed_document_alerted_again(self):
+		doc = self.expiring(10)
+		send_expiry_alerts()
+		self.assertEqual(len(self.notifications(doc, self.emp_user)), 1)
+		doc.db_set("expiry_date", add_days(today(), 20))  # renewed / corrected: a new Expiry Date
+		send_expiry_alerts()
+		subjects = [n.subject for n in self.notifications(doc, self.emp_user)]
+		self.assertEqual(len(subjects), 2)
+		self.assertTrue(any("expires in 20 days" in s for s in subjects))
+
+	def test_pending_document_alerted_once_approved_inside_window(self):
+		doc = self.expiring(12, user=self.emp_user)  # Pending Approval
+		send_expiry_alerts()
+		self.assertFalse(self.notifications(doc, self.emp_user))
+		self.fresh(doc, self.hr_manager2).approve()
+		frappe.set_user("Administrator")
+		frappe.db.delete("Notification Log", {"document_name": doc.name})  # drop the approval note
+		send_expiry_alerts()
+		self.assertIn("expires in 12 days", self.notifications(doc, self.emp_user)[0].subject)
 
 	def test_no_expiry_alert_for_pending_or_left(self):
 		pending = self.expiring(30, user=self.emp_user)
@@ -577,6 +675,57 @@ class IntegrationTestDocument(IntegrationTestCase):
 		self.assertNotIn(expired.name, rows)
 
 		self.assertFalse(self.report_names(document_type=PASSPORT, reference_doctype="Company"))
+
+	# --- report list not displayed (ClickUp 14yr2e57cqm) --------------------
+	def id_card_expiring(self, days, employee=None, user=None):
+		"""QA's Driving License case: the type has Expiry Date switched off, yet the document has one."""
+		doc = self.make_doc(employee=employee, user=user, document_type=ID_CARD, card_number=AADHAAR)
+		frappe.set_user("Administrator")
+		doc.db_set("expiry_date", add_days(today(), days))
+		return doc
+
+	def test_expiry_report_lists_type_without_expiry_rule(self):
+		doc = self.id_card_expiring(20)
+		rows = self.report_names(expiring_within_days=90, include_expired=1)
+		self.assertIn(doc.name, rows)
+		self.assertEqual(rows[doc.name].days_left, 20)
+		self.assertEqual(rows[doc.name].approval_status, APPROVED)
+
+	def test_expiry_report_skips_documents_without_expiry_date(self):
+		no_date = self.make_doc(document_type=ID_CARD, card_number=AADHAAR)
+		self.assertFalse(no_date.expiry_date)
+		self.assertNotIn(no_date.name, self.report_names(include_expired=1))
+		self.assertNotIn(no_date.name, self.report_names(include_expired=0))
+
+	def test_expiry_report_explains_pending_documents(self):
+		pending = self.expiring(10, user=self.emp_user)
+		columns, data, message = expiry_report({"document_type": PASSPORT, "include_expired": 1})
+		self.assertNotIn(pending.name, {row.name for row in data})
+		self.assertIn("1 document(s) in this range are waiting for HR Manager approval", message)
+
+		rows = self.report_names(document_type=PASSPORT, include_expired=1, approval_status="Approved and Pending")
+		self.assertIn(pending.name, rows)
+		self.assertEqual(rows[pending.name].approval_status, PENDING)
+		self.assertIsNone(expiry_report({"document_type": PASSPORT, "approval_status": "Approved and Pending"})[2])
+
+	def test_expiry_report_never_lists_rejected(self):
+		rejected = self.expiring(10, user=self.emp_user)
+		self.fresh(rejected, self.hr_manager2).reject("wrong scan")
+		frappe.set_user("Administrator")
+		rows = self.report_names(document_type=PASSPORT, include_expired=1, approval_status="Approved and Pending")
+		self.assertNotIn(rejected.name, rows)
+
+	def test_expiry_report_as_hr_user(self):
+		doc = self.expiring(15)
+		frappe.set_user(self.hr_user)
+		self.assertIn(doc.name, self.report_names(document_type=PASSPORT))
+
+	def test_expiry_alert_for_type_with_expiry_switched_off(self):
+		doc = self.id_card_expiring(30)  # alert days 30 (type default)
+		days = frappe.db.get_value("Document Type Master", ID_CARD, "alert_days_before") or 30
+		frappe.db.set_value("Document", doc.name, "expiry_date", add_days(today(), int(days)))
+		send_expiry_alerts()
+		self.assertTrue(self.notifications(doc, self.emp_user))
 
 	def test_expiry_report_soonest_first(self):
 		self.expiring(20)

@@ -15,6 +15,7 @@
   "column_break_ref",
   "document_type",
   "card_number",
+  "number_key",
   "expiry_required",
   "issue_date_required",
   "issue_date_mandatory",
@@ -24,6 +25,7 @@
   "place_of_issue",
   "column_break_validity",
   "expiry_date",
+  "expiry_alert_sent_for",
   "issuing_country",
   "attachment_section",
   "attachments",
@@ -93,6 +95,16 @@
    "label": "Card Number"
   },
   {
+   "fieldname": "number_key",
+   "fieldtype": "Data",
+   "label": "Number Key",
+   "hidden": 1,
+   "read_only": 1,
+   "no_copy": 1,
+   "search_index": 1,
+   "description": "Card Number in upper case without spaces, dashes, dots or slashes: the duplicate check compares this (document_number.py)."
+  },
+  {
    "default": "0",
    "fetch_from": "document_type.expiry_required",
    "fieldname": "expiry_required",
@@ -156,6 +168,15 @@
    "label": "Expiry Date",
    "mandatory_depends_on": "eval:doc.expiry_date_mandatory",
    "depends_on": "eval:doc.expiry_required"
+  },
+  {
+   "fieldname": "expiry_alert_sent_for",
+   "fieldtype": "Date",
+   "label": "Expiry Alert Sent For",
+   "hidden": 1,
+   "read_only": 1,
+   "no_copy": 1,
+   "description": "Expiry Date the advance expiry alert was sent for (send_expiry_alerts). A new Expiry Date gets its own alert."
   },
   {
    "fieldname": "issuing_country",
@@ -228,7 +249,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-04 12:00:00.000000",
+ "modified": "2026-11-06 17:14:37.331325",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Document",

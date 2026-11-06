@@ -165,6 +165,8 @@ const alt_doc = {
 				document_type,
 				number: card_number || "",
 				name: frm.is_new() ? null : frm.doc.name,
+				reference_doctype: frm.doc.reference_doctype || null,
+				reference_name: frm.doc.reference_name || null,
 			})
 			.then((r) => {
 				// a newer check started while this one ran (still typing)

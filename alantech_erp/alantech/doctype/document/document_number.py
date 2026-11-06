@@ -1,5 +1,12 @@
 """Document numbers: format check per Document Type Master (Number Format), and one document per
-number within a type. Used by Document.validate and, while typing, by document.js."""
+number within a type. Used by Document.validate and, while typing, by document.js.
+
+Duplicates (ClickUp 14yr2e57c6k): an identity number (Aadhaar, Passport, Driving Licence, ...)
+belongs to one person, so the same number is refused for any other employee or record, and twice
+for the same one. Numbers are compared by number_key (upper case, no spaces / dashes / dots /
+slashes), so "DL-TEST-123456", "dl test 123456" and "DL/TEST/123456" are the same number even for a
+type without a Number Format. Rejected documents do not count. Users without HR access are not told
+whose number it is."""
 
 import re
 
@@ -105,13 +112,51 @@ def clean_number(document_type, number, rules=None):
 	return number, _("{0} is not a valid {1} number.").format(frappe.bold(number), document_type)
 
 
+REJECTED = "Rejected"
+
+
+def number_key(number):
+	"""What two numbers are compared by: upper case, no spaces, dashes, dots or slashes."""
+	return _compact(number) if number and number.strip() else None
+
+
 def find_duplicate(document_type, number, name=None):
+	"""Another non-rejected document of this type with the same number (however it was typed)."""
+	key = number_key(number)
+	if not key:
+		return None
 	return frappe.db.get_value(
 		"Document",
-		{"document_type": document_type, "card_number": number, "name": ["!=", name or ""]},
-		["name", "reference_title"],
+		{
+			"document_type": document_type,
+			"number_key": key,
+			"name": ["!=", name or ""],
+			"approval_status": ["!=", REJECTED],
+		},
+		["name", "reference_doctype", "reference_name", "reference_title", "employee"],
 		as_dict=True,
+		order_by="creation asc",
 	)
+
+
+def duplicate_message(document_type, number, duplicate, reference_doctype=None, reference_name=None):
+	"""'Driving License Number DL-TEST-123456 already exists for another employee. Duplicate not
+	allowed.' HR also sees whose document it is; an employee is not told whose number it is."""
+	label = _("{0} Number {1}").format(document_type, frappe.bold(number))
+	same_record = duplicate.reference_doctype == reference_doctype and duplicate.reference_name == reference_name
+	if same_record:
+		owner = _("this employee") if duplicate.employee else _("this record")
+	else:
+		owner = _("another employee") if duplicate.employee else _("another record")
+	message = _("{0} already exists for {1}. Duplicate not allowed.").format(label, owner)
+
+	from alantech_erp.alantech.doctype.document.document import has_unrestricted_role
+
+	if same_record or has_unrestricted_role():
+		message += " " + _("See {0} ({1}).").format(
+			frappe.utils.get_link_to_form("Document", duplicate.name), duplicate.reference_title
+		)
+	return message
 
 
 def validate_document_number(doc):
@@ -119,6 +164,7 @@ def validate_document_number(doc):
 	rules = get_rules(doc.document_type)
 	label = _("{0} Number").format(doc.document_type)
 	doc.card_number, error = clean_number(doc.document_type, doc.card_number, rules)
+	doc.number_key = number_key(doc.card_number)
 	if error:
 		frappe.throw(error, title=_("Invalid {0}").format(label))
 	if not doc.card_number:
@@ -128,16 +174,20 @@ def validate_document_number(doc):
 	duplicate = find_duplicate(doc.document_type, doc.card_number, doc.name)
 	if duplicate:
 		frappe.throw(
-			_("{0} {1} is already on {2} ({3}).").format(
-				label, frappe.bold(doc.card_number), duplicate.name, duplicate.reference_title
-			),
+			duplicate_message(doc.document_type, doc.card_number, duplicate, doc.reference_doctype, doc.reference_name),
 			frappe.DuplicateEntryError,
 			title=_("Duplicate {0}").format(label),
 		)
 
 
 @frappe.whitelist()
-def check_number(document_type: str, number: str | None = None, name: str | None = None) -> dict:
+def check_number(
+	document_type: str,
+	number: str | None = None,
+	name: str | None = None,
+	reference_doctype: str | None = None,
+	reference_name: str | None = None,
+) -> dict:
 	"""For the form: the number as it will be stored, any error, and the example to show."""
 	frappe.has_permission("Document", "read", throw=True)
 	rules = get_rules(document_type)
@@ -145,9 +195,7 @@ def check_number(document_type: str, number: str | None = None, name: str | None
 	if value and not error:
 		duplicate = find_duplicate(document_type, value, name)
 		if duplicate:
-			error = _("{0} Number {1} is already on {2} ({3}).").format(
-				document_type, frappe.bold(value), duplicate.name, duplicate.reference_title
-			)
+			error = duplicate_message(document_type, value, duplicate, reference_doctype, reference_name)
 	return {
 		"value": value,
 		"error": error,
