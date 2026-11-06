@@ -18,7 +18,7 @@ removed again in tearDownClass. Shift overtime and Session Log Settings are rest
 """
 
 import frappe
-from frappe.utils import add_days, add_to_date, formatdate, getdate, now_datetime, today
+from frappe.utils import add_days, add_to_date, formatdate, get_datetime, getdate, now_datetime, today
 
 try:  # v16
 	from frappe.tests import IntegrationTestCase as TestCase
@@ -269,3 +269,39 @@ class TestPhase0CheckinSequence(TestCase):
 			frappe.client.insert({"doctype": "Employee Checkin", "employee": self.emp1, "log_type": "IN"})
 		self.assertIn(OPEN_CHECKIN, str(ctx.exception))
 		frappe.client.insert({"doctype": "Employee Checkin", "employee": self.emp1, "log_type": "OUT"})
+
+	# ---------------------------------------------------------------- 4. punches edited after saving
+	def test_14_log_type_set_after_saving_builds_session_log(self):
+		"""HR saves the OUT with Log Type empty, then edits it to OUT: the Session Log is built then
+		(builder.on_checkin_update), not only when an OUT is first inserted."""
+		emp = self.new_employee()
+		self.punch(emp, 6, "10:00", "IN")
+		out = self.punch(emp, 6, "14:00", "")
+		self.assertFalse(frappe.db.exists("Session Log", {"employee": emp, "log_date": self.day(6)}))
+
+		frappe.set_user(HR_USER)
+		out.reload()
+		out.log_type = "OUT"
+		out.save()
+		frappe.set_user("Administrator")
+
+		name = frappe.db.exists("Session Log", {"employee": emp, "log_date": self.day(6)})
+		self.assertTrue(name)
+		self.assertEqual(frappe.db.get_value("Session Log", name, "working_hours"), 4)
+
+	def test_15_punch_moved_to_another_day_builds_that_day(self):
+		"""A pair first saved on the wrong date (today's) and then moved to the real date, IN first:
+		the log is built for the new date."""
+		emp = self.new_employee()
+		punch_in = self.punch(emp, 0, "10:00", "IN")
+		out = self.punch(emp, 0, "14:00", "OUT")  # builds day 0
+		frappe.set_user(HR_MANAGER)
+		for doc in (punch_in, out):
+			doc.reload()
+			doc.time = f"{self.day(5)} {get_datetime(doc.time).strftime('%H:%M:%S')}"
+			doc.save()
+		frappe.set_user("Administrator")
+
+		name = frappe.db.exists("Session Log", {"employee": emp, "log_date": self.day(5)})
+		self.assertTrue(name)
+		self.assertEqual(frappe.db.get_value("Session Log", name, "working_hours"), 4)

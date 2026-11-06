@@ -14,7 +14,8 @@ goes on to be processed when the check-out is now complete and Require Log Appro
 Building never blocks the check-in: a failure is written to the Error Log.
 
 hooks.py:
-    doc_events = {"Employee Checkin": {"after_insert": "...session_log.builder.on_checkin"}}
+    doc_events = {"Employee Checkin": {"after_insert": "...session_log.builder.on_checkin",
+                                       "on_update": "...session_log.builder.on_checkin_update"}}
     scheduler_events = {"daily": ["...session_log.builder.build_yesterday_logs"]}
 """
 
@@ -40,6 +41,30 @@ def on_checkin(doc, method=None):
 	log_date = shift_day(doc.employee, doc.time)
 	if get_session_log_settings().log_creation_trigger == TRIGGER_ON_CHECKOUT or held_log(doc.employee, log_date):
 		build_log_safely(doc.employee, log_date)
+
+
+REBUILD_FIELDS = ("employee", "time", "log_type")
+
+
+def on_checkin_update(doc, method=None):
+	"""Employee Checkin.on_update: a punch edited after saving (Log Type set later, time or employee
+	corrected) is treated like a new punch, and the day it was moved away from is recalculated.
+	New punches are left to on_checkin (after_insert)."""
+	before = doc.get_doc_before_save()
+	if not before or not any(doc.has_value_changed(f) for f in REBUILD_FIELDS):
+		return
+	on_checkin(doc)
+	rebuild_existing_log(doc)
+	if before.employee and before.time and before.log_type in ("IN", "OUT"):
+		rebuild_existing_log(before)
+
+
+def rebuild_existing_log(checkin):
+	"""Recalculate the Session Log of the punch's shift day, if there is one (only a Draft or a held
+	missing check-out log changes; see build_log)."""
+	log_date = shift_day(checkin.employee, checkin.time)
+	if frappe.db.exists(DT, {"employee": checkin.employee, "log_date": getdate(log_date)}):
+		build_log_safely(checkin.employee, log_date)
 
 
 def held_log(employee, log_date):

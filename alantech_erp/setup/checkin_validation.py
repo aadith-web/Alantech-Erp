@@ -38,6 +38,7 @@ from alantech_erp.alantech.doctype.session_log_settings.session_log_settings imp
 	DEFAULT_MISSING_CHECKOUT_HOURS,
 	get_session_log_settings,
 )
+from alantech_erp.setup.shift_ot_fields import FLEXIBLE, shift_settings
 
 DT = "Employee Checkin"
 LOG_TYPES = ("IN", "OUT")
@@ -137,7 +138,8 @@ def can_skip_missing_checkout_limit():
 def missing_checkout_limit(employee, in_time):
 	"""(hours, shift date) after which an open IN counts as a missed check-out.
 
-	Shift length + the Overtime Type's maximum overtime hours, for the shift the IN belongs to.
+	Shift length (Flexible Threshold: Regular Hours Per Day) + the Overtime Type's maximum overtime
+	hours, for the shift the IN belongs to.
 	Without an overtime maximum: Session Log Settings > Missing Check-out Block After, but never less
 	than the shift length (a 24 hour shift is not cut at 16 hours).
 	"""
@@ -149,6 +151,9 @@ def missing_checkout_limit(employee, in_time):
 	if shift:
 		window = get_shift_window(day, shift)
 		shift_hours = time_diff_in_hours(window.end, window.start)
+		settings = shift_settings(shift)
+		if settings.work_mode == FLEXIBLE and settings.regular_hours_per_day:
+			shift_hours = settings.regular_hours_per_day  # Flexible Threshold: the day's regular hours
 	rule = get_overtime_rule(shift)
 	max_overtime = flt(rule.maximum_overtime_hours_allowed) if rule else 0
 	if shift and max_overtime:

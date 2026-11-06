@@ -298,10 +298,16 @@ doc_events = {
         "on_submit": "alantech_erp.setup.shifts.sync_employee_holiday_lists",
         "on_cancel": "alantech_erp.setup.shifts.sync_employee_holiday_lists",
     },
+    # Work Mode defaults; Regular Hours Per Day > 0 for Flexible Threshold (setup/shift_ot_fields.py)
+    "Shift Type": {
+        "validate": "alantech_erp.setup.shift_ot_fields.validate",
+    },
     "Employee Checkin": {
         # IN/OUT must alternate; a missed check-out blocks the next punch (setup/checkin_validation.py)
         "validate": "alantech_erp.setup.checkin_validation.validate",
         "after_insert": "alantech_erp.alantech.doctype.session_log.builder.on_checkin",  # "On Check-out"
+        # a punch edited later (Log Type set after saving, time / employee corrected) rebuilds too
+        "on_update": "alantech_erp.alantech.doctype.session_log.builder.on_checkin_update",
     },
     "Leave Application": {
 		"before_validate": "alantech_erp.setup.leave_workflow.leave_application_before_validate",
@@ -478,6 +484,8 @@ after_migrate = [
     "alantech_erp.setup.employee_fields.execute",
     "alantech_erp.setup.employee_validation.seed_employee_number_counter",
     "alantech_erp.setup.session_log_fields.execute",
+    # Shift Type Work Mode / Early Check-in / Late Checkout / OT Rounding (before shifts.execute)
+    "alantech_erp.setup.shift_ot_fields.execute",
     "alantech_erp.setup.shifts.execute",
     "alantech_erp.setup.leave_fields.execute",
     "alantech_erp.setup.sales_flow.execute",
