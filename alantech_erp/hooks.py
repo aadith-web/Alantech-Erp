@@ -398,6 +398,9 @@ scheduler_events = {
 #
 override_whitelisted_methods = {
 	"erpnext.setup.doctype.employee.employee.create_user": "alantech_erp.setup.employee_user.create_user",
+	# bell list never cached by the browser: another user's list was shown after a re-login
+	# (setup/notifications.py, ClickUp 14yr2e57crv)
+	"frappe.desk.doctype.notification_log.notification_log.get_notification_logs": "alantech_erp.setup.notifications.get_notification_logs",
 }
 #
 # each overriding function accepts a `data` argument;

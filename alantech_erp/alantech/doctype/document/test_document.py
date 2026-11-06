@@ -586,6 +586,24 @@ class IntegrationTestDocument(IntegrationTestCase):
 		doc.db_set("expiry_date", add_days(today(), days))
 		return doc
 
+	# --- bell for the HR Manager (ClickUp 14yr2e57crv) -----------------------
+	def test_hr_manager_bell_lists_pending_document(self):
+		"""What the HR Manager's bell loads after an employee upload: the app's uncached method."""
+		from alantech_erp.setup.notifications import get_notification_logs
+
+		doc = self.make_doc(user=self.emp_user)
+		frappe.set_user(self.hr_manager2)
+		logs = get_notification_logs(limit=20)["notification_logs"]
+		mine = [log for log in logs if log.document_name == doc.name]
+		self.assertEqual(len(mine), 1)
+		self.assertIn("needs approval", mine[0].subject)
+		self.assertEqual((mine[0].for_user, mine[0].from_user, mine[0].read), (self.hr_manager2, self.emp_user, 0))
+		self.assertGreaterEqual(frappe.db.count("Notification Log", {"for_user": self.hr_manager2, "read": 0}), 1)
+
+		frappe.set_user(self.other_user)  # another user's bell never contains it
+		self.assertFalse([log for log in get_notification_logs(limit=20)["notification_logs"]
+			if log.document_name == doc.name])
+
 	def test_expiry_alert_before_and_on_expiry_day(self):
 		soon = self.expiring(30)  # PASSPORT alerts 30 days before
 		due = self.expiring(0, employee=self.other_emp)
