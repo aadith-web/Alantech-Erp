@@ -5,11 +5,13 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import cint
+from frappe.utils import cint, flt
 
 TRIGGER_ON_CHECKOUT = "On Check-out"
 TRIGGER_DAILY = "Daily Scheduler"
 DEFAULT_APPROVER_ROLE = "HR Manager"
+# Employee Checkin: open IN older than this blocks the next punch, when the shift gives no limit
+DEFAULT_MISSING_CHECKOUT_HOURS = 16
 
 
 class SessionLogSettings(Document):
@@ -40,6 +42,7 @@ def get_session_log_settings():
 		log_creation_trigger=doc.log_creation_trigger or TRIGGER_ON_CHECKOUT,
 		approver_role=doc.approver_role or DEFAULT_APPROVER_ROLE,
 		hold_missing_checkout=flag("hold_missing_checkout", 1),
+		missing_checkout_block_hours=flt(doc.get("missing_checkout_block_hours")) or DEFAULT_MISSING_CHECKOUT_HOURS,
 		auto_submit_attendance=flag("auto_submit_attendance", 1),
 		auto_submit_overtime=flag("auto_submit_overtime", 1),
 		lock_after_processing=flag("lock_after_processing", 1),

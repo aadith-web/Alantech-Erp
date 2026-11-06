@@ -8,7 +8,9 @@
     build_yesterday_logs()   daily. "Daily Scheduler": one log per employee who punched yesterday.
 
 A Draft log is recalculated and processed again; a log already under HR review (Pending Approval,
-Approved, Rejected, Processed) is left alone: HR uses Recalculate / Reopen on it.
+Approved, Rejected, Processed) is left alone: HR uses Recalculate / Reopen on it. Exception: a log
+held for a missing check-out is recalculated when the missing OUT is added (with either trigger), and
+goes on to be processed when the check-out is now complete and Require Log Approval is off.
 Building never blocks the check-in: a failure is written to the Error Log.
 
 hooks.py:
@@ -17,10 +19,11 @@ hooks.py:
 """
 
 import frappe
-from frappe.utils import add_days, get_datetime, getdate, today
+from frappe import _
+from frappe.utils import add_days, cint, get_datetime, getdate, today
 
-from alantech_erp.alantech.doctype.session_log.calculation import get_shift, get_shift_window
-from alantech_erp.alantech.doctype.session_log.processing import process_log
+from alantech_erp.alantech.doctype.session_log.calculation import calculate, get_shift, get_shift_window
+from alantech_erp.alantech.doctype.session_log.processing import add_remark, process_log
 from alantech_erp.alantech.doctype.session_log_settings.session_log_settings import (
 	TRIGGER_DAILY,
 	TRIGGER_ON_CHECKOUT,
@@ -32,9 +35,19 @@ SAVEPOINT = "session_log_build"
 
 
 def on_checkin(doc, method=None):
-	if doc.log_type != "OUT" or get_session_log_settings().log_creation_trigger != TRIGGER_ON_CHECKOUT:
+	if doc.log_type != "OUT":
 		return
-	build_log_safely(doc.employee, shift_day(doc.employee, doc.time))
+	log_date = shift_day(doc.employee, doc.time)
+	if get_session_log_settings().log_creation_trigger == TRIGGER_ON_CHECKOUT or held_log(doc.employee, log_date):
+		build_log_safely(doc.employee, log_date)
+
+
+def held_log(employee, log_date):
+	"""The log of that day waiting for HR because the check-out was missing."""
+	return frappe.db.exists(
+		DT,
+		{"employee": employee, "log_date": getdate(log_date), "status": "Pending Approval", "missing_checkout": 1},
+	)
 
 
 def build_yesterday_logs():
@@ -76,6 +89,8 @@ def build_log(employee, log_date):
 	name = frappe.db.exists(DT, {"employee": employee, "log_date": getdate(log_date)})
 	if name:
 		log = frappe.get_doc(DT, name)
+		if log.status == "Pending Approval" and cint(log.missing_checkout):
+			return release_corrected_log(log)
 		if log.status != "Draft":
 			return log
 		log.save(ignore_permissions=True)  # validate recalculates Draft logs
@@ -92,4 +107,20 @@ def build_log(employee, log_date):
 		return log
 
 	process_log(log)
+	return log
+
+
+def release_corrected_log(log):
+	"""A held missing check-out log after the OUT was added (HR correction): recalculate it, and
+	process it when nothing else holds it (check-out found, Require Log Approval off)."""
+	calculate(log)
+	if cint(log.missing_checkout):
+		log.save(ignore_permissions=True)
+		return log
+	add_remark(log, _("Check-out corrected; recalculated."))
+	if not get_session_log_settings().require_log_approval:
+		log.status = "Draft"
+	log.save(ignore_permissions=True)
+	if log.status == "Draft":
+		process_log(log)
 	return log

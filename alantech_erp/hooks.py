@@ -299,6 +299,8 @@ doc_events = {
         "on_cancel": "alantech_erp.setup.shifts.sync_employee_holiday_lists",
     },
     "Employee Checkin": {
+        # IN/OUT must alternate; a missed check-out blocks the next punch (setup/checkin_validation.py)
+        "validate": "alantech_erp.setup.checkin_validation.validate",
         "after_insert": "alantech_erp.alantech.doctype.session_log.builder.on_checkin",  # "On Check-out"
     },
     "Leave Application": {
