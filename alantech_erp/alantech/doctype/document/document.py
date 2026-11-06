@@ -3,6 +3,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, cint, get_fullname, get_link_to_form, getdate, now_datetime, today
 
+from alantech_erp.alantech.doctype.document.document_files import file_restrictions, validate_attachments
 from alantech_erp.alantech.doctype.document.document_number import validate_document_number
 
 DOCTYPE = "Document"
@@ -19,10 +20,14 @@ CONTENT_FIELDS = ("reference_doctype", "reference_name", "document_type", "card_
 
 
 class Document(Document):
+	def onload(self):
+		self.set_onload("file_restrictions", file_restrictions())  # upload dialog (document.js)
+
 	def validate(self):
 		self.set_reference_details()
 		self.validate_reference_access()
 		self.validate_dates()
+		validate_attachments(self)  # PDF / JPG / PNG, at most 5 MB
 		validate_document_number(self)  # also blocks approving a wrong number until it is fixed
 		if self.flags.approval_action:      # approve()/reject() set the fields themselves
 			return

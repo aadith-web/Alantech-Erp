@@ -25,6 +25,7 @@ from alantech_erp.alantech.doctype.document.document import (
 	review_document,
 	send_expiry_alerts,
 )
+from alantech_erp.alantech.doctype.document.document_files import MAX_FILE_SIZE, DocumentFileError
 from alantech_erp.alantech.doctype.document_type_master.test_document_type_master import make_type
 from alantech_erp.alantech.report.document_expiry.document_expiry import execute as expiry_report
 
@@ -34,6 +35,31 @@ ID_CARD = "_Test Doc ID Card"  # Aadhaar format, issue date only
 PASSPORT = "_Test Doc Passport"  # expiry date mandatory, alert 30 days before
 PLAIN = "_Test Doc Plain"  # no format, number mandatory
 AADHAAR = "2345 6789 0124"
+
+
+def pdf_bytes(size=0):
+	"""A valid one-page PDF (Frappe parses uploaded PDFs), padded to about `size` bytes."""
+	from io import BytesIO
+
+	from pypdf import PdfWriter
+
+	writer = PdfWriter()
+	writer.add_blank_page(width=72, height=72)
+	if size:
+		writer.add_metadata({"/Padding": "x" * size})
+	out = BytesIO()
+	writer.write(out)
+	return out.getvalue()
+
+
+def image_bytes(fmt):
+	from io import BytesIO
+
+	from PIL import Image
+
+	out = BytesIO()
+	Image.new("RGB", (8, 8), "white").save(out, fmt)
+	return out.getvalue()
 
 
 def make_user(email, roles, employee=None):
@@ -71,7 +97,7 @@ class IntegrationTestDocument(IntegrationTestCase):
 		make_type(PLAIN, number_mandatory=1)
 
 		cls.file_url = frappe.get_doc(
-			{"doctype": "File", "file_name": "_test_doc_scan.txt", "content": "scan", "is_private": 1}
+			{"doctype": "File", "file_name": "_test_doc_scan.pdf", "content": pdf_bytes(), "is_private": 1}
 		).insert(ignore_permissions=True).file_url
 
 	def setUp(self):
@@ -168,6 +194,61 @@ class IntegrationTestDocument(IntegrationTestCase):
 			attachments=[{"file": self.file_url, "description": "front"}, {"file": self.file_url, "description": "back"}]
 		)
 		self.assertEqual(len(doc.attachments), 2)
+
+	# --- file type and size (ClickUp 14yr2e57a43) ------------------------
+	def make_file(self, name, size=None, attached_to=None):
+		if name.lower().endswith(".pdf"):
+			content = pdf_bytes(size or 0)
+		elif name.lower().endswith((".jpg", ".png")):
+			content = image_bytes("JPEG" if name.lower().endswith(".jpg") else "PNG")
+		else:
+			content = b"x" * (size or 1024)
+		values = {"doctype": "File", "file_name": name, "content": content, "is_private": 1}
+		if attached_to:
+			values.update(attached_to_doctype="Document", attached_to_name=attached_to, attached_to_field="file")
+		return frappe.get_doc(values)
+
+	def test_zip_upload_refused(self):
+		doc = self.make_doc()
+		with self.assertRaises(DocumentFileError) as ctx:
+			self.make_file("_test_doc_scan.zip", attached_to=doc.name).insert()
+		self.assertIn("Only PDF, JPG and PNG", str(ctx.exception))
+
+	def test_upload_over_5_mb_refused(self):
+		doc = self.make_doc()
+		with self.assertRaises(DocumentFileError) as ctx:
+			self.make_file("_test_doc_big.pdf", size=6 * 1024 * 1024 + 4096, attached_to=doc.name).insert()
+		self.assertIn("is 6.0 MB. Files can be at most 5 MB", str(ctx.exception))
+
+	def test_upload_up_to_5_mb_pdf_jpg_png_allowed(self):
+		doc = self.make_doc()
+		pdf = self.make_file("_test_doc_5mb.pdf", size=MAX_FILE_SIZE - 4096, attached_to=doc.name).insert()
+		self.assertLessEqual(pdf.file_size, MAX_FILE_SIZE)
+		self.make_file("_test_doc_photo.JPG", attached_to=doc.name).insert()
+		self.make_file("_test_doc_photo.png", attached_to=doc.name).insert()
+
+	def test_document_with_zip_row_refused(self):
+		"""A file uploaded elsewhere (not attached to the Document) and put in the table by the API."""
+		url = self.make_file("_test_doc_other.zip").insert().file_url
+		doc = self.make_doc(save=False, attachments=[{"file": url, "description": "front"}])
+		with self.assertRaises(DocumentFileError):
+			doc.insert()
+
+	def test_document_with_large_pdf_row_refused(self):
+		url = self.make_file("_test_doc_other_big.pdf", size=MAX_FILE_SIZE + 1).insert().file_url
+		doc = self.make_doc()
+		doc.append("attachments", {"file": url, "description": "back"})
+		with self.assertRaises(DocumentFileError):
+			doc.save()
+
+	def test_existing_file_rows_not_checked_again(self):
+		"""A document saved before the rule (with a zip) can still be edited."""
+		doc = self.make_doc()
+		url = self.make_file("_test_doc_old.zip").insert().file_url
+		frappe.db.set_value("Document Attachment", doc.attachments[0].name, "file", url)
+		doc.reload()
+		doc.remarks = "checked"
+		doc.save()
 
 	# --- dates -----------------------------------------------------------
 	def test_date_rules_copied_from_type(self):

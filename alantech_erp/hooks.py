@@ -298,6 +298,10 @@ doc_events = {
         "on_submit": "alantech_erp.setup.shifts.sync_employee_holiday_lists",
         "on_cancel": "alantech_erp.setup.shifts.sync_employee_holiday_lists",
     },
+    "File": {
+        # Document files: PDF / JPG / PNG only, at most 5 MB (alantech/doctype/document/document_files.py)
+        "validate": "alantech_erp.alantech.doctype.document.document_files.validate_file",
+    },
     # Work Mode defaults; Regular Hours Per Day > 0 for Flexible Threshold (setup/shift_ot_fields.py)
     "Shift Type": {
         "validate": "alantech_erp.setup.shift_ot_fields.validate",
