@@ -3,6 +3,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, cint, get_fullname, get_link_to_form, getdate, now_datetime, today
 
+from alantech_erp.alantech.doctype.document.document_files import file_restrictions, validate_attachments
 from alantech_erp.alantech.doctype.document.document_number import validate_document_number
 
 DOCTYPE = "Document"
@@ -19,10 +20,14 @@ CONTENT_FIELDS = ("reference_doctype", "reference_name", "document_type", "card_
 
 
 class Document(Document):
+	def onload(self):
+		self.set_onload("file_restrictions", file_restrictions())  # upload dialog (document.js)
+
 	def validate(self):
 		self.set_reference_details()
 		self.validate_reference_access()
 		self.validate_dates()
+		validate_attachments(self)  # PDF / JPG / PNG, at most 5 MB
 		validate_document_number(self)  # also blocks approving a wrong number until it is fixed
 		if self.flags.approval_action:      # approve()/reject() set the fields themselves
 			return
@@ -319,29 +324,56 @@ def has_permission(doc, ptype=None, user=None, debug=False):
 
 # --- daily expiry alerts (registered in hooks.py) ------------------------
 def send_expiry_alerts():
-	"""Only Approved documents count; Pending/Rejected are ignored."""
+	"""Daily. Only Approved documents of active employees; Pending / Rejected are ignored. Every
+	document with an Expiry Date counts, also when its type has Expiry Date switched off
+	(ClickUp 14yr2e57cqm).
+
+	- Advance alert, once per Expiry Date: the first run on which the document is inside its type's
+	  alert window (Days Before Expiry to Alert, default 30) sends "expires in N days". Normally that
+	  is exactly N days before; a document added, approved or dated later, when the window has
+	  already started, is alerted on the next run instead of only on its expiry day.
+	  expiry_alert_sent_for remembers the Expiry Date alerted, so a renewed document (new date) is
+	  alerted again in its next window.
+	- On the expiry day: "expires today".
+	"""
 	run_date = getdate(today())
-	types = frappe.get_all("Document Type Master", filters={"disabled": 0, "expiry_required": 1},
-	                       fields=["name", "alert_days_before"])
+	types = frappe.get_all("Document Type Master", filters={"disabled": 0}, fields=["name", "alert_days_before"])
 	hr_managers = get_hr_managers()
 	for doc_type in types:
 		days = cint(doc_type.alert_days_before) or 30
-		names = frappe.get_all(DOCTYPE, filters={
-			"document_type": doc_type.name, "approval_status": APPROVED,
-			"expiry_date": ["in", [add_days(run_date, days), run_date]],
-		}, pluck="name")
-		for name in names:
-			doc = frappe.get_doc(DOCTYPE, name)
+		for row in frappe.get_all(
+			DOCTYPE,
+			filters={
+				"document_type": doc_type.name,
+				"approval_status": APPROVED,
+				"expiry_date": ["between", [run_date, add_days(run_date, days)]],
+			},
+			fields=["name", "expiry_date", "expiry_alert_sent_for"],
+		):
+			expiry = getdate(row.expiry_date)
+			alerted = row.expiry_alert_sent_for and getdate(row.expiry_alert_sent_for) == expiry
+			if expiry != run_date and alerted:
+				continue
+			doc = frappe.get_doc(DOCTYPE, row.name)
 			if is_inactive_employee(doc.employee):
 				continue
-			if getdate(doc.expiry_date) == run_date:
-				subject = _("{0} for {1} expires today").format(doc.document_type, doc.reference_title)
-			else:
-				subject = _("{0} for {1} expires in {2} days").format(doc.document_type, doc.reference_title, days)
-			message = _("{0} ({1}) for {2} expires on {3}.").format(
-				doc.document_type, doc.card_number or doc.name, doc.reference_title,
-				frappe.utils.formatdate(doc.expiry_date))
-			send_notification([*hr_managers, doc.get_linked_user()], subject, message, doc)
+			send_expiry_alert(doc, (expiry - run_date).days, hr_managers)
+			if not alerted:
+				doc.db_set("expiry_alert_sent_for", expiry, update_modified=False)
+
+
+def send_expiry_alert(doc, days_left, hr_managers):
+	if days_left <= 0:
+		subject = _("{0} for {1} expires today").format(doc.document_type, doc.reference_title)
+	elif days_left == 1:
+		subject = _("{0} for {1} expires tomorrow").format(doc.document_type, doc.reference_title)
+	else:
+		subject = _("{0} for {1} expires in {2} days").format(doc.document_type, doc.reference_title, days_left)
+	message = _("{0} ({1}) for {2} expires on {3}.").format(
+		doc.document_type, doc.card_number or doc.name, doc.reference_title, frappe.utils.formatdate(doc.expiry_date)
+	)
+	send_notification([*hr_managers, doc.get_linked_user()], subject, message, doc)
+
 
 # --- approve / reject from other pages (Employee Documents section) -------
 @frappe.whitelist()

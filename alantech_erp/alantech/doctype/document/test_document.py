@@ -25,6 +25,7 @@ from alantech_erp.alantech.doctype.document.document import (
 	review_document,
 	send_expiry_alerts,
 )
+from alantech_erp.alantech.doctype.document.document_files import MAX_FILE_SIZE, DocumentFileError
 from alantech_erp.alantech.doctype.document_type_master.test_document_type_master import make_type
 from alantech_erp.alantech.report.document_expiry.document_expiry import execute as expiry_report
 
@@ -34,6 +35,31 @@ ID_CARD = "_Test Doc ID Card"  # Aadhaar format, issue date only
 PASSPORT = "_Test Doc Passport"  # expiry date mandatory, alert 30 days before
 PLAIN = "_Test Doc Plain"  # no format, number mandatory
 AADHAAR = "2345 6789 0124"
+
+
+def pdf_bytes(size=0):
+	"""A valid one-page PDF (Frappe parses uploaded PDFs), padded to about `size` bytes."""
+	from io import BytesIO
+
+	from pypdf import PdfWriter
+
+	writer = PdfWriter()
+	writer.add_blank_page(width=72, height=72)
+	if size:
+		writer.add_metadata({"/Padding": "x" * size})
+	out = BytesIO()
+	writer.write(out)
+	return out.getvalue()
+
+
+def image_bytes(fmt):
+	from io import BytesIO
+
+	from PIL import Image
+
+	out = BytesIO()
+	Image.new("RGB", (8, 8), "white").save(out, fmt)
+	return out.getvalue()
 
 
 def make_user(email, roles, employee=None):
@@ -71,7 +97,7 @@ class IntegrationTestDocument(IntegrationTestCase):
 		make_type(PLAIN, number_mandatory=1)
 
 		cls.file_url = frappe.get_doc(
-			{"doctype": "File", "file_name": "_test_doc_scan.txt", "content": "scan", "is_private": 1}
+			{"doctype": "File", "file_name": "_test_doc_scan.pdf", "content": pdf_bytes(), "is_private": 1}
 		).insert(ignore_permissions=True).file_url
 
 	def setUp(self):
@@ -169,6 +195,61 @@ class IntegrationTestDocument(IntegrationTestCase):
 		)
 		self.assertEqual(len(doc.attachments), 2)
 
+	# --- file type and size (ClickUp 14yr2e57a43) ------------------------
+	def make_file(self, name, size=None, attached_to=None):
+		if name.lower().endswith(".pdf"):
+			content = pdf_bytes(size or 0)
+		elif name.lower().endswith((".jpg", ".png")):
+			content = image_bytes("JPEG" if name.lower().endswith(".jpg") else "PNG")
+		else:
+			content = b"x" * (size or 1024)
+		values = {"doctype": "File", "file_name": name, "content": content, "is_private": 1}
+		if attached_to:
+			values.update(attached_to_doctype="Document", attached_to_name=attached_to, attached_to_field="file")
+		return frappe.get_doc(values)
+
+	def test_zip_upload_refused(self):
+		doc = self.make_doc()
+		with self.assertRaises(DocumentFileError) as ctx:
+			self.make_file("_test_doc_scan.zip", attached_to=doc.name).insert()
+		self.assertIn("Only PDF, JPG and PNG", str(ctx.exception))
+
+	def test_upload_over_5_mb_refused(self):
+		doc = self.make_doc()
+		with self.assertRaises(DocumentFileError) as ctx:
+			self.make_file("_test_doc_big.pdf", size=6 * 1024 * 1024 + 4096, attached_to=doc.name).insert()
+		self.assertIn("is 6.0 MB. Files can be at most 5 MB", str(ctx.exception))
+
+	def test_upload_up_to_5_mb_pdf_jpg_png_allowed(self):
+		doc = self.make_doc()
+		pdf = self.make_file("_test_doc_5mb.pdf", size=MAX_FILE_SIZE - 4096, attached_to=doc.name).insert()
+		self.assertLessEqual(pdf.file_size, MAX_FILE_SIZE)
+		self.make_file("_test_doc_photo.JPG", attached_to=doc.name).insert()
+		self.make_file("_test_doc_photo.png", attached_to=doc.name).insert()
+
+	def test_document_with_zip_row_refused(self):
+		"""A file uploaded elsewhere (not attached to the Document) and put in the table by the API."""
+		url = self.make_file("_test_doc_other.zip").insert().file_url
+		doc = self.make_doc(save=False, attachments=[{"file": url, "description": "front"}])
+		with self.assertRaises(DocumentFileError):
+			doc.insert()
+
+	def test_document_with_large_pdf_row_refused(self):
+		url = self.make_file("_test_doc_other_big.pdf", size=MAX_FILE_SIZE + 1).insert().file_url
+		doc = self.make_doc()
+		doc.append("attachments", {"file": url, "description": "back"})
+		with self.assertRaises(DocumentFileError):
+			doc.save()
+
+	def test_existing_file_rows_not_checked_again(self):
+		"""A document saved before the rule (with a zip) can still be edited."""
+		doc = self.make_doc()
+		url = self.make_file("_test_doc_old.zip").insert().file_url
+		frappe.db.set_value("Document Attachment", doc.attachments[0].name, "file", url)
+		doc.reload()
+		doc.remarks = "checked"
+		doc.save()
+
 	# --- dates -----------------------------------------------------------
 	def test_date_rules_copied_from_type(self):
 		doc = self.make_doc(document_type=ID_CARD, card_number=AADHAAR)
@@ -219,6 +300,59 @@ class IntegrationTestDocument(IntegrationTestCase):
 		first = self.make_doc(document_type=ID_CARD, card_number=AADHAAR)
 		doc = self.make_doc(save=False, employee=self.other_emp, document_type=ID_CARD, card_number="234567890124")
 		self.assert_refused(doc, first.name, frappe.DuplicateEntryError)
+
+	# --- one person per identity number (ClickUp 14yr2e57c6k) --------------
+	def test_number_typed_differently_refused_for_another_employee(self):
+		"""A type without a Number Format keeps the number as typed; it is still the same number."""
+		first = self.make_doc(document_type=PLAIN, card_number="DL-TEST-123456")
+		self.assertEqual(first.number_key, "DLTEST123456")
+		for typed in ("DL-TEST-123456", "dl test 123456", "DL/TEST/123456", " DL.TEST.123456 "):
+			doc = self.make_doc(save=False, employee=self.other_emp, document_type=PLAIN, card_number=typed)
+			self.assert_refused(
+				doc, "already exists for another employee. Duplicate not allowed.", frappe.DuplicateEntryError
+			)
+
+	def test_duplicate_message_for_hr_names_the_document(self):
+		first = self.make_doc(document_type=PLAIN, card_number="DL-TEST-123456")
+		doc = self.make_doc(save=False, employee=self.other_emp, document_type=PLAIN, card_number="DL-TEST-123456",
+			user=self.hr_user)
+		self.assert_refused(doc, first.name, frappe.DuplicateEntryError)
+
+	def test_duplicate_message_for_employee_hides_the_owner(self):
+		first = self.make_doc(employee=self.other_emp, document_type=PLAIN, card_number="DL-TEST-123456")
+		doc = self.make_doc(save=False, document_type=PLAIN, card_number="DL-TEST-123456", user=self.emp_user)
+		with self.assertRaises(frappe.DuplicateEntryError) as ctx:
+			doc.insert()
+		message = str(ctx.exception)
+		self.assertIn("already exists for another employee. Duplicate not allowed.", message)
+		self.assertNotIn(first.name, message)
+		self.assertNotIn(first.reference_title, message)
+
+	def test_same_number_twice_for_same_employee_refused(self):
+		first = self.make_doc(document_type=PLAIN, card_number="DL-TEST-123456")
+		doc = self.make_doc(save=False, document_type=PLAIN, card_number="dl-test-123456")
+		self.assert_refused(doc, "already exists for this employee", frappe.DuplicateEntryError)
+		self.assert_refused(doc, first.name, frappe.DuplicateEntryError)
+
+	def test_changing_number_to_a_used_one_refused(self):
+		self.make_doc(document_type=PLAIN, card_number="DL-TEST-123456")
+		doc = self.make_doc(employee=self.other_emp, document_type=PLAIN, card_number="DL-TEST-999999")
+		doc.card_number = "DL TEST 123456"
+		self.assert_refused(doc, "Duplicate not allowed", frappe.DuplicateEntryError)
+
+	def test_rejected_document_does_not_block_the_number(self):
+		wrong = self.make_doc(document_type=PLAIN, card_number="DL-TEST-123456", user=self.emp_user)
+		self.fresh(wrong, self.hr_manager2).reject("Not this employee's licence")
+		doc = self.make_doc(employee=self.other_emp, document_type=PLAIN, card_number="DL-TEST-123456")
+		self.assertEqual(doc.number_key, "DLTEST123456")
+
+	def test_check_number_reports_duplicate_while_typing(self):
+		from alantech_erp.alantech.doctype.document.document_number import check_number
+
+		self.make_doc(document_type=PLAIN, card_number="DL-TEST-123456")
+		result = check_number(PLAIN, "dl test 123456", reference_doctype="Employee", reference_name=self.other_emp)
+		self.assertIn("already exists for another employee", result["error"])
+		self.assertIsNone(check_number(PLAIN, "DL-TEST-000001")["error"])
 
 	def test_same_number_allowed_for_another_type(self):
 		self.make_doc(document_type=ID_CARD, card_number=AADHAAR)
@@ -452,17 +586,80 @@ class IntegrationTestDocument(IntegrationTestCase):
 		doc.db_set("expiry_date", add_days(today(), days))
 		return doc
 
+	# --- bell for the HR Manager (ClickUp 14yr2e57crv) -----------------------
+	def test_hr_manager_bell_lists_pending_document(self):
+		"""What the HR Manager's bell loads after an employee upload: the app's uncached method."""
+		from alantech_erp.setup.notifications import get_notification_logs
+
+		doc = self.make_doc(user=self.emp_user)
+		frappe.set_user(self.hr_manager2)
+		logs = get_notification_logs(limit=20)["notification_logs"]
+		mine = [log for log in logs if log.document_name == doc.name]
+		self.assertEqual(len(mine), 1)
+		self.assertIn("needs approval", mine[0].subject)
+		self.assertEqual((mine[0].for_user, mine[0].from_user, mine[0].read), (self.hr_manager2, self.emp_user, 0))
+		self.assertGreaterEqual(frappe.db.count("Notification Log", {"for_user": self.hr_manager2, "read": 0}), 1)
+
+		frappe.set_user(self.other_user)  # another user's bell never contains it
+		self.assertFalse([log for log in get_notification_logs(limit=20)["notification_logs"]
+			if log.document_name == doc.name])
+
 	def test_expiry_alert_before_and_on_expiry_day(self):
 		soon = self.expiring(30)  # PASSPORT alerts 30 days before
 		due = self.expiring(0, employee=self.other_emp)
-		later = self.expiring(29, employee=self.hr_emp)
+		outside = self.expiring(31, employee=self.hr_emp)
 		send_expiry_alerts()
 
 		soon_users = {n.for_user for n in self.notifications(soon)}
 		self.assertTrue({self.emp_user, self.hr_manager, self.hr_manager2} <= soon_users)
 		self.assertIn("expires in 30 days", self.notifications(soon, self.emp_user)[0].subject)
 		self.assertIn("expires today", self.notifications(due, self.other_user)[0].subject)
-		self.assertFalse(self.notifications(later))
+		self.assertFalse(self.notifications(outside))
+
+	# --- alert once for documents already inside the window (ClickUp 14yr2e57cqm) ---
+	def test_expiry_alert_for_document_added_inside_window(self):
+		"""Added with 6 days left (the 30-day point has passed): alerted on the next run, once."""
+		late = self.expiring(6)
+		send_expiry_alerts()
+		subjects = [n.subject for n in self.notifications(late, self.emp_user)]
+		self.assertEqual(len(subjects), 1)
+		self.assertIn("expires in 6 days", subjects[0])
+		self.assertEqual(str(frappe.db.get_value("Document", late.name, "expiry_alert_sent_for")),
+			str(late.expiry_date))
+
+		send_expiry_alerts()  # next day's run (same date here): no second advance alert
+		self.assertEqual(len(self.notifications(late, self.emp_user)), 1)
+
+	def test_expiry_alert_tomorrow_wording(self):
+		doc = self.expiring(1)
+		send_expiry_alerts()
+		self.assertIn("expires tomorrow", self.notifications(doc, self.emp_user)[0].subject)
+
+	def test_expiry_day_alert_even_after_advance_alert(self):
+		doc = self.expiring(0)
+		doc.db_set("expiry_alert_sent_for", doc.expiry_date)  # advance alert sent earlier
+		send_expiry_alerts()
+		self.assertIn("expires today", self.notifications(doc, self.emp_user)[0].subject)
+
+	def test_renewed_document_alerted_again(self):
+		doc = self.expiring(10)
+		send_expiry_alerts()
+		self.assertEqual(len(self.notifications(doc, self.emp_user)), 1)
+		doc.db_set("expiry_date", add_days(today(), 20))  # renewed / corrected: a new Expiry Date
+		send_expiry_alerts()
+		subjects = [n.subject for n in self.notifications(doc, self.emp_user)]
+		self.assertEqual(len(subjects), 2)
+		self.assertTrue(any("expires in 20 days" in s for s in subjects))
+
+	def test_pending_document_alerted_once_approved_inside_window(self):
+		doc = self.expiring(12, user=self.emp_user)  # Pending Approval
+		send_expiry_alerts()
+		self.assertFalse(self.notifications(doc, self.emp_user))
+		self.fresh(doc, self.hr_manager2).approve()
+		frappe.set_user("Administrator")
+		frappe.db.delete("Notification Log", {"document_name": doc.name})  # drop the approval note
+		send_expiry_alerts()
+		self.assertIn("expires in 12 days", self.notifications(doc, self.emp_user)[0].subject)
 
 	def test_no_expiry_alert_for_pending_or_left(self):
 		pending = self.expiring(30, user=self.emp_user)
@@ -496,6 +693,57 @@ class IntegrationTestDocument(IntegrationTestCase):
 		self.assertNotIn(expired.name, rows)
 
 		self.assertFalse(self.report_names(document_type=PASSPORT, reference_doctype="Company"))
+
+	# --- report list not displayed (ClickUp 14yr2e57cqm) --------------------
+	def id_card_expiring(self, days, employee=None, user=None):
+		"""QA's Driving License case: the type has Expiry Date switched off, yet the document has one."""
+		doc = self.make_doc(employee=employee, user=user, document_type=ID_CARD, card_number=AADHAAR)
+		frappe.set_user("Administrator")
+		doc.db_set("expiry_date", add_days(today(), days))
+		return doc
+
+	def test_expiry_report_lists_type_without_expiry_rule(self):
+		doc = self.id_card_expiring(20)
+		rows = self.report_names(expiring_within_days=90, include_expired=1)
+		self.assertIn(doc.name, rows)
+		self.assertEqual(rows[doc.name].days_left, 20)
+		self.assertEqual(rows[doc.name].approval_status, APPROVED)
+
+	def test_expiry_report_skips_documents_without_expiry_date(self):
+		no_date = self.make_doc(document_type=ID_CARD, card_number=AADHAAR)
+		self.assertFalse(no_date.expiry_date)
+		self.assertNotIn(no_date.name, self.report_names(include_expired=1))
+		self.assertNotIn(no_date.name, self.report_names(include_expired=0))
+
+	def test_expiry_report_explains_pending_documents(self):
+		pending = self.expiring(10, user=self.emp_user)
+		columns, data, message = expiry_report({"document_type": PASSPORT, "include_expired": 1})
+		self.assertNotIn(pending.name, {row.name for row in data})
+		self.assertIn("1 document(s) in this range are waiting for HR Manager approval", message)
+
+		rows = self.report_names(document_type=PASSPORT, include_expired=1, approval_status="Approved and Pending")
+		self.assertIn(pending.name, rows)
+		self.assertEqual(rows[pending.name].approval_status, PENDING)
+		self.assertIsNone(expiry_report({"document_type": PASSPORT, "approval_status": "Approved and Pending"})[2])
+
+	def test_expiry_report_never_lists_rejected(self):
+		rejected = self.expiring(10, user=self.emp_user)
+		self.fresh(rejected, self.hr_manager2).reject("wrong scan")
+		frappe.set_user("Administrator")
+		rows = self.report_names(document_type=PASSPORT, include_expired=1, approval_status="Approved and Pending")
+		self.assertNotIn(rejected.name, rows)
+
+	def test_expiry_report_as_hr_user(self):
+		doc = self.expiring(15)
+		frappe.set_user(self.hr_user)
+		self.assertIn(doc.name, self.report_names(document_type=PASSPORT))
+
+	def test_expiry_alert_for_type_with_expiry_switched_off(self):
+		doc = self.id_card_expiring(30)  # alert days 30 (type default)
+		days = frappe.db.get_value("Document Type Master", ID_CARD, "alert_days_before") or 30
+		frappe.db.set_value("Document", doc.name, "expiry_date", add_days(today(), int(days)))
+		send_expiry_alerts()
+		self.assertTrue(self.notifications(doc, self.emp_user))
 
 	def test_expiry_report_soonest_first(self):
 		self.expiring(20)

@@ -14,6 +14,7 @@ from alantech_erp.alantech.doctype.document.document_number import (
 	clean_number,
 	live_rules,
 	luhn_ok,
+	number_key,
 	verhoeff_ok,
 )
 
@@ -101,3 +102,12 @@ class UnitTestDocumentNumber(UnitTestCase):
 		self.assertIsNone(live_rules(rules("PAN"))["check_digit"])
 		self.assertEqual(live_rules(rules("Custom Pattern", "[0-9]+")), {"pattern": "[0-9]+", "compact": 0})
 		self.assertEqual(live_rules(rules()), {})
+
+	def test_number_key_ignores_case_spaces_and_separators(self):
+		for typed in ("DL-TEST-123456", "dl test 123456", "DL/TEST/123456", " Dl.Test.123456 ", "DLTEST123456"):
+			self.assertEqual(number_key(typed), "DLTEST123456", typed)
+		self.assertEqual(number_key("2345 6789 0124"), number_key("234567890124"))
+		self.assertNotEqual(number_key("DL-TEST-123456"), number_key("DL-TEST-123457"))
+		self.assertIsNone(number_key(""))
+		self.assertIsNone(number_key("   "))
+		self.assertIsNone(number_key(None))

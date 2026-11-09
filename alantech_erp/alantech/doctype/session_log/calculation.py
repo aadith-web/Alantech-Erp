@@ -213,32 +213,65 @@ def get_status(doc, shift, leave):
 def set_overtime(doc, shift, window):
 	rule = get_overtime_rule(shift)
 	doc.overtime_rule = rule.name if rule else None
-	doc.overtime_hours = get_overtime_hours(doc, rule, window) if rule else 0
+	doc.overtime_hours = get_overtime_hours(doc, rule, window, shift) if rule else 0
 
 
 def get_overtime_rule(shift):
 	"""The employee's shift (assignment / default, see get_shift) decides the rule:
-	Shift Type > Allow Overtime + Overtime Type."""
+	Shift Type > Allow Overtime + Overtime Type. No rule = no overtime."""
 	if not shift or not cint(shift.get("allow_overtime")) or not shift.get("overtime_type"):
 		return None
 	return frappe.get_cached_doc(OVERTIME_RULE_DOCTYPE, shift.overtime_type)
 
 
-def get_overtime_hours(doc, rule, window):
-	"""Working day: hours beyond the shift length. Weekly off / holiday: all worked hours,
-	if the rule allows overtime on that day type. Capped at the rule's maximum."""
+def get_overtime_hours(doc, rule, window, shift=None):
+	"""Overtime from the shift's Work Mode (setup/shift_ot_fields.py), in this order:
+
+	Weekly off / holiday: all worked hours, if the rule allows overtime on that day type.
+	Flexible Threshold:   worked hours beyond the shift's Regular Hours Per Day.
+	Fixed Shift:          time before the shift start (Early Checkin Mode = OT) plus time after the
+	                      shift end (Late Checkout Mode = OT); Ignore counts nothing.
+	Then capped at the rule's Maximum Overtime Hours Allowed, and finally rounded down to the
+	shift's Round OT Minutes To."""
+	from alantech_erp.setup.shift_ot_fields import FLEXIBLE, shift_settings
+
 	worked = flt(doc.working_hours)
 	if worked <= 0:
 		return 0
 
+	settings = shift_settings(shift)
 	if doc.day_type == "Weekly Off":
 		hours = worked if cint(rule.applicable_for_weekend) else 0
 	elif doc.day_type == "Holiday":
 		hours = worked if cint(rule.applicable_for_public_holiday) else 0
+	elif settings.work_mode == FLEXIBLE:
+		hours = worked - settings.regular_hours_per_day
 	else:
-		hours = worked - time_diff_in_hours(window.end, window.start)
+		hours = outside_shift_hours(doc, window, settings)
 
+	hours = max(hours, 0)
 	max_allowed = flt(rule.maximum_overtime_hours_allowed)
 	if max_allowed:
 		hours = min(hours, max_allowed)
-	return flt(max(hours, 0), 2)
+	return round_down_hours(hours, settings.round_ot_minutes_to)
+
+
+def outside_shift_hours(doc, window, settings):
+	"""Fixed Shift: early check-in and late checkout time that the shift counts as overtime."""
+	if not (window.start and window.end and doc.first_in and doc.last_out):
+		return 0
+	first_in, last_out = get_datetime(doc.first_in), get_datetime(doc.last_out)
+	hours = 0
+	if settings.early_checkin_ot and first_in < window.start:
+		hours += time_diff_in_hours(min(window.start, last_out), first_in)
+	if settings.late_checkout_ot and last_out > window.end:
+		hours += time_diff_in_hours(last_out, max(window.end, first_in))
+	return hours
+
+
+def round_down_hours(hours, step_minutes):
+	"""Round hours down to a multiple of step_minutes; 0 = no rounding."""
+	if not step_minutes:
+		return flt(hours, 2)
+	minutes = int(round(flt(hours) * 60, 6))  # round(): 0.1 h is 5.999999 min in floating point
+	return flt((minutes - minutes % step_minutes) / 60, 2)

@@ -20,6 +20,7 @@ frappe.ui.form.on("Document", {
 
 	refresh(frm) {
 		frm.__alt_ref_dt = frm.doc.reference_doctype;
+		alt_doc.restrict_uploads(frm);
 		frm.toggle_enable("reference_doctype", frm.is_new() && !frappe.route_options?.reference_doctype);
 		alt_doc.set_card_number_label(frm);
 		alt_doc.take_snapshot(frm);
@@ -127,6 +128,15 @@ const ALT_DOC_CHECK_DIGITS = {
 };
 
 const alt_doc = {
+	// Same as document_files.py (the server checks again); a new document has no __onload yet
+	FILE_RESTRICTIONS: { allowed_file_types: [".pdf", ".jpg", ".jpeg", ".png"], max_file_size: 5 * 1024 * 1024 },
+
+	restrict_uploads(frm) {
+		const restrictions = frm.doc.__onload?.file_restrictions || alt_doc.FILE_RESTRICTIONS;
+		// ControlAttach merges df.options into the FileUploader options
+		frm.fields_dict.attachments.grid.update_docfield_property("file", "options", { restrictions });
+	},
+
 	// Visa -> Visa Number, Passport -> Passport Number, other -> "<Type> Number"
 	set_card_number_label(frm) {
 		const t = frm.doc.document_type;
@@ -155,6 +165,8 @@ const alt_doc = {
 				document_type,
 				number: card_number || "",
 				name: frm.is_new() ? null : frm.doc.name,
+				reference_doctype: frm.doc.reference_doctype || null,
+				reference_name: frm.doc.reference_name || null,
 			})
 			.then((r) => {
 				// a newer check started while this one ran (still typing)

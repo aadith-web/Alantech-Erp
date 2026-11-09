@@ -13,3 +13,6 @@ alantech_erp.patches.v16.document_attachments_table
 alantech_erp.patches.v16.sales_director
 alantech_erp.patches.v16.estimation_customer_expenses
 alantech_erp.patches.v16.sales_person_hierarchy
+alantech_erp.patches.v16.shift_ot_modes
+alantech_erp.patches.v16.document_number_key
+alantech_erp.patches.v16.document_expiry_alert_sent

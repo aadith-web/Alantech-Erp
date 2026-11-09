@@ -190,9 +190,11 @@ class TestPhase0SessionLog(TestCase):
 		cls.week = [add_days(cls.monday, i) for i in range(7)]
 		add_public_holiday(cls.week[HOLIDAY_DAY])
 
-		# one week of emp1 check-ins, punched by the HR User
+		# one week of emp1 check-ins, punched by the HR User. The missing check-out day's lone IN is
+		# punched last: in date order the next day's IN would be refused (setup/checkin_validation.py)
 		frappe.set_user(HR_USER)
-		for day, (time_in, time_out, *_) in zip(cls.week, WEEK):
+		days = sorted(zip(cls.week, WEEK), key=lambda row: row[1][1] is None)
+		for day, (time_in, time_out, *_) in days:
 			punch(cls.emp1, day, time_in, time_out)
 		frappe.set_user("Administrator")
 		# missing check-out: no OUT punch, so the daily build makes that log
@@ -460,7 +462,8 @@ class TestPhase0SessionLog(TestCase):
 
 	def test_19_second_checkout_does_not_duplicate_attendance(self):
 		frappe.set_user(HR_USER)
-		checkin(self.emp1, f"{self.monday} 17:30:00", "OUT").insert()
+		# a second session the same day (OUT straight after OUT is refused, see test_phase0_checkin_sequence)
+		punch(self.emp1, self.monday, "17:15", "17:30")
 		frappe.set_user("Administrator")
 		self.assertEqual(frappe.db.count("Session Log", {"employee": self.emp1, "log_date": self.monday}), 1)
 		self.assertEqual(attendance_count(self.emp1, self.monday), 1)

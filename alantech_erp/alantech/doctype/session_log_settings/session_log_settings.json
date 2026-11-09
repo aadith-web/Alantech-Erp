@@ -9,6 +9,7 @@
   "log_creation_trigger",
   "approver_role",
   "hold_missing_checkout",
+  "missing_checkout_block_hours",
   "auto_submit_attendance",
   "auto_submit_overtime",
   "lock_after_processing"
@@ -43,6 +44,14 @@
    "label": "Hold Missing Check-out for Review"
   },
   {
+   "default": "16",
+   "description": "An employee whose check-in has no check-out cannot check in or out again after this many hours, until HR adds the missing check-out. Used when the shift has no Overtime Type with Maximum Overtime Hours Allowed; otherwise the limit is shift hours + that maximum.",
+   "fieldname": "missing_checkout_block_hours",
+   "fieldtype": "Float",
+   "label": "Missing Check-out Block After (Hours)",
+   "non_negative": 1
+  },
+  {
    "default": "1",
    "fieldname": "auto_submit_attendance",
    "fieldtype": "Check",
@@ -65,7 +74,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-10-22 18:51:07.932071",
+ "modified": "2026-11-06 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Session Log Settings",

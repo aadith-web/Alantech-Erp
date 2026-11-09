@@ -356,6 +356,10 @@ def setup_overtime():
 	shift = frappe.db.get_value("Shift Type", DEFAULT_SHIFT, ["allow_overtime", "overtime_type"], as_dict=True)
 	if shift and not shift.overtime_type and frappe.db.exists("Overtime Type", OVERTIME_TYPE):
 		frappe.db.set_value("Shift Type", DEFAULT_SHIFT, {"allow_overtime": 1, "overtime_type": OVERTIME_TYPE})
+		# time before the start and after the end is overtime (setup/shift_ot_fields.py)
+		from alantech_erp.setup.shift_ot_fields import count_outside_shift_as_ot
+
+		count_outside_shift_as_ot(DEFAULT_SHIFT)
 
 	settings = frappe.get_doc("Overtime Settings")
 	if settings.working_hours_per_day or not applicable:
