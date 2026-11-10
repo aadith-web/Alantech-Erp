@@ -43,6 +43,8 @@ app_include_js = [
     "/assets/alantech_erp/js/phone_control.js",
     # Customer quick entry: Tax Type Local -> GSTIN and the address fields are mandatory
     "/assets/alantech_erp/js/customer_quick_entry.js",
+    # Home page check-in reminder popup (HR-F02)
+    "/assets/alantech_erp/js/checkin_reminder.js",
 ]
 
 # include js, css files in header of web template
@@ -81,6 +83,8 @@ doctype_js = {
     "Holiday List": "public/js/holiday_list.js",
     # one summary of the users created by an Employee import
     "Data Import": "public/js/data_import.js",
+    "Employee Checkin": "public/js/employee_checkin.js",
+
 }
 extend_doctype_class = {
     # "Create User Automatically" without an email: no user, no error (setup/employee_user.py)
