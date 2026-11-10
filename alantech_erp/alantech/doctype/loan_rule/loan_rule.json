@@ -1,0 +1,330 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:rule_name",
+ "creation": "2026-11-09 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "rule_name",
+  "company",
+  "enabled",
+  "priority",
+  "column_break_header",
+  "valid_from",
+  "valid_upto",
+  "enforcement",
+  "section_break_description",
+  "description",
+  "applicability_section",
+  "loan_products",
+  "employment_types",
+  "grades",
+  "column_break_applicability",
+  "designations",
+  "departments",
+  "branches",
+  "eligibility_section",
+  "min_service_months",
+  "require_confirmation",
+  "min_age",
+  "max_age",
+  "column_break_eligibility",
+  "block_if_resignation",
+  "block_if_on_leave",
+  "frequency_section",
+  "max_active_loans",
+  "max_open_applications",
+  "cooling_off_months",
+  "column_break_frequency",
+  "max_loans_per_year",
+  "same_product_only",
+  "override_section",
+  "allow_override",
+  "override_role"
+ ],
+ "fields": [
+  {
+   "fieldname": "rule_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Rule Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company",
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Enabled"
+  },
+  {
+   "default": "0",
+   "description": "When several rules match, the one with the higher priority wins.",
+   "fieldname": "priority",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Priority"
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "valid_from",
+   "fieldtype": "Date",
+   "label": "Valid From"
+  },
+  {
+   "fieldname": "valid_upto",
+   "fieldtype": "Date",
+   "label": "Valid Upto"
+  },
+  {
+   "default": "Block",
+   "description": "Block stops the application from being saved. Warn shows a message and lets it save.",
+   "fieldname": "enforcement",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Enforcement",
+   "options": "Block\nWarn",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_description",
+   "fieldtype": "Section Break"
+  },
+  {
+   "description": "Policy note shown to the applicant.",
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "description": "Leave a list blank to apply the rule to everyone for that field.",
+   "fieldname": "applicability_section",
+   "fieldtype": "Section Break",
+   "label": "Applicability"
+  },
+  {
+   "fieldname": "loan_products",
+   "fieldtype": "Table MultiSelect",
+   "label": "Loan Products",
+   "options": "Loan Rule Product"
+  },
+  {
+   "fieldname": "employment_types",
+   "fieldtype": "Table MultiSelect",
+   "label": "Employment Types",
+   "options": "Loan Rule Employment Type"
+  },
+  {
+   "fieldname": "grades",
+   "fieldtype": "Table MultiSelect",
+   "label": "Grades",
+   "options": "Loan Rule Grade"
+  },
+  {
+   "fieldname": "column_break_applicability",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "designations",
+   "fieldtype": "Table MultiSelect",
+   "label": "Designations",
+   "options": "Loan Rule Designation"
+  },
+  {
+   "fieldname": "departments",
+   "fieldtype": "Table MultiSelect",
+   "label": "Departments",
+   "options": "Loan Rule Department"
+  },
+  {
+   "fieldname": "branches",
+   "fieldtype": "Table MultiSelect",
+   "label": "Branches",
+   "options": "Loan Rule Branch"
+  },
+  {
+   "description": "The employee must always be Active. Zero or blank means no limit.",
+   "fieldname": "eligibility_section",
+   "fieldtype": "Section Break",
+   "label": "Eligibility"
+  },
+  {
+   "description": "Months from Date of Joining to the application's posting date.",
+   "fieldname": "min_service_months",
+   "fieldtype": "Int",
+   "label": "Minimum Service (Months)",
+   "non_negative": 1
+  },
+  {
+   "default": "0",
+   "description": "The employee's Final Confirmation Date must be on or before the posting date.",
+   "fieldname": "require_confirmation",
+   "fieldtype": "Check",
+   "label": "Require Confirmation"
+  },
+  {
+   "fieldname": "min_age",
+   "fieldtype": "Int",
+   "label": "Minimum Age",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "max_age",
+   "fieldtype": "Int",
+   "label": "Maximum Age",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_eligibility",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "block_if_resignation",
+   "fieldtype": "Check",
+   "label": "Block if Resignation / Separation"
+  },
+  {
+   "default": "0",
+   "fieldname": "block_if_on_leave",
+   "fieldtype": "Check",
+   "label": "Block if on Approved Leave"
+  },
+  {
+   "description": "Zero or blank means no limit.",
+   "fieldname": "frequency_section",
+   "fieldtype": "Section Break",
+   "label": "Frequency Limits"
+  },
+  {
+   "default": "1",
+   "fieldname": "max_active_loans",
+   "fieldtype": "Int",
+   "label": "Max Active Loans",
+   "non_negative": 1
+  },
+  {
+   "default": "1",
+   "description": "Open Loan Applications, not counting the one being checked.",
+   "fieldname": "max_open_applications",
+   "fieldtype": "Int",
+   "label": "Max Open Applications",
+   "non_negative": 1
+  },
+  {
+   "description": "Months since the employee's last loan was closed.",
+   "fieldname": "cooling_off_months",
+   "fieldtype": "Int",
+   "label": "Cooling-off (Months)",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_frequency",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "max_loans_per_year",
+   "fieldtype": "Int",
+   "label": "Max Loans per Fiscal Year",
+   "non_negative": 1
+  },
+  {
+   "default": "0",
+   "description": "Count only loans and applications for the same Loan Product.",
+   "fieldname": "same_product_only",
+   "fieldtype": "Check",
+   "label": "Same Loan Product Only"
+  },
+  {
+   "fieldname": "override_section",
+   "fieldtype": "Section Break",
+   "label": "Override"
+  },
+  {
+   "default": "0",
+   "description": "Lets a user with the override role save an application that fails a check.",
+   "fieldname": "allow_override",
+   "fieldtype": "Check",
+   "label": "Allow Override"
+  },
+  {
+   "depends_on": "eval:doc.allow_override",
+   "fieldname": "override_role",
+   "fieldtype": "Link",
+   "label": "Override Role",
+   "mandatory_depends_on": "eval:doc.allow_override",
+   "options": "Role"
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-09 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Loan Rule",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Loan Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Employee"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "priority",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "rule_name",
+ "track_changes": 1
+}

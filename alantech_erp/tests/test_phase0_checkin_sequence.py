@@ -39,7 +39,8 @@ from alantech_erp.tests.test_phase0_session_log import overtime_off, set_setting
 HR_MANAGER = "p9.hr.manager@example.com"
 HR_USER = "p9.hr.user@example.com"
 EMP1 = "p9.emp1@example.com"
-TEST_USERS = {HR_MANAGER: {"HR Manager", "Employee"}, HR_USER: {"HR User", "Employee"}}
+# Loan Manager comes with HR Manager (setup/loan_roles.py, HR-F05-x)
+TEST_USERS = {HR_MANAGER: {"HR Manager", "Employee", "Loan Manager"}, HR_USER: {"HR User", "Employee"}}
 TRANSACTIONS = ("Employee Checkin", "Attendance", "Overtime Log")
 OPEN_CHECKIN = "open check-in"
 NO_OPEN_CHECKIN = "No open check-in found"

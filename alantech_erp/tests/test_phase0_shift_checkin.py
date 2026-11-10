@@ -36,7 +36,8 @@ APPROVER = "p2.approver@example.com"
 EMP1 = "p2.emp1@example.com"
 
 TEST_USERS = {
-	HR_MANAGER: {"HR Manager", "Employee"},
+	# Loan Manager comes with HR Manager (setup/loan_roles.py, HR-F05-x)
+	HR_MANAGER: {"HR Manager", "Employee", "Loan Manager"},
 	HR_USER: {"HR User", "Employee"},
 	APPROVER: {"Employee", "Leave Approver"},
 }

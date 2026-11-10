@@ -81,6 +81,10 @@ doctype_js = {
     "Holiday List": "public/js/holiday_list.js",
     # one summary of the users created by an Employee import
     "Data Import": "public/js/data_import.js",
+    # asterisk on collection offset sequences Lending requires when the Company has none
+    "Loan Product": "public/js/loan_product.js",
+    # Loan Eligibility check list rendered as a table, not raw HTML text
+    "Loan Application": "public/js/loan_application.js",
 }
 extend_doctype_class = {
     # "Create User Automatically" without an email: no user, no error (setup/employee_user.py)
@@ -91,6 +95,10 @@ persistent_cache_keys = ["alt_employee_import_notes|*"]
 doctype_list_js = {
     "Employee": "public/js/employee_list.js",
     "Holiday List Assignment": "public/js/holiday_list_assignment_list.js",
+    # Add Loan lists the Approved Loan Applications without a Loan (HR-F05-x)
+    "Loan": "public/js/loan_list.js",
+    # Add Loan Disbursement lists the Sanctioned loans waiting to be paid out (HR-F05-x)
+    "Loan Disbursement": "public/js/loan_disbursement_list.js",
 }
 
 # Svg Icons
@@ -178,6 +186,9 @@ permission_query_conditions = {
 	"Session Log": "alantech_erp.alantech.doctype.session_log.session_log.get_permission_query_conditions",
 	"Holiday List": "alantech_erp.setup.shifts.holiday_list_query_conditions",
 	"Company Policy": "alantech_erp.alantech.doctype.company_policy.company_policy.get_permission_query_conditions",
+	# Employee Loan Rules (LR-09): employees see only their own loan applications and loans
+	"Loan Application": "alantech_erp.setup.loan_permissions.loan_application_query_conditions",
+	"Loan": "alantech_erp.setup.loan_permissions.loan_query_conditions",
 	"Salary Structure Assignment": "alantech_erp.setup.salary_access.salary_structure_assignment_query_conditions",
 	"Salary Slip": "alantech_erp.setup.salary_access.salary_slip_query_conditions",
 	"Lead": f"{_SALES_HIERARCHY}.lead_query",
@@ -193,6 +204,8 @@ has_permission = {
 	"Session Log": "alantech_erp.alantech.doctype.session_log.session_log.has_permission",
 	"Holiday List": "alantech_erp.setup.shifts.holiday_list_has_permission",
 	"Company Policy": "alantech_erp.alantech.doctype.company_policy.company_policy.has_permission",
+	"Loan Application": "alantech_erp.setup.loan_permissions.has_permission",
+	"Loan": "alantech_erp.setup.loan_permissions.has_permission",
 	"Salary Structure Assignment": "alantech_erp.setup.salary_access.has_permission",
 	"Salary Slip": "alantech_erp.setup.salary_access.has_permission",
 	**{
@@ -247,6 +260,21 @@ fixtures = [
 ]
 
 doc_events = {
+    # Loan Management flow (HR-F05-x): an HR Manager is also a Loan Manager
+    "User": {"validate": "alantech_erp.setup.loan_roles.user_validate"},
+    # new Loan Products get the employee loan ledgers for accounts left blank (HR-F05-x)
+    "Loan Product": {"before_insert": "alantech_erp.setup.loan_accounts.loan_product_before_insert"},
+    # a Loan is made only from an Approved Loan Application (HR-F05-x)
+    "Loan": {"validate": "alantech_erp.loan_rules.loan.validate"},
+    # Employee Loan Rules: match the Loan Rule, run the checks, block / warn / override (LR-03, LR-05)
+    "Loan Application": {
+        "before_validate": "alantech_erp.loan_rules.loan_application.before_validate",
+        "validate": "alantech_erp.loan_rules.loan_application.validate",
+        "before_submit": "alantech_erp.loan_rules.loan_application.before_submit",
+        "before_update_after_submit": "alantech_erp.loan_rules.loan_application.before_update_after_submit",
+        "on_update": "alantech_erp.loan_rules.loan_application.on_update",
+        "on_update_after_submit": "alantech_erp.loan_rules.loan_application.on_update_after_submit",
+    },
     # a Stock Entry made by an Employee Uniform Issue is cancelled through that issue only
     "Stock Entry": {
         "before_cancel": "alantech_erp.alantech.doctype.employee_uniform_issue.employee_uniform_issue.stock_entry_before_cancel",
@@ -509,6 +537,16 @@ after_migrate = [
     "alantech_erp.setup.sales_flow.execute",
     # Sales Person for every active employee in the Sales department
     "alantech_erp.sales.sales_person.execute",
+    # Employee Loan Rules: Lending Settings > Require Loan Rule (LR-02)
+    "alantech_erp.setup.loan_rule_settings.execute",
+    # Employee Loan Rules: Loan Eligibility section on Loan Application (LR-03)
+    "alantech_erp.setup.loan_application_fields.execute",
+    # Employee Loan Rules: HR roles on Loan Application / Loan Product / Loan (LR-09)
+    "alantech_erp.setup.loan_permissions.execute",
+    # Loan Management flow (HR-F05-x): existing HR Managers get Loan Manager
+    "alantech_erp.setup.loan_roles.execute",
+    # Loan Management flow (HR-F05-x): employee loan ledgers, Loan Product accounts, Company settings
+    "alantech_erp.setup.loan_accounts.execute",
     # demo / UAT sites only (site_config "alantech_demo_data": 1): keep last
     "alantech_erp.demo.data.after_migrate",
 ]

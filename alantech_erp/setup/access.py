@@ -8,10 +8,11 @@
 import frappe
 
 # Role profile -> roles added on top of the ones org_structure.py gives it
+# Loan Manager: every HR Manager runs the Lending flow (setup/loan_roles.py, HR-F05-x)
 EXTRA_PROFILE_ROLES = {
-    "ALT Managing Director": ["System Manager", "HR Manager", "HR User"],
-    "ALT HR Manager": ["HR Manager", "HR User"],
-    "ALT HR Executive": ["HR Manager", "HR User"],
+    "ALT Managing Director": ["System Manager", "HR Manager", "HR User", "Loan Manager"],
+    "ALT HR Manager": ["HR Manager", "HR User", "Loan Manager"],
+    "ALT HR Executive": ["HR Manager", "HR User", "Loan Manager"],
 }
 
 # Designations that must see every employee (no "own record only" restriction)
