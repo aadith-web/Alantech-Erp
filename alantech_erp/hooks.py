@@ -95,6 +95,8 @@ persistent_cache_keys = ["alt_employee_import_notes|*"]
 doctype_list_js = {
     "Employee": "public/js/employee_list.js",
     "Holiday List Assignment": "public/js/holiday_list_assignment_list.js",
+    "Employee Checkin": "public/js/employee_checkin_list.js",
+
 }
 
 # Svg Icons
