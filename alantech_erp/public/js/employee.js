@@ -4,6 +4,20 @@
 frappe.ui.form.on("Employee", {
 	refresh(frm) {
 		alt_employee_docs.render(frm);
+
+		// Company Policy card on Connections: open the policy list
+		if (!frm.is_new()) {
+			setTimeout(() => {
+				frm.dashboard.wrapper
+					.find('.document-link[data-doctype="Company Policy"]')
+					.off("click")
+					.on("click", (e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						frappe.set_route("List", "Company Policy");
+					});
+			}, 500);
+		}
 	},
 });
 
@@ -105,19 +119,16 @@ const alt_employee_docs = {
 					<td>${r.issue_date ? frappe.datetime.str_to_user(r.issue_date) : ""}</td>
 					<td>${expiry}</td>
 					<td>${status}</td>
-					<td>${
-						r.files.length
-							? `<button class="btn btn-default btn-xs" data-files="${esc(r.name)}">${
-									r.files.length > 1 ? __("View ({0})", [r.files.length]) : __("View")
-								}</button>`
-							: `<span class="text-muted">${__("No file")}</span>`
+					<td>${r.files.length
+						? `<button class="btn btn-default btn-xs" data-files="${esc(r.name)}">${r.files.length > 1 ? __("View ({0})", [r.files.length]) : __("View")
+						}</button>`
+						: `<span class="text-muted">${__("No file")}</span>`
 					}</td>
-					<td style="white-space:nowrap;">${
-						alt_employee_docs.can_review(r)
-							? `<button class="btn btn-success btn-xs" data-review="approve" data-name="${esc(r.name)}">${__("Approve")}</button>
+					<td style="white-space:nowrap;">${alt_employee_docs.can_review(r)
+						? `<button class="btn btn-success btn-xs" data-review="approve" data-name="${esc(r.name)}">${__("Approve")}</button>
 							   <button class="btn btn-danger btn-xs" data-review="reject" data-name="${esc(r.name)}"
 								style="margin-left:4px;">${__("Reject")}</button>`
-							: ""
+						: ""
 					}</td>
 				</tr>`;
 			})

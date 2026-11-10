@@ -2,6 +2,55 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-10-29 09:00:09.728609",
+  "name": "Cancel",
+  "workflow_action_name": "Cancel"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-29 13:23:54.423815",
+  "name": "Submit for Approval",
+  "workflow_action_name": "Submit for Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-29 13:23:54.432688",
+  "name": "Resubmit",
+  "workflow_action_name": "Resubmit"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-29 13:23:54.433631",
+  "name": "Send to Client",
+  "workflow_action_name": "Send to Client"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-29 13:23:54.434453",
+  "name": "Client Accepted",
+  "workflow_action_name": "Client Accepted"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-29 13:23:54.435197",
+  "name": "Client Requested Revision",
+  "workflow_action_name": "Client Requested Revision"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-29 13:23:54.435899",
+  "name": "Client Rejected",
+  "workflow_action_name": "Client Rejected"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-10-12 10:12:48.019950",
   "name": "Approve",
   "workflow_action_name": "Approve"
@@ -19,5 +68,47 @@
   "modified": "2026-10-12 10:12:48.021157",
   "name": "Review",
   "workflow_action_name": "Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2025-06-27 16:13:36.773584",
+  "name": "Initiate",
+  "workflow_action_name": "Initiate"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2025-06-27 16:28:02.106474",
+  "name": "Complete KYC",
+  "workflow_action_name": "Complete KYC"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-02-20 09:40:06.848521",
+  "name": "Run Basic Rules",
+  "workflow_action_name": "Run Basic Rules"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-02-20 09:40:06.861739",
+  "name": "Run Pre-Qualification Rules",
+  "workflow_action_name": "Run Pre-Qualification Rules"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-02-20 09:40:06.864394",
+  "name": "Run Knockout Rules",
+  "workflow_action_name": "Run Knockout Rules"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-02-20 09:40:06.867583",
+  "name": "Converted to Application",
+  "workflow_action_name": "Converted to Application"
  }
 ]

@@ -36,3 +36,16 @@ CUSTOM_FIELDS = {
 
 def execute():
 	create_custom_fields(CUSTOM_FIELDS, update=True)
+	allow_employees_to_read_leave_policy()
+
+
+def allow_employees_to_read_leave_policy():
+	"""The HRMS Employee form lists the masters an employee can be assigned (Leave Policy, ...) with a
+	read check, so an Employee-role user opening the form got "Insufficient Permission for Leave Policy".
+	Read only; create-only so a rule changed later in Role Permissions Manager is left alone."""
+	import frappe
+	from frappe.permissions import add_permission
+
+	if frappe.db.exists("Custom DocPerm", {"parent": "Leave Policy", "role": "Employee", "permlevel": 0}):
+		return
+	add_permission("Leave Policy", "Employee", 0, "read")

@@ -1,22 +1,25 @@
-"""Doctype dashboard overrides (override_doctype_dashboards in hooks.py)."""
+"""Doctype dashboard overrides for HR doctypes (override_doctype_dashboards in hooks.py)."""
+
+from frappe import _
+
+# shown on the Employee form's Connections; each links to the employee by its `employee` field
+EMPLOYEE_LINKS = ["Employee Uniform Issue", "Employee Asset Handover"]
 
 
-def customer(data):
-	"""Customer dashboard: its Estimations and Technical Offers next to Deals and Quotations."""
-	for group in data.get("transactions", []):
-		if "Quotation" in group.get("items", []):
-			pos = group["items"].index("Quotation")
-			for doctype in ("Technical Offer", "Estimation"):
-				if doctype not in group["items"]:
-					group["items"].insert(pos, doctype)
-			return data
-	data.setdefault("transactions", []).insert(0, {"label": "Pre Sales", "items": ["Estimation", "Technical Offer"]})
-	return data
+def employee(data):
+        """Employee Connections: the employee's Uniform Issues and Asset Handovers, plus Company Policy."""
+        transactions = data.setdefault("transactions", [])
+        linked = {doctype for group in transactions for doctype in group.get("items", [])}
+        items = [doctype for doctype in EMPLOYEE_LINKS if doctype not in linked]
+        if items:
+                transactions.append({"label": _("Uniform & Assets"), "items": items})
 
+        if data.get("fieldname", "employee") != "employee":
+                for doctype in items:
+                        data.setdefault("non_standard_fieldnames", {})[doctype] = "employee"
 
-def lead(data):
-	"""Lead dashboard: no Prospect (the Prospect flow is not used; a Lead becomes a Customer)."""
-	for group in data.get("transactions", []):
-		group["items"] = [item for item in group.get("items", []) if item != "Prospect"]
-	data["transactions"] = [group for group in data.get("transactions", []) if group.get("items")]
-	return data
+        # Company Policy has no employee link, so it is a plain card that opens the policy list
+        if "Company Policy" not in linked:
+                transactions.append({"label": _("Policies"), "items": ["Company Policy"]})
+                data.setdefault("non_standard_fieldnames", {})["Company Policy"] = "name"
+        return data

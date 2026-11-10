@@ -43,6 +43,8 @@ app_include_js = [
     "/assets/alantech_erp/js/phone_control.js",
     # Customer quick entry: Tax Type Local -> GSTIN and the address fields are mandatory
     "/assets/alantech_erp/js/customer_quick_entry.js",
+    # Home page check-in reminder popup (HR-F02)
+    "/assets/alantech_erp/js/checkin_reminder.js",
 ]
 
 # include js, css files in header of web template
@@ -85,6 +87,7 @@ doctype_js = {
     "Loan Product": "public/js/loan_product.js",
     # Loan Eligibility check list rendered as a table, not raw HTML text
     "Loan Application": "public/js/loan_application.js",
+    "Employee Checkin": "public/js/employee_checkin.js",
 }
 extend_doctype_class = {
     # "Create User Automatically" without an email: no user, no error (setup/employee_user.py)
@@ -99,6 +102,7 @@ doctype_list_js = {
     "Loan": "public/js/loan_list.js",
     # Add Loan Disbursement lists the Sanctioned loans waiting to be paid out (HR-F05-x)
     "Loan Disbursement": "public/js/loan_disbursement_list.js",
+    "Employee Checkin": "public/js/employee_checkin_list.js",
 }
 
 # Svg Icons
@@ -234,6 +238,8 @@ has_permission = {
 # }
 
 fixtures = [
+    {"dt": "Print Format", "filters": [["name", "in", ["Offer Letter", "Appointment Letter"]]]},
+    {"dt": "Letter Head", "filters": [["name", "in", ["AlanTech"]]]},
     {"dt": "Custom Field", "or_filters": [
         ["fieldname", "like", "alt\\_%"],
         ["name", "in", [
@@ -244,6 +250,11 @@ fixtures = [
           "Event-custom_call_result",
           "Event-custom_section_break_i4ir3",
           "Event-custom_section_break_fxv5g",
+          "Employee-custom_ref_no",
+          "Employee-custom_job_description",
+          "Company-custom_hr_signatory_name",
+          "Company-custom_hr_email",
+          "Company-custom_hr_office_address",
         ]],
     ]},
     {"dt": "Property Setter", "or_filters": [
@@ -257,6 +268,7 @@ fixtures = [
     {"dt": "Designation"},
     {"dt": "Department", "filters": [["name", "!=", "All Departments"]]},
     {"dt": "Document Type Master"}
+    
 ]
 
 doc_events = {
