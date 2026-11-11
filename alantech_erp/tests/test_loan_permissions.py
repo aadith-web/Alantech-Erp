@@ -174,6 +174,65 @@ class TestLoanPermissions(IntegrationTestCase):
 				frappe.set_user(user)
 				frappe.client.get_single_value("Loan Origination Settings", "employee_loans")  # no error
 
+	def test_loan_by_hr_head_disbursement_by_accounts_head(self):
+		"""Every employee applies; only the HR Head (HR Manager) makes the Loan; only the Accounts
+		Head (Accounts Manager) disburses it. Both also hold Loan Manager, which is read-only on both."""
+		frappe.set_user("Administrator")
+		hr_head = self.user("sod.hrhead", "HR Manager", "HR User", "Loan Manager")
+		accounts_head = self.user("sod.accounts", "Accounts Manager", "Accounts User", "Loan Manager")
+		loan_manager = self.user("sod.lm", "Loan Manager")
+		employee = self.user("sod.emp", "Employee")
+		write = ("create", "write", "submit", "cancel")
+
+		def can(user, doctype, ptype):
+			return bool(frappe.has_permission(doctype, ptype, user=user))
+
+		for ptype in write:
+			with self.subTest(ptype=ptype):
+				self.assertTrue(can(hr_head, "Loan", ptype))
+				self.assertFalse(can(hr_head, "Loan Disbursement", ptype))
+				self.assertTrue(can(accounts_head, "Loan Disbursement", ptype))
+				self.assertFalse(can(accounts_head, "Loan", ptype))
+				self.assertFalse(can(loan_manager, "Loan", ptype))
+				self.assertFalse(can(loan_manager, "Loan Disbursement", ptype))
+				self.assertFalse(can(employee, "Loan", ptype))
+				self.assertFalse(can(employee, "Loan Disbursement", ptype))
+		for user in (hr_head, accounts_head, loan_manager):
+			self.assertTrue(can(user, "Loan", "read"))
+			self.assertTrue(can(user, "Loan Disbursement", "read"))
+		for user in (hr_head, accounts_head, employee):
+			self.assertTrue(can(user, "Loan Application", "create"))
+
+	def test_exact_rows_restored_on_migrate(self):
+		"""A Loan Manager row widened by hand is cut back to read-only by the after_migrate setup."""
+		key = {"parent": "Loan Disbursement", "role": "Loan Manager", "permlevel": 0, "if_owner": 0}
+		frappe.db.set_value("Custom DocPerm", key, {"create": 1, "submit": 1})
+		loan_permissions.execute()
+		self.assertEqual(frappe.db.get_value("Custom DocPerm", key, ["read", "create", "submit"]), (1, 0, 0))
+
+	def test_auto_disbursement_refused_without_disbursement_rights(self):
+		from alantech_erp.loan_rules.loan import AutoDisbursementNotAllowedError, validate_auto_disbursement
+
+		frappe.set_user("Administrator")
+		hr_head = self.user("sod.auto", "HR Manager", "Loan Manager")
+		doc = frappe._dict(auto_create_disbursement_on_loan_booking=1)
+		frappe.set_user(hr_head)
+		self.assertRaises(AutoDisbursementNotAllowedError, validate_auto_disbursement, doc)
+		doc.auto_create_disbursement_on_loan_booking = 0
+		validate_auto_disbursement(doc)  # no error
+
+	def test_loan_purpose_readable(self):
+		"""Loan Application's Loan Purpose link: Lending grants Loan Purpose to System Manager only,
+		so the form stopped with 'Insufficient Permission for Loan Purpose'."""
+		for role in ("HR Manager", "HR User", "Employee", "Loan Manager", "Loan LOS User"):
+			with self.subTest(role=role):
+				frappe.set_user("Administrator")
+				user = self.user(role.lower().replace(" ", ""), role)
+				self.assertTrue(frappe.has_permission("Loan Purpose", "read", user=user))
+				self.assertTrue(frappe.has_permission("Loan Purpose", "select", user=user))
+				self.assertFalse(frappe.has_permission("Loan Purpose", "write", user=user))
+				self.assertFalse(frappe.has_permission("Loan Purpose", "create", user=user))
+
 	def test_hr_roles_read_every_master_the_loan_form_links_to(self):
 		"""The Loan form validates and fetches its Link fields; each target must be readable, or the
 		form stops with 'Insufficient Permission for <doctype>'."""

@@ -4,9 +4,10 @@
 
 ClickUp: https://app.clickup.com/t/14yr2e57kyk (parent HR-F05 14yr2e56cah)
 
-The HR Manager runs the whole Lending flow: approve the Loan Application, create and sanction the
-Loan, Loan Disbursement, Loan Repayment (prepayment / foreclosure), interest accrual, Loan Write
-Off / Refund / Restructure. Lending gives those doctypes to its Loan Manager role and also checks
+The HR Manager runs the Lending flow: approve the Loan Application, create and sanction the Loan,
+Loan Repayment (prepayment / foreclosure), interest accrual, Loan Write Off / Refund / Restructure.
+The Loan Disbursement is made by the Accounts Department Head (Accounts Manager) only; Loan
+Manager is read-only on it and on Loan (setup/loan_permissions.py EXACT). Lending gives those doctypes to its Loan Manager role and also checks
 that role by name (e.g. Loan Installment Skip Request approval), so the role itself is assigned,
 as the flow spec says; per-doctype rights would not cover the name checks.
 

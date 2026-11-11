@@ -39,6 +39,7 @@ from frappe import _
 from frappe.utils import escape_html, now_datetime
 
 from alantech_erp.loan_rules import engine
+from alantech_erp.loan_rules.loan import set_applicant_name
 from alantech_erp.setup.loan_application_fields import ELIGIBLE, NOT_ELIGIBLE, OVERRIDDEN
 from alantech_erp.setup.loan_permissions import validate_own_applicant
 from alantech_erp.setup.loan_rule_settings import is_loan_rule_required, no_rule_message
@@ -92,6 +93,7 @@ def before_validate(doc, method=None):
 			title=_("Employee Loans Only"),
 		)
 	validate_own_applicant(doc)
+	set_applicant_name(doc)
 
 
 def validate(doc, method=None):
@@ -181,7 +183,7 @@ def evaluate(doc):
 		clear_override(doc)
 
 	results = engine.run_checks(
-		rule, doc.applicant, doc.posting_date, doc.loan_product, doc.company, doc.name
+		rule, doc.applicant, doc.posting_date, doc.loan_product, doc.company, doc.name, doc.loan_amount
 	)
 	failures = engine.failure_messages(results)
 

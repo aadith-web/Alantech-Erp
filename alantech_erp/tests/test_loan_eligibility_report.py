@@ -83,6 +83,7 @@ class TestLoanEligibilityReport(IntegrationTestCase):
 				"eligible",
 				"failed_reason",
 				"next_eligible_date",
+				"max_eligible_amount",
 			],
 		)
 
