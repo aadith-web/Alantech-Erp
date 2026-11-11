@@ -1,0 +1,156 @@
+{
+ "actions": [],
+ "creation": "2026-11-11 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "forecast_section",
+  "won_source",
+  "forecast_column",
+  "period_type",
+  "commission_section",
+  "enable_commission",
+  "default_basis",
+  "commission_column",
+  "payout_method",
+  "salary_component",
+  "accounts_section",
+  "expense_account",
+  "payable_account",
+  "accounts_column",
+  "cost_center"
+ ],
+ "fields": [
+  {
+   "fieldname": "forecast_section",
+   "fieldtype": "Section Break",
+   "label": "Forecast"
+  },
+  {
+   "default": "Sales Order",
+   "description": "Submitted documents counted as won business (net total, split by the Sales Team %)",
+   "fieldname": "won_source",
+   "fieldtype": "Select",
+   "label": "Closed Won From",
+   "options": "Sales Order\nSales Invoice",
+   "reqd": 1
+  },
+  {
+   "fieldname": "forecast_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Month",
+   "fieldname": "period_type",
+   "fieldtype": "Select",
+   "label": "Default Forecast Period",
+   "options": "Month\nQuarter",
+   "reqd": 1
+  },
+  {
+   "fieldname": "commission_section",
+   "fieldtype": "Section Break",
+   "label": "Commission"
+  },
+  {
+   "default": "1",
+   "description": "Post Commission Ledger Entries when Sales Orders, Sales Invoices and Payment Entries are submitted",
+   "fieldname": "enable_commission",
+   "fieldtype": "Check",
+   "label": "Enable Commission"
+  },
+  {
+   "default": "Sales Invoice",
+   "description": "For Sales Persons without a Commission Plan (paid at their Commission Rate)",
+   "fieldname": "default_basis",
+   "fieldtype": "Select",
+   "label": "Default Commission Basis",
+   "options": "Sales Invoice\nSales Order\nPayment Received"
+  },
+  {
+   "fieldname": "commission_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Journal Entry",
+   "fieldname": "payout_method",
+   "fieldtype": "Select",
+   "label": "Default Payout Method",
+   "options": "Journal Entry\nAdditional Salary"
+  },
+  {
+   "depends_on": "eval:doc.payout_method=='Additional Salary'",
+   "fieldname": "salary_component",
+   "fieldtype": "Link",
+   "label": "Commission Salary Component",
+   "options": "Salary Component"
+  },
+  {
+   "fieldname": "accounts_section",
+   "fieldtype": "Section Break",
+   "label": "Default Accounts"
+  },
+  {
+   "fieldname": "expense_account",
+   "fieldtype": "Link",
+   "label": "Commission Expense Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "payable_account",
+   "fieldtype": "Link",
+   "label": "Commission Payable Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "accounts_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-11-11 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Sales Performance Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

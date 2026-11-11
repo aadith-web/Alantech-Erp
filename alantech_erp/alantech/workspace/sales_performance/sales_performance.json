@@ -1,0 +1,85 @@
+{
+ "charts": [],
+ "content": "[{\"id\": \"sp00\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Sales Forecast &amp; Commission</b></span>\", \"col\": 12}}, {\"id\": \"sp01\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Forecast Report\", \"col\": 3}}, {\"id\": \"sp02\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Forecasts\", \"col\": 3}}, {\"id\": \"sp03\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Forecast Accuracy\", \"col\": 3}}, {\"id\": \"sp04\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Commission Plans\", \"col\": 3}}, {\"id\": \"sp05\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Commission Payouts\", \"col\": 3}}, {\"id\": \"sp06\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Commission Statement\", \"col\": 3}}, {\"id\": \"sp07\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Settings\", \"col\": 3}}]",
+ "creation": "2026-11-11 12:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "hide_custom": 0,
+ "idx": 0,
+ "indicator_color": "blue",
+ "is_hidden": 0,
+ "label": "Sales Performance",
+ "link_type": "DocType",
+ "links": [],
+ "modified": "2026-11-11 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Sales Performance",
+ "number_cards": [],
+ "owner": "Administrator",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "Sales User"
+  },
+  {
+   "role": "Sales Manager"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "System Manager"
+  }
+ ],
+ "sequence_id": 0.0,
+ "shortcuts": [
+  {
+   "label": "Sales Forecast Report",
+   "link_to": "Sales Forecast",
+   "report_ref_doctype": "Opportunity",
+   "type": "Report"
+  },
+  {
+   "doc_view": "List",
+   "label": "Sales Forecasts",
+   "link_to": "Sales Forecast",
+   "type": "DocType"
+  },
+  {
+   "label": "Forecast Accuracy",
+   "link_to": "Sales Forecast Accuracy",
+   "report_ref_doctype": "Sales Forecast",
+   "type": "Report"
+  },
+  {
+   "doc_view": "List",
+   "label": "Commission Plans",
+   "link_to": "Commission Plan",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "List",
+   "label": "Commission Payouts",
+   "link_to": "Commission Payout",
+   "type": "DocType"
+  },
+  {
+   "label": "Commission Statement",
+   "link_to": "Commission Statement",
+   "report_ref_doctype": "Commission Ledger Entry",
+   "type": "Report"
+  },
+  {
+   "doc_view": "",
+   "label": "Settings",
+   "link_to": "Sales Performance Settings",
+   "type": "DocType"
+  }
+ ],
+ "standard": 0,
+ "title": "Sales Performance",
+ "type": "Workspace"
+}

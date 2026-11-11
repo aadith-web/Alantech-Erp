@@ -202,6 +202,8 @@ permission_query_conditions = {
 	"Technical Offer": f"{_SALES_HIERARCHY}.technical_offer_query",
 	"Quotation": f"{_SALES_HIERARCHY}.quotation_query",
 	"Sales Order": f"{_SALES_HIERARCHY}.sales_order_query",
+	# a Sales Engineer / Manager sees the forecasts of their own part of the tree
+	"Sales Forecast": "alantech_erp.sales.forecast.sales_forecast_query",
 }
 has_permission = {
 	"Document": "alantech_erp.alantech.doctype.document.document.has_permission",
@@ -388,7 +390,11 @@ doc_events = {
     },
     # Deal: no Prospect; Sales Stage follows the quotation (alantech_erp/sales/deal.py)
     "Opportunity": {
-        "validate": "alantech_erp.sales.deal.validate_opportunity",
+        "validate": [
+            "alantech_erp.sales.deal.validate_opportunity",
+            # Forecast Category / probability from the Sales Stage, Sales Person from the owner
+            "alantech_erp.sales.forecast.opportunity_validate",
+        ],
     },
     # Prospect flow not used (alantech_erp/sales/prospect.py)
     "Prospect": {
@@ -404,10 +410,30 @@ doc_events = {
         "on_change": "alantech_erp.sales.quotation.on_change",
     },
     "Sales Order": {
-        "validate": "alantech_erp.sales.sales_order.validate",
+        "validate": [
+            "alantech_erp.sales.sales_order.validate",
+            # empty Sales Team: the quotation's Sales Person at 100% (forecast + commission credit)
+            "alantech_erp.sales.commission.fill_sales_team",
+        ],
         "before_submit": "alantech_erp.sales.sales_order.before_submit",
-        "on_submit": "alantech_erp.sales.sales_order.on_submit",
-        "on_cancel": "alantech_erp.sales.sales_order.on_cancel",
+        "on_submit": [
+            "alantech_erp.sales.sales_order.on_submit",
+            "alantech_erp.sales.commission.on_sales_order_submit",
+        ],
+        "on_cancel": [
+            "alantech_erp.sales.sales_order.on_cancel",
+            "alantech_erp.sales.commission.on_cancel",
+        ],
+    },
+    # Sales commission (alantech_erp/sales/commission.py): Commission Ledger Entries per Sales Team
+    "Sales Invoice": {
+        "validate": "alantech_erp.sales.commission.fill_sales_team",
+        "on_submit": "alantech_erp.sales.commission.on_sales_invoice_submit",
+        "on_cancel": "alantech_erp.sales.commission.on_cancel",
+    },
+    "Payment Entry": {
+        "on_submit": "alantech_erp.sales.commission.on_payment_entry_submit",
+        "on_cancel": "alantech_erp.sales.commission.on_cancel",
     },
 }
 
@@ -549,6 +575,8 @@ after_migrate = [
     "alantech_erp.setup.sales_flow.execute",
     # Sales Person for every active employee in the Sales department
     "alantech_erp.sales.sales_person.execute",
+    # Sales forecast + commission: Deal Forecast Category / Sales Person, Sales Stage defaults
+    "alantech_erp.setup.sales_performance.execute",
     # Employee Loan Rules: Lending Settings > Require Loan Rule (LR-02)
     "alantech_erp.setup.loan_rule_settings.execute",
     # Employee Loan Rules: Loan Eligibility section on Loan Application (LR-03)

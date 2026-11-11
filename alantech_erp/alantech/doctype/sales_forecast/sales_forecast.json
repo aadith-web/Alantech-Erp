@@ -1,0 +1,244 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-11-11 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "company",
+  "sales_person",
+  "period_column",
+  "period_type",
+  "period_start",
+  "period_label",
+  "from_date",
+  "to_date",
+  "source_column",
+  "currency",
+  "won_source",
+  "amended_from",
+  "details_section",
+  "details",
+  "totals_section",
+  "total_target",
+  "total_closed_won",
+  "totals_column",
+  "total_forecast",
+  "total_manager_forecast",
+  "remarks_section",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "default": "SF-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Series",
+   "no_copy": 1,
+   "options": "SF-.YYYY.-",
+   "print_hide": 1,
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company",
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "description": "Forecast of this Sales Person and everyone under them; blank: the whole sales team",
+   "fieldname": "sales_person",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Sales Person (Team)",
+   "options": "Sales Person"
+  },
+  {
+   "fieldname": "period_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Month",
+   "fieldname": "period_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Period",
+   "options": "Month\nQuarter",
+   "reqd": 1
+  },
+  {
+   "description": "Any date in the month / quarter",
+   "fieldname": "period_start",
+   "fieldtype": "Date",
+   "label": "Period Of",
+   "reqd": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "period_label",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Period Label",
+   "read_only": 1
+  },
+  {
+   "fieldname": "from_date",
+   "fieldtype": "Date",
+   "label": "From Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "to_date",
+   "fieldtype": "Date",
+   "label": "To Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "won_source",
+   "fieldtype": "Data",
+   "label": "Closed Won From",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Sales Forecast",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "details_section",
+   "fieldtype": "Section Break",
+   "label": "Forecast"
+  },
+  {
+   "fieldname": "details",
+   "fieldtype": "Table",
+   "label": "Forecast",
+   "options": "Sales Forecast Detail"
+  },
+  {
+   "fieldname": "totals_section",
+   "fieldtype": "Section Break",
+   "label": "Team Total"
+  },
+  {
+   "fieldname": "total_target",
+   "fieldtype": "Currency",
+   "label": "Target",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_closed_won",
+   "fieldtype": "Currency",
+   "label": "Closed Won",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "totals_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_forecast",
+   "fieldtype": "Currency",
+   "label": "System Forecast",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "total_manager_forecast",
+   "fieldtype": "Currency",
+   "label": "Manager Forecast",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "remarks_section",
+   "fieldtype": "Section Break",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Text Editor",
+   "label": "Remarks"
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-11-11 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Sales Forecast",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User"
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "sales_person,period_label",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "period_label",
+ "track_changes": 1
+}

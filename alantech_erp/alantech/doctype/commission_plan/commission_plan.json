@@ -1,0 +1,230 @@
+{
+ "actions": [],
+ "autoname": "field:plan_name",
+ "creation": "2026-11-11 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "plan_name",
+  "company",
+  "enabled",
+  "basis_column",
+  "basis",
+  "calculation_method",
+  "rate",
+  "slab_section",
+  "slab_basis",
+  "slabs",
+  "slab_help",
+  "item_group_section",
+  "item_group_rates",
+  "rules_section",
+  "min_achievement",
+  "max_commission",
+  "rules_column",
+  "clawback_on_return",
+  "members_section",
+  "members",
+  "description_section",
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "plan_name",
+   "fieldtype": "Data",
+   "label": "Plan Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "basis_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Sales Invoice",
+   "description": "Payment Received: only the paid share of each invoice counts",
+   "fieldname": "basis",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Commission On",
+   "options": "Sales Invoice\nSales Order\nPayment Received",
+   "reqd": 1
+  },
+  {
+   "default": "Flat Rate",
+   "fieldname": "calculation_method",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Calculation",
+   "options": "Flat Rate\nTiered (Whole)\nTiered (Incremental)\nItem Group Rates",
+   "reqd": 1
+  },
+  {
+   "description": "Flat Rate; with Item Group Rates, the rate for groups not listed",
+   "fieldname": "rate",
+   "fieldtype": "Percent",
+   "label": "Commission Rate %"
+  },
+  {
+   "depends_on": "eval:doc.calculation_method.startsWith('Tiered')",
+   "fieldname": "slab_section",
+   "fieldtype": "Section Break",
+   "label": "Slabs"
+  },
+  {
+   "default": "Amount",
+   "description": "Target Achievement %: slab limits are % of the Sales Person's target for the payout period",
+   "fieldname": "slab_basis",
+   "fieldtype": "Select",
+   "label": "Slabs On",
+   "options": "Amount\nTarget Achievement %"
+  },
+  {
+   "fieldname": "slabs",
+   "fieldtype": "Table",
+   "label": "Slabs",
+   "options": "Commission Plan Slab"
+  },
+  {
+   "fieldname": "slab_help",
+   "fieldtype": "HTML",
+   "label": "Slab Help",
+   "options": "<p class='text-muted small'>Whole: the slab the period total reaches sets the rate for all of it. Incremental: each slab's rate is paid on the part of the total inside it.</p>"
+  },
+  {
+   "depends_on": "eval:doc.calculation_method=='Item Group Rates'",
+   "fieldname": "item_group_section",
+   "fieldtype": "Section Break",
+   "label": "Item Group Rates"
+  },
+  {
+   "fieldname": "item_group_rates",
+   "fieldtype": "Table",
+   "label": "Item Group Rates",
+   "options": "Commission Plan Item Group"
+  },
+  {
+   "fieldname": "rules_section",
+   "fieldtype": "Section Break",
+   "label": "Rules"
+  },
+  {
+   "description": "Nothing is paid for a period below this % of target (0: no minimum)",
+   "fieldname": "min_achievement",
+   "fieldtype": "Percent",
+   "label": "Minimum Target Achievement %"
+  },
+  {
+   "description": "0: no cap",
+   "fieldname": "max_commission",
+   "fieldtype": "Currency",
+   "label": "Maximum Commission per Period"
+  },
+  {
+   "fieldname": "rules_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "description": "Credit notes and cancelled documents reduce the commission",
+   "fieldname": "clawback_on_return",
+   "fieldtype": "Check",
+   "label": "Claw Back Credit Notes"
+  },
+  {
+   "fieldname": "members_section",
+   "fieldtype": "Section Break",
+   "label": "Sales Persons"
+  },
+  {
+   "fieldname": "members",
+   "fieldtype": "Table",
+   "label": "Sales Persons",
+   "options": "Commission Plan Member"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "description_section",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-11 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Commission Plan",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "plan_name",
+ "track_changes": 1
+}
