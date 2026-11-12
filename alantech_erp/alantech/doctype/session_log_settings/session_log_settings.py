@@ -46,4 +46,5 @@ def get_session_log_settings():
 		auto_submit_attendance=flag("auto_submit_attendance", 1),
 		auto_submit_overtime=flag("auto_submit_overtime", 1),
 		lock_after_processing=flag("lock_after_processing", 1),
+		auto_create_missing_checkout=flag("auto_create_missing_checkout", 0),
 	)

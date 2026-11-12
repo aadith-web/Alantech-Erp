@@ -421,6 +421,12 @@ doc_events = {
 # ---------------
 
 scheduler_events = {
+    "cron": {
+        # midnight: add missing check-outs for the previous day (setting-gated)
+        "0 0 * * *": [
+            "alantech_erp.setup.auto_checkout.auto_create_missing_checkout",
+        ],
+    },
     "daily": [
         "alantech_erp.alantech.doctype.document.document.send_expiry_alerts",
         "alantech_erp.alantech.doctype.session_log.builder.build_yesterday_logs",  # "Daily Scheduler"
