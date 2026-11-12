@@ -9,9 +9,10 @@ ClickUp: https://app.clickup.com/t/14yr2e57ghg (parent 14yr2e57ghb)
         2. every filled applicability list contains the employee's / application's value
            (loan product, employment type, grade, designation, department, branch); blank = all
         3. sort: priority (high first), specificity (filled lists, high first), name
-    run_checks(rule, employee, posting_date, loan_product, company, exclude_application)
+    run_checks(rule, employee, posting_date, loan_product, company, exclude_application, loan_amount)
         list of {check, label, passed, expected, actual, message}; the cooling-off row also has
-        eligible_from (ISO date) when a loan has closed. Failures are never raised here.
+        eligible_from (ISO date) when a loan has closed; the salary-limit row has
+        max_eligible_amount. Failures are never raised here.
     candidate_rules(company, posting_date) + pick_rule(rules, context)
         the same matching split in two, to load the rules once for many employees (LR-08)
     check_eligibility(...)             rule + results + eligible flag (used by the Loan
@@ -29,12 +30,18 @@ Definitions (verified against the installed Lending / HRMS):
 - Missing date_of_joining / date_of_birth / final_confirmation_date that a rule needs fails with
   "Employee record incomplete: <field>"; nothing passes silently.
 - Every date-based check uses the application's posting date, not today.
+- Annual gross salary (Annual Salary Loan Eligibility %): gross pay of a preview Salary Slip from
+  the employee's latest submitted Salary Structure Assignment on or before the posting date (full
+  period, no leave-without-pay, no overtime), times the pay periods in a year (Monthly 12,
+  Bimonthly 24, Fortnightly 26, Weekly 52, Daily 365). Max eligible loan = annual gross x % / 100;
+  the Loan Amount must not exceed it. No assignment fails with "No Salary Structure Assignment".
+  Without a loan amount (Loan Eligibility report, API without one) only the limit is shown.
 """
 
 import frappe
 from dateutil.relativedelta import relativedelta
 from frappe import _
-from frappe.utils import add_months, cint, escape_html, formatdate, getdate
+from frappe.utils import add_months, cint, escape_html, flt, fmt_money, formatdate, getdate
 
 INACTIVE_LOAN_STATUSES = ("Closed", "Written Off", "Settled")
 CLOSED_LOAN_STATUSES = ("Closed", "Settled")
@@ -78,6 +85,10 @@ ACTIVE_LOANS = "active_loans"
 OPEN_APPLICATIONS = "open_applications"
 COOLING_OFF = "cooling_off"
 LOANS_PER_YEAR = "loans_per_year"
+SALARY_LIMIT = "salary_limit"
+
+# Salary Structure payroll_frequency -> pay periods per year (HRMS "Bimonthly" = twice a month)
+PERIODS_PER_YEAR = {"Monthly": 12, "Bimonthly": 24, "Fortnightly": 26, "Weekly": 52, "Daily": 365}
 
 CHECK_LABELS = {
 	STATUS: "Employee status",
@@ -90,6 +101,7 @@ CHECK_LABELS = {
 	OPEN_APPLICATIONS: "Open applications",
 	COOLING_OFF: "Cooling-off",
 	LOANS_PER_YEAR: "Loans per year",
+	SALARY_LIMIT: "Loan amount (salary limit)",
 }
 
 
@@ -194,7 +206,9 @@ def pick_rule(rules, context):
 # ---------------------------------------------------------------------------
 
 
-def check_eligibility(employee, loan_product, posting_date, company=None, exclude_application=None):
+def check_eligibility(
+	employee, loan_product, posting_date, company=None, exclude_application=None, loan_amount=None
+):
 	"""{"rule": Loan Rule or None, "results": [...], "eligible": bool} for one employee + product.
 
 	With no matching rule, results is empty and eligible is True; the caller decides what
@@ -210,11 +224,15 @@ def check_eligibility(employee, loan_product, posting_date, company=None, exclud
 	rule = get_applicable_rule(application)
 	if not rule:
 		return {"rule": None, "results": [], "eligible": True}
-	results = run_checks(rule, employee, posting_date, loan_product, company, exclude_application)
+	results = run_checks(
+		rule, employee, posting_date, loan_product, company, exclude_application, loan_amount
+	)
 	return {"rule": rule, "results": results, "eligible": all(r["passed"] for r in results)}
 
 
-def run_checks(rule, employee, posting_date, loan_product, company=None, exclude_application=None):
+def run_checks(
+	rule, employee, posting_date, loan_product, company=None, exclude_application=None, loan_amount=None
+):
 	emp = get_employee(employee) if isinstance(employee, str) else employee
 	posting_date = getdate(posting_date)
 	company = company or emp.company
@@ -243,6 +261,15 @@ def run_checks(rule, employee, posting_date, loan_product, company=None, exclude
 	if cint(rule.max_loans_per_year):
 		start, end = fiscal_year_bounds(posting_date, company)
 		results.append(check_loans_per_year(rule.max_loans_per_year, count_loans_between(scope, start, end)))
+	if flt(rule.get("annual_salary_loan_percent")) > 0:
+		results.append(
+			check_salary_limit(
+				rule.annual_salary_loan_percent,
+				annual_gross_salary(emp.name, posting_date, company),
+				loan_amount,
+				company,
+			)
+		)
 	return [r for r in results if r]
 
 
@@ -425,6 +452,45 @@ def check_loans_per_year(max_loans, count):
 	)
 
 
+def check_salary_limit(percent, annual_gross, loan_amount=None, company=None):
+	"""percent of annual gross salary = the most the employee may borrow. annual_gross None = no
+	Salary Structure Assignment. loan_amount None = no amount to compare (only the limit is shown)."""
+	percent = flt(percent)
+	pct = f"{percent:g}"  # 50 not 50.0
+	currency = frappe.get_cached_value("Company", company, "default_currency") if company else None
+
+	def money(value):
+		return fmt_money(value, currency=currency)
+
+	if annual_gross is None:
+		return result(
+			SALARY_LIMIT,
+			False,
+			_("{0}% of annual gross salary").format(pct),
+			_("No salary"),
+			_("No Salary Structure Assignment for the employee on the posting date; the loan limit "
+			  "({0}% of annual gross salary) cannot be worked out.").format(pct),
+		)
+	max_amount = flt(annual_gross * percent / 100, 2)
+	expected = _("Up to {0} ({1}% of annual gross {2})").format(money(max_amount), pct, money(annual_gross))
+	if loan_amount is None:
+		return result(
+			SALARY_LIMIT, True, expected, _("Max eligible {0}").format(money(max_amount)),
+			max_eligible_amount=max_amount,
+		)
+	loan_amount = flt(loan_amount)
+	return result(
+		SALARY_LIMIT,
+		loan_amount <= max_amount,
+		expected,
+		money(loan_amount),
+		_("Loan Amount {0} is more than the maximum eligible {1} ({2}% of annual gross salary {3}).").format(
+			money(loan_amount), money(max_amount), pct, money(annual_gross)
+		),
+		max_eligible_amount=max_amount,
+	)
+
+
 # ---------------------------------------------------------------------------
 # Data
 # ---------------------------------------------------------------------------
@@ -490,6 +556,64 @@ def fiscal_year_bounds(posting_date, company):
 	except FiscalYearError:
 		posting_date = getdate(posting_date)
 		return posting_date.replace(month=1, day=1), posting_date.replace(month=12, day=31)
+
+
+def annual_gross_salary(employee, posting_date, company=None):
+	"""Annual gross salary on posting_date, or None without a submitted Salary Structure Assignment.
+
+	Built like HRMS's salary slip preview (Salary Structure > Preview Salary Slip) but without its
+	Employee read-permission check: Loan users (Accounts, Loan Manager) cannot read Employee and
+	only the total is used here, never shown slip by slip. Cached per request."""
+	posting_date = getdate(posting_date)
+	key = (employee, str(posting_date), company)
+	cache = getattr(frappe.local, "alt_annual_gross_salary", None)
+	if cache is None:
+		cache = frappe.local.alt_annual_gross_salary = {}
+	if key in cache:
+		return cache[key]
+
+	filters = {"employee": employee, "docstatus": 1, "from_date": ("<=", posting_date)}
+	if company:
+		filters["company"] = company
+	structure = frappe.db.get_value(
+		"Salary Structure Assignment", filters, "salary_structure", order_by="from_date desc"
+	)
+	annual = None
+	if structure:
+		from frappe.model.mapper import get_mapped_doc
+
+		def postprocess(source, target):
+			target.employee = employee
+			target.posting_date = posting_date
+			target.start_date = posting_date
+			target.run_method("process_salary_structure", for_preview=1)
+
+		slip = get_mapped_doc(
+			"Salary Structure",
+			structure,
+			{
+				"Salary Structure": {
+					"doctype": "Salary Slip",
+					"field_map": {"total_earning": "gross_pay", "name": "salary_structure", "currency": "currency"},
+				}
+			},
+			None,
+			postprocess,
+			ignore_permissions=True,
+			ignore_child_tables=True,
+			cached=True,
+		)
+		periods = PERIODS_PER_YEAR.get(slip.payroll_frequency or "Monthly", 12)
+		# full-period earnings (default_amount is the amount before leave-without-pay), counted as
+		# HRMS counts gross pay: statistical / "do not include in total" components left out
+		gross = sum(
+			flt(row.default_amount) or flt(row.amount)
+			for row in slip.earnings
+			if not (row.get("statistical_component") or row.get("do_not_include_in_total"))
+		)
+		annual = flt(gross * periods, 2)
+	cache[key] = annual
+	return annual
 
 
 def has_open_separation(employee):

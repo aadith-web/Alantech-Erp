@@ -17,6 +17,8 @@
 	const lending_onload = settings.onload;
 	settings.onload = function (listview) {
 		if (lending_onload) lending_onload.call(this, listview);
+		// only users who may create it (Loan: HR Head, Loan Disbursement: Accounts Head)
+		if (!frappe.model.can_create("Loan Disbursement")) return;
 		listview.alt_loans_button = listview.page.add_inner_button(LABEL, () => show_loans());
 		update_count(listview);
 		// the list view is kept when you leave it: recount whenever it is shown again

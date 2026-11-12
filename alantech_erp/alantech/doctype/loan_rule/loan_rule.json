@@ -32,6 +32,7 @@
   "column_break_eligibility",
   "block_if_resignation",
   "block_if_on_leave",
+  "annual_salary_loan_percent",
   "frequency_section",
   "max_active_loans",
   "max_open_applications",
@@ -207,6 +208,13 @@
    "label": "Block if on Approved Leave"
   },
   {
+   "description": "The percentage of an employee's annual gross salary that determines the maximum loan amount they are eligible to receive. Example: annual gross salary ₹6,00,000 and 50% gives a maximum loan of ₹3,00,000. Annual gross comes from the employee's Salary Structure Assignment. Zero or blank means no limit.",
+   "fieldname": "annual_salary_loan_percent",
+   "fieldtype": "Percent",
+   "label": "Annual Salary Loan Eligibility (%)",
+   "non_negative": 1
+  },
+  {
    "description": "Zero or blank means no limit.",
    "fieldname": "frequency_section",
    "fieldtype": "Section Break",
@@ -273,7 +281,7 @@
   }
  ],
  "links": [],
- "modified": "2026-11-09 10:00:00.000000",
+ "modified": "2026-11-11 19:16:53.269972",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Loan Rule",

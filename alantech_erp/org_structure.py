@@ -48,7 +48,11 @@ ROLE_PROFILES = {
         "Accounts Manager", "Accounts User", "Purchase Manager", "Auditor",
         "Report Manager", "Analytics", *APPROVER, *EMP,
     ],
-    "ALT Accounts Head": ["Accounts Manager", "Accounts User", "Report Manager", "Leave Approver", *EMP],
+    "ALT Accounts Head": [
+        "Accounts Manager", "Accounts User", "Report Manager", "Leave Approver",
+        "Loan Manager",  # Lending app (workspace is restricted to Loan Manager)
+        *EMP,
+    ],
     "ALT Accounts Executive": ["Accounts User", *EMP],
     "ALT Internal Auditor": ["Auditor", "Report Manager", "Leave Approver", *EMP],
     "ALT Audit Executive": ["Auditor", *EMP],

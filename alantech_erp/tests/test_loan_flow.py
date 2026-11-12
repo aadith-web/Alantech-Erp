@@ -4,8 +4,9 @@
 setup/loan_accounts.py): HR Manager is also Loan Manager, the employee loan ledgers / Loan Product
 accounts / Company settings, and the whole flow run as an HR Manager:
 
-    Loan Application -> Approved -> Loan (Repay From Salary) -> Loan Disbursement (GL)
-    -> repayment schedule -> monthly demand -> Salary Slip loan row (EMI) -> Loan Repayment (GL)
+    Loan Application -> Approved -> Loan (Repay From Salary) -> Loan Disbursement (GL, made by
+    the Accounts Department Head: the HR Manager is refused) -> repayment schedule -> monthly
+    demand -> Salary Slip loan row (EMI) -> Loan Repayment (GL)
 
 Run:
     bench --site alantech.localhost run-tests --module alantech_erp.tests.test_loan_flow
@@ -233,6 +234,20 @@ class TestLoanFlowAsHRManager(IntegrationTestCase):
 			.insert(ignore_permissions=True)
 			.name
 		)
+		# ALT Accounts Head role profile: disburses loans (setup/loan_permissions.py)
+		self.accounts_head = (
+			frappe.get_doc(
+				{
+					"doctype": "User",
+					"email": "zz.hrf05.accounts@example.com",
+					"first_name": "ZZ HRF05 accounts",
+					"send_welcome_email": 0,
+					"roles": [{"role": r} for r in ("Accounts Manager", "Accounts User", "Loan Manager")],
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
 
 	def test_full_flow(self):
 		from hrms.payroll.doctype.salary_slip.salary_slip_loan_utils import (
@@ -272,10 +287,14 @@ class TestLoanFlowAsHRManager(IntegrationTestCase):
 		loan.submit()
 		self.assertEqual(frappe.db.get_value("Loan", loan.name, "status"), "Sanctioned")
 
-		# 3. disbursement: Dr Employee Loans (employee as party) / Cr bank or cash -> Disbursed
+		# 3. disbursement by the Accounts Department Head, not the HR Manager:
+		#    Dr Employee Loans (employee as party) / Cr bank or cash -> Disbursed
+		self.assertRaises(frappe.PermissionError, make_loan_disbursement, loan.name)
+		frappe.set_user(self.accounts_head)
 		disbursement = make_loan_disbursement(loan.name)
 		disbursement.insert()
 		disbursement.submit()
+		frappe.set_user(self.hr_manager)
 		self.assertEqual(frappe.db.get_value("Loan", loan.name, "status"), "Disbursed")
 		gl = frappe.get_all(
 			"GL Entry",

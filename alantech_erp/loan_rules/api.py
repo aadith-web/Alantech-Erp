@@ -6,7 +6,7 @@ mobile.
 ClickUp: https://app.clickup.com/t/14yr2e57ghk (LR-07), https://app.clickup.com/t/14yr2e57ghj
 (LR-06), parent 14yr2e57ghb
 
-    check_loan_eligibility(employee, loan_product, posting_date, company, loan_application)
+    check_loan_eligibility(employee, loan_product, posting_date, company, loan_application, loan_amount)
         The matched rule, overall status and per-check results the Loan Application would get on
         save, without saving anything. employee may be left out: the caller's own Employee record
         (Employee.user_id) is used, for self service and mobile. Called by
@@ -29,7 +29,7 @@ application can never be submitted).
 
 import frappe
 from frappe import _
-from frappe.utils import escape_html, getdate, today
+from frappe.utils import escape_html, flt, getdate, today
 
 from alantech_erp.loan_rules import engine
 from alantech_erp.loan_rules.loan_application import can_override
@@ -52,6 +52,7 @@ def check_loan_eligibility(
 	posting_date: str | None = None,
 	company: str | None = None,
 	loan_application: str | None = None,
+	loan_amount: float | None = None,
 ) -> dict:
 	"""{employee, employee_name, company, loan_product, posting_date, rule, enforcement, status,
 	eligible, blocked, results, failures, message, html, allow_override, can_override}
@@ -72,7 +73,13 @@ def check_loan_eligibility(
 	emp = engine.get_employee(employee)
 	company = company or emp.company
 	data = engine.check_eligibility(
-		employee, loan_product, posting_date, company=company, exclude_application=loan_application
+		employee,
+		loan_product,
+		posting_date,
+		company=company,
+		exclude_application=loan_application,
+		# blank amount: the salary-limit row only shows the maximum eligible amount
+		loan_amount=flt(loan_amount) if loan_amount not in (None, "") else None,
 	)
 	rule, results = data["rule"], data["results"]
 	out = {
