@@ -69,6 +69,7 @@ SALARY_COMPONENTS = {
 	"Professional Tax": ("PT", "Deduction", None, 200, 0),
 }
 SALARY_STRUCTURE = "Alantech Staff Salary"
+DEMO_GRADE = "Staff"  # Grade is needed to create an employee (employee_validation.REQUIRED_ON_CREATE)
 
 # --------------------------------------------------------------------------------- employees
 # (number, first, last, gender, designation, branch, email user (None: no login), monthly base, shift)
@@ -395,6 +396,7 @@ def _hr_masters(company):
 		_ensure("Branch", branch, name_field="branch")
 	for etype in EMPLOYMENT_TYPES:
 		_ensure("Employment Type", etype, name_field="employee_type_name")
+	_ensure("Employee Grade", DEMO_GRADE)
 	for expense in EXPENSE_CLAIM_TYPES:
 		_ensure("Expense Claim Type", expense, name_field="expense_type")
 
@@ -548,11 +550,16 @@ def _employees(company):
 				"gender": gender,
 				"date_of_birth": f"{1975 + int(number) % 20}-0{1 + int(number) % 9}-15",
 				"date_of_joining": f"{2015 + int(number) % 9}-04-01",
+				"alt_nationality": "India",  # mandatory (setup/employee_nationality.py)
+				# Indian nationals need both; demo values in the valid formats, not real numbers
+				"alt_aadhaar_number": f"2345{int(number):08d}",
+				"pan_number": f"DEMOE{int(number) % 10000:04d}A",
 				"company": company,
 				"status": "Active",
 				"designation": designation,
 				"branch": branch,
 				"employment_type": "Full-time",
+				"grade": DEMO_GRADE,
 				"cell_number": f"+91 98470 {int(number):05d}",
 				"company_email": email,
 				"prefered_contact_email": "Company Email" if email else "",

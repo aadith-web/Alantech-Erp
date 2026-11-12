@@ -228,6 +228,10 @@ has_permission = {
 # override_doctype_class = {
 # 	"ToDo": "custom_app.overrides.CustomToDo"
 # }
+override_doctype_class = {
+    # Employee import: unused rows of the Series-pre-filled template are skipped (setup/employee_import.py)
+    "Data Import": "alantech_erp.setup.employee_import.AlantechDataImport",
+}
 
 # Document Events
 # ---------------
@@ -307,12 +311,20 @@ doc_events = {
             "alantech_erp.setup.employee_validation.validate_unique_employee",
             "alantech_erp.setup.employee_validation.validate_unique_email",
             "alantech_erp.setup.employee_validation.validate_mobile_number",
+            # 18 or older on the Date of Joining
+            "alantech_erp.setup.employee_validation.validate_minimum_age",
             "alantech_erp.setup.access.employee_validate",
             # after apply_designation_defaults, which may fill Reports To
             "alantech_erp.setup.approvers.employee_validate",
             "alantech_erp.setup.shifts.employee_holiday_list",
             # last: Department / Reports To may be filled from the designation above
             "alantech_erp.setup.employee_validation.validate_required_on_create",
+            # Nationality (Citizen) on create, never cleared (ClickUp 14yr2e57r7h)
+            "alantech_erp.setup.employee_nationality.validate_nationality",
+            # Nationality India: Aadhaar + PAN mandatory; formats (ClickUp 14yr2e57r7k)
+            "alantech_erp.setup.employee_nationality.validate_indian_ids",
+            # blank Confirmation Date = Date of Joining + Probation Period (ClickUp 14yr2e57mhp)
+            "alantech_erp.setup.employee_payroll_fields.fill_confirmation_date",
         ],
         "on_update": [
             "alantech_erp.org_structure.sync_user_role_profile",
@@ -334,7 +346,19 @@ doc_events = {
         "on_update": "alantech_erp.setup.employee_fields.show_employee_number_in_list",
     },
     "Salary Slip": {
-        "validate": "alantech_erp.overtime_utils.add_overtime_components",
+        "validate": [
+            "alantech_erp.overtime_utils.add_overtime_components",
+            # hand-made slip: employee payroll fields filled (setup/employee_payroll_fields.py)
+            "alantech_erp.setup.employee_payroll_fields.salary_slip_validate",
+        ],
+    },
+    # Employee Mandatory Fields part 2: no payroll for an employee missing payroll fields
+    # (setup/employee_payroll_fields.py, ClickUp 14yr2e57mhp)
+    "Salary Structure Assignment": {
+        "before_submit": "alantech_erp.setup.employee_payroll_fields.salary_structure_assignment_before_submit",
+    },
+    "Payroll Entry": {
+        "before_submit": "alantech_erp.setup.employee_payroll_fields.payroll_entry_before_submit",
     },
     "Holiday List Assignment": {
         "validate": "alantech_erp.setup.shifts.set_assignment_status",
@@ -445,6 +469,8 @@ override_whitelisted_methods = {
 	# bell list never cached by the browser: another user's list was shown after a re-login
 	# (setup/notifications.py, ClickUp 14yr2e57crv)
 	"frappe.desk.doctype.notification_log.notification_log.get_notification_logs": "alantech_erp.setup.notifications.get_notification_logs",
+	# blank Employee template with Series pre-filled HR-EMP- (setup/employee_import.py, ClickUp 14yr2e57mja)
+	"frappe.core.doctype.data_import.data_import.download_template": "alantech_erp.setup.employee_import.download_template",
 }
 #
 # each overriding function accepts a `data` argument;
@@ -533,6 +559,10 @@ after_migrate = [
     "alantech_erp.setup.designations.execute",
     "alantech_erp.setup.access.execute",
     "alantech_erp.setup.employee_fields.execute",
+    # Bank Branch / PF-Gratuity date / Probation fields; Part 1 fields ticked in the import template
+    "alantech_erp.setup.employee_payroll_fields.execute",
+    # Nationality custom field, ticked in the import template
+    "alantech_erp.setup.employee_nationality.execute",
     "alantech_erp.setup.employee_validation.seed_employee_number_counter",
     "alantech_erp.setup.session_log_fields.execute",
     # Shift Type Work Mode / Early Check-in / Late Checkout / OT Rounding (before shifts.execute)

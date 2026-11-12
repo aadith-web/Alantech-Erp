@@ -307,7 +307,7 @@ frappe.ui.form.on("Employee", {
 const ALT_EMPLOYEE_REQUIRED = [
 	"first_name", "gender", "date_of_birth", "date_of_joining", "company", "status",
 	"department", "designation", "branch", "reports_to", "employment_type", "cell_number",
-	"default_shift",
+	"default_shift", "grade",
 ];
 const ALT_TOP_DESIGNATION = "Managing Director"; // reports to no one (org_structure.TOP_DESIGNATION)
 
@@ -389,3 +389,77 @@ const alt_employee_required = {
 			});
 	},
 };
+
+// Fields needed before the first payroll (ClickUp 14yr2e57mhp): listed at the top of a saved,
+// active employee until filled. Salary Structure Assignment / Payroll Entry are refused without
+// them (setup/employee_payroll_fields.py, which also decides the list).
+frappe.ui.form.on("Employee", {
+	refresh(frm) {
+		frm.set_intro("");
+		if (frm.is_new() || frm.doc.status !== "Active") return;
+		frappe
+			.xcall("alantech_erp.setup.employee_payroll_fields.get_missing_payroll_fields", {
+				employee: frm.doc.name,
+			})
+			.then((missing) => {
+				if (!missing || !missing.length || frm.doc.__unsaved) return;
+				const fields = missing.map((label) => frappe.utils.escape_html(label)).join(", ");
+				frm.set_intro(__("Needed before the first payroll: {0}", [fields]), "orange");
+			});
+	},
+});
+
+// Nationality (Citizen) is mandatory on new and existing employees (ClickUp 14yr2e57r7h). The
+// server refuses a new employee without it and never lets it be cleared
+// (setup/employee_nationality.py); older employees are asked for it on their next edit here.
+frappe.ui.form.on("Employee", {
+	refresh(frm) {
+		frm.toggle_reqd("alt_nationality", true);
+	},
+});
+
+// Minimum age: 18 on the Date of Joining (today when blank). Shown under Date of Birth as soon as
+// either date is entered; the save is refused by employee_validation.validate_minimum_age.
+const ALT_MINIMUM_AGE = 18;
+frappe.ui.form.on("Employee", {
+	date_of_birth: (frm) => alt_check_minimum_age(frm),
+	date_of_joining: (frm) => alt_check_minimum_age(frm),
+});
+
+function alt_check_minimum_age(frm) {
+	const { date_of_birth: dob, date_of_joining: doj } = frm.doc;
+	let note = "";
+	if (dob) {
+		const on = doj || frappe.datetime.get_today();
+		const age = Math.max(moment(on).diff(moment(dob), "years"), 0);
+		if (age < ALT_MINIMUM_AGE) {
+			note = `<span class="text-danger">${__(
+				"Must be at least {0} years old on the Date of Joining (now {1}).",
+				[ALT_MINIMUM_AGE, age]
+			)}</span>`;
+		}
+	}
+	frm.set_df_property("date_of_birth", "description", note);
+}
+
+// PAN Number in capitals while typing (ClickUp 14yr2e57r7k); the server upper-cases it too
+// (employee_nationality.validate_indian_ids).
+frappe.ui.form.on("Employee", {
+	refresh(frm) {
+		const $input = frm.get_field("pan_number")?.$input;
+		if (!$input || $input.data("alt-uppercase")) return;
+		$input.data("alt-uppercase", true);
+		$input.css("text-transform", "uppercase");
+		$input.on("input", function () {
+			const upper = this.value.toUpperCase();
+			if (this.value === upper) return;
+			const { selectionStart: start, selectionEnd: end } = this;
+			this.value = upper;
+			this.setSelectionRange(start, end);
+		});
+	},
+	pan_number(frm) {
+		const upper = (frm.doc.pan_number || "").toUpperCase();
+		if (frm.doc.pan_number && frm.doc.pan_number !== upper) frm.set_value("pan_number", upper);
+	},
+});

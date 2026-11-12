@@ -194,13 +194,57 @@ def format_mobile_number(number, region=None):
     return f"+{number.country_code}-{phonenumbers.national_significant_number(number)}"
 
 
+# Employees are at least MINIMUM_AGE years old on their Date of Joining (today when it is blank).
+MINIMUM_AGE = 18
+
+
+class UnderageEmployeeError(frappe.ValidationError):
+    pass
+
+
+def age_on(date_of_birth, on_date):
+    """Completed years between the two dates."""
+    from dateutil.relativedelta import relativedelta
+    from frappe.utils import getdate
+
+    return relativedelta(getdate(on_date), getdate(date_of_birth)).years
+
+
+def validate_minimum_age(doc, method=None):
+    """Employee.validate: 18 or older on the Date of Joining. New employees and changed Date of
+    Birth / Date of Joining only, so system saves of older records are not blocked."""
+    from frappe.utils import formatdate, today
+
+    if not doc.date_of_birth:
+        return
+    if not (doc.is_new() or doc.has_value_changed("date_of_birth") or doc.has_value_changed("date_of_joining")):
+        return
+    on_date = doc.date_of_joining or today()
+    age = age_on(doc.date_of_birth, on_date)
+    if age >= MINIMUM_AGE:
+        return
+    frappe.throw(
+        _(
+            "The employee must be at least {0} years old on the Date of Joining ({1}). "
+            "With Date of Birth {2} they are {3}."
+        ).format(
+            MINIMUM_AGE,
+            formatdate(on_date),
+            frappe.bold(formatdate(doc.date_of_birth)),
+            max(age, 0),
+        ),
+        UnderageEmployeeError,
+        title=_("Invalid Date of Birth"),
+    )
+
+
 # Needed to create an employee (form and Data Import). New employees only, so existing records
 # that miss one can still be saved. Department and Reports To may come from the designation
 # (org_structure.apply_designation_defaults, which runs before this). Same list in employee.js.
 REQUIRED_ON_CREATE = (
     "first_name", "gender", "date_of_birth", "date_of_joining", "company", "status",
     "department", "designation", "branch", "reports_to", "employment_type", "cell_number",
-    "default_shift",
+    "default_shift", "grade",
 )
 
 
