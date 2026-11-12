@@ -449,11 +449,11 @@ override_whitelisted_methods = {
 # override_doctype_dashboards = {
 # 	"Task": "alantech_erp.task.get_dashboard_data"
 # }
-override_doctype_dashboards = {
-	"Customer": "alantech_erp.sales.dashboards.customer",
-	"Lead": "alantech_erp.sales.dashboards.lead",
-	"Employee": "alantech_erp.alantech.dashboards.employee",
-}
+# override_doctype_dashboards = {
+# 	"Customer": "alantech_erp.sales.dashboards.customer",
+# 	"Lead": "alantech_erp.sales.dashboards.lead",
+# 	"Employee": "alantech_erp.alantech.dashboards.employee",
+# }
 
 # exempt linked doctypes from being automatically cancelled
 #

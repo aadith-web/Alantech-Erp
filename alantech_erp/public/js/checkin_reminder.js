@@ -20,13 +20,30 @@
       message = __("Your check-out for {0} is missing. Please request correction of the previous day's check-out before checking in.", [d.missing_checkout]);
       dlg = new frappe.ui.Dialog({ title: __("Check-in Reminder"), primary_action_label: __("OK"), primary_action: () => dlg.hide() });
     } else {
-      message = __("Hi {0}, you haven't marked your check-in for today ({1}). Please create your Employee Checkin now.", [d.employee_name, d.date]);
+      message = __("Hi {0}, you haven't marked your check-in for today ({1}).", [d.employee_name, d.date]);
       dlg = new frappe.ui.Dialog({
         title: __("Check-in Reminder"),
-        primary_action_label: __("Check In Now"),
+        primary_action_label: __("Check In"),
         primary_action() {
-          dlg.hide();
-          frappe.new_doc("Employee Checkin", { employee: d.employee });
+          dlg.disable_primary_action();
+          frappe.call({
+            method: "frappe.client.insert",
+            args: {
+              doc: {
+                doctype: "Employee Checkin",
+                employee: d.employee,
+                log_type: "IN",
+                time: frappe.datetime.now_datetime(),
+              },
+            },
+            callback() {
+              dlg.hide();
+              frappe.show_alert({ message: __("Checked in"), indicator: "green" });
+            },
+            error() {
+              dlg.enable_primary_action();
+            },
+          });
         },
         secondary_action_label: __("Later"),
         secondary_action: () => dlg.hide(),
