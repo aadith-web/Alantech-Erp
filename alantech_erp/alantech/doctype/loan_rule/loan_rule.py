@@ -12,6 +12,7 @@ Rules enforced here (on save):
 - valid_from <= valid_upto (either may be blank)
 - max_age >= min_age when both are set
 - limits and ages are never negative; 0 / blank means "no limit"
+- Annual Salary Loan Eligibility (%) is never negative; 0 / blank means no salary-based limit
 - no duplicate rows in an applicability table; a blank table means "applies to all"
 - override_role is required when allow_override is ticked, and cleared when it is not
 
@@ -21,7 +22,7 @@ Priority: the higher number wins; ties are broken by specificity (get_specificit
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import cint, getdate
+from frappe.utils import cint, flt, getdate
 
 # (table fieldname, link fieldname in the child row)
 APPLICABILITY_TABLES = (
@@ -61,6 +62,10 @@ class LoanRule(Document):
 		for field in NON_NEGATIVE_FIELDS:
 			if cint(self.get(field)) < 0:
 				frappe.throw(_("{0} cannot be negative.").format(_(self.meta.get_label(field))))
+		if flt(self.get("annual_salary_loan_percent")) < 0:
+			frappe.throw(
+				_("{0} cannot be negative.").format(_(self.meta.get_label("annual_salary_loan_percent")))
+			)
 
 	def validate_age_range(self):
 		if cint(self.min_age) and cint(self.max_age) and cint(self.max_age) < cint(self.min_age):

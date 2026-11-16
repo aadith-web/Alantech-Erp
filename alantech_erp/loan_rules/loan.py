@@ -25,6 +25,11 @@ by hand (Add Loan, import, API) would skip them, so:
                    on the Loan does).
 
 Loans submitted before this rule (without an application) are left as they are.
+
+    set_applicant_name(doc)  Loan validate and Loan Application before_validate: Applicant Name is
+                   filled from the Employee on the server. Lending fills it only in the browser by
+                   loading the Employee record, which Accounts / Loan users cannot read, so it stayed
+                   empty and the form showed only the employee ID.
 """
 
 import frappe
@@ -36,12 +41,23 @@ class LoanWithoutApplicationError(frappe.ValidationError):
 	pass
 
 
+class AutoDisbursementNotAllowedError(frappe.PermissionError):
+	pass
+
+
 TITLE = _("Loan Application Required")
+
+
+def set_applicant_name(doc):
+	if doc.get("applicant_type") == "Employee" and doc.get("applicant"):
+		doc.applicant_name = frappe.db.get_value("Employee", doc.applicant, "employee_name")
 
 
 def validate(doc, method=None):
 	if doc.docstatus == 2:
 		return
+	set_applicant_name(doc)
+	validate_auto_disbursement(doc)
 	if not doc.loan_application:
 		frappe.throw(
 			_(
@@ -99,6 +115,23 @@ def validate(doc, method=None):
 		)
 
 
+def validate_auto_disbursement(doc):
+	"""Lending's Auto Create Disbursement on Loan Booking makes and submits the Loan Disbursement as
+	the user submitting the Loan. Loans are made by the HR Head, disbursements by the Accounts Head
+	(setup/loan_permissions.py EXACT), so it is refused for a user who cannot disburse."""
+	from alantech_erp.setup.loan_permissions import can_create_loan_disbursement
+
+	if doc.get("auto_create_disbursement_on_loan_booking") and not can_create_loan_disbursement():
+		frappe.throw(
+			_(
+				"Untick Auto Create Disbursement on Loan Booking: loans are disbursed by the Accounts "
+				"Department Head through a Loan Disbursement."
+			),
+			AutoDisbursementNotAllowedError,
+			title=_("Not Permitted"),
+		)
+
+
 @frappe.whitelist()
 def approved_applications_without_loan():
 	"""Approved Loan Applications the user can read that have no Loan (other than a cancelled one)."""
@@ -144,3 +177,34 @@ def loans_awaiting_disbursement():
 		if not loan.applicant_name and loan.applicant:
 			loan.applicant_name = frappe.db.get_value("Employee", loan.applicant, "employee_name")
 	return [loan for loan in loans if loan.pending_amount > 0]
+
+
+# Lending doctypes whose Applicant is an Employee (Dynamic Link on applicant_type); the employee's
+# name is shown under the Applicant box by public/js/loan_applicant_name.js
+APPLICANT_NAME_DOCTYPES = (
+	"Collection Case",
+	"Loan",
+	"Loan Application",
+	"Loan Balance Adjustment",
+	"Loan Demand",
+	"Loan Disbursement",
+	"Loan Interest Accrual",
+	"Loan Refund",
+	"Loan Repayment",
+	"Loan Restructure",
+	"Loan Security Assignment",
+	"Loan Security Release",
+	"Loan Security Shortfall",
+	"Loan Write Off",
+	"Sanctioned Loan Amount",
+)
+
+
+@frappe.whitelist()
+def get_applicant_name(doctype: str, applicant: str) -> str | None:
+	"""Employee name for the Applicant box on a Lending form. Users of these forms (Accounts, Loan
+	roles) often cannot read Employee, so the name is read here for anyone who can read the form's
+	doctype, never the rest of the Employee record."""
+	if doctype not in APPLICANT_NAME_DOCTYPES or not frappe.has_permission(doctype, "read"):
+		return None
+	return frappe.db.get_value("Employee", applicant, "employee_name")

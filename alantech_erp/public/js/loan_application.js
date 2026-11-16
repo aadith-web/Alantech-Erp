@@ -12,10 +12,22 @@
 //    visible, read-only for other users. The server checks the role again on save.
 
 const ALT_LOAN_API = "alantech_erp.loan_rules.api";
-const ALT_PREVIEW_TRIGGERS = ["applicant_type", "applicant", "loan_product", "posting_date", "company"];
+const ALT_PREVIEW_TRIGGERS = [
+	"applicant_type",
+	"applicant",
+	"loan_product",
+	"posting_date",
+	"company",
+	"loan_amount", // Annual Salary Loan Eligibility (%) compares it with the salary limit
+];
 
 frappe.ui.form.on("Loan Application", {
 	refresh(frm) {
+		// Loans are made by the HR Head (HR Manager) only (setup/loan_permissions.py); Lending adds
+		// Create > Loan after a server call, so it is removed once that call has returned
+		if (!frm.is_new() && !frappe.model.can_create("Loan")) {
+			frappe.after_ajax(() => frm.remove_custom_button(__("Loan"), __("Create")));
+		}
 		frm._alt_eligibility = null;
 		frm.doc.__eligibility_preview = 0;
 		alt_toggle_override(frm); // hidden until the rule's Override Role is known
@@ -71,6 +83,7 @@ function alt_preview_eligibility(frm) {
 				posting_date: frm.doc.posting_date || null,
 				company: frm.doc.company || null,
 				loan_application: frm.is_new() ? null : frm.doc.name,
+				loan_amount: frm.doc.loan_amount || null,
 			},
 		})
 		.then((r) => {

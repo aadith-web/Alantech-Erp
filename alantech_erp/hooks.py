@@ -47,6 +47,8 @@ app_include_js = [
     "/assets/alantech_erp/js/checkin_reminder.js",
     # Activity menu + Activities panel on Lead, Customer and Deal (CRM C10, sales/activity.py)
     "/assets/alantech_erp/js/sales_activity.js",
+    # Lending forms: employee name under the Applicant box (loan_rules/loan.get_applicant_name)
+    "/assets/alantech_erp/js/loan_applicant_name.js",
 ]
 
 # include js, css files in header of web template
@@ -89,6 +91,8 @@ doctype_js = {
     "Loan Product": "public/js/loan_product.js",
     # Loan Eligibility check list rendered as a table, not raw HTML text
     "Loan Application": "public/js/loan_application.js",
+    # hides Create > Loan Disbursement from users who cannot disburse
+    "Loan": "public/js/loan.js",
     "Employee Checkin": "public/js/employee_checkin.js",
     # Campaign owner, budget, costs, child campaigns and results (CRM C36)
     "Campaign": "public/js/campaign.js",

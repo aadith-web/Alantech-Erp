@@ -8,6 +8,8 @@ Run:
     bench --site alantech.localhost run-tests --module alantech_erp.tests.test_unit_loan_rule_engine
 """
 
+from unittest.mock import patch
+
 import frappe
 from frappe.tests import UnitTestCase
 
@@ -198,3 +200,53 @@ class TestPresentation(UnitTestCase):
 		self.assertNotIn("<b>Rule</b>", html)
 		self.assertIn("Failed", html)
 		self.assertIn("Not Eligible", html)
+
+
+class TestSalaryLimit(UnitTestCase):
+	"""Loan Rule > Annual Salary Loan Eligibility (%): max loan = annual gross salary x % / 100."""
+
+	def test_example_from_policy(self):
+		# annual gross 6,00,000 at 50% -> maximum 3,00,000; exactly the maximum passes
+		r = engine.check_salary_limit(50, 600000, 300000)
+		self.assertTrue(r["passed"])
+		self.assertEqual(r["check"], engine.SALARY_LIMIT)
+		self.assertEqual(r["max_eligible_amount"], 300000)
+		self.assertIn("50%", r["expected"])
+
+	def test_above_maximum_fails(self):
+		r = engine.check_salary_limit(50, 600000, 300001)
+		self.assertFalse(r["passed"])
+		self.assertIn("more than the maximum eligible", r["message"])
+
+	def test_fractional_percent(self):
+		self.assertEqual(engine.check_salary_limit(12.5, 480000, 1)["max_eligible_amount"], 60000)
+
+	def test_no_salary_structure_fails(self):
+		r = engine.check_salary_limit(50, None, 1000)
+		self.assertFalse(r["passed"])
+		self.assertIn("No Salary Structure Assignment", r["message"])
+
+	def test_without_amount_only_shows_limit(self):
+		r = engine.check_salary_limit(50, 600000)
+		self.assertTrue(r["passed"])
+		self.assertEqual(r["max_eligible_amount"], 300000)
+
+	def _run(self, percent, loan_amount):
+		rule_doc = frappe._dict(same_product_only=0, annual_salary_loan_percent=percent)
+		emp = frappe._dict(name="EMP-X", company="X", status="Active")
+		with patch.object(engine, "annual_gross_salary", return_value=600000) as gross:
+			results = engine.run_checks(rule_doc, emp, "2026-11-11", "PL", "X", None, loan_amount)
+		return results, gross
+
+	def test_run_checks_adds_row_only_when_percent_set(self):
+		results, gross = self._run(0, 999999)
+		self.assertNotIn(engine.SALARY_LIMIT, [r["check"] for r in results])
+		gross.assert_not_called()
+
+		results, _gross = self._run(50, 300001)
+		row = next(r for r in results if r["check"] == engine.SALARY_LIMIT)
+		self.assertFalse(row["passed"])
+
+	def test_periods_per_year(self):
+		self.assertEqual(engine.PERIODS_PER_YEAR["Monthly"], 12)
+		self.assertEqual(engine.PERIODS_PER_YEAR["Bimonthly"], 24)

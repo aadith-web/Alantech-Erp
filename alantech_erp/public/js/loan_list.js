@@ -14,6 +14,8 @@
 	const lending_onload = settings.onload;
 	settings.onload = function (listview) {
 		if (lending_onload) lending_onload.call(this, listview);
+		// only users who may create it (Loan: HR Head, Loan Disbursement: Accounts Head)
+		if (!frappe.model.can_create("Loan")) return;
 		listview.alt_approved_button = listview.page.add_inner_button(__("Approved Applications"), () =>
 			show_approved_applications()
 		);

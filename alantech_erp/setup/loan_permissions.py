@@ -32,6 +32,20 @@ Frappe Lending's own permissions are extended here (never in its JSON):
                         slip of an employee with a Repay From Salary loan
       Loan Origination Settings  HR Manager, HR User, Employee, Loan Manager, Loan LOS User read
                         (Lending's Loan Application form script reads it on every load)
+      Loan Purpose      HR Manager, HR User, Employee, Loan Manager, Loan LOS User read / select
+                        (Loan Purpose link on Loan Application)
+      Loan Disbursement Accounts Manager (Accounts Department Head) full; Loan, Loan Product read
+
+    Separation of duties (EXACT, set on every run, not create-only): every employee applies (Loan
+    Application); only the HR Head (HR Manager) creates / submits / cancels the Loan; only the
+    Accounts Head (Accounts Manager) creates / submits / cancels the Loan Disbursement. Both heads
+    also hold Lending's Loan Manager role (setup/loan_roles.py, org_structure ALT Accounts Head),
+    which Lending gives full rights on both doctypes, so its rows there are cut to read-only:
+      Loan              Loan Manager  read only (an Accounts Head sees the loan, cannot make it)
+      Loan Disbursement Loan Manager  read only (an HR Head sees the payout, cannot make it)
+    loan_rules/loan.py refuses "Auto Create Disbursement on Loan Booking" for a user who cannot
+    create the disbursement; public/js hides Lending's Create > Loan / Loan Disbursement buttons
+    from users without create rights.
 
     Own records only (hooks.py permission_query_conditions / has_permission): Lending gives the
     Employee role create / submit on Loan Application and read on Loan, and Applicant is a Dynamic
@@ -93,6 +107,25 @@ PERMISSIONS = {
 		("Loan Origination Settings", role, 0): ("read",)
 		for role in ("HR Manager", "HR User", "Employee", "Loan Manager", "Loan LOS User")
 	},
+	# Loan Application's Loan Purpose link: Lending grants Loan Purpose to System Manager only, so
+	# the form stopped with "Insufficient Permission for Loan Purpose" for everyone else (the Loan
+	# Manager / Accounts Head, HR, an employee applying). Read only; System Manager keeps the master.
+	**{
+		("Loan Purpose", role, 0): ("read", "select")
+		for role in ("HR Manager", "HR User", "Employee", "Loan Manager", "Loan LOS User")
+	},
+	# the Accounts Department Head disburses loans (separation of duties, see EXACT)
+	("Loan Disbursement", "Accounts Manager", 0): ("read", "write", "create", "submit", "cancel", "amend", "report", "export", "print", "email", "share"),
+	("Loan", "Accounts Manager", 0): ("read", "report", "print"),
+	("Loan Product", "Accounts Manager", 0): ("read",),
+}
+
+_READ_ONLY = ("read", "report", "export", "print", "email", "share")
+
+# (doctype, role, permlevel): exactly these rights, every other right off; enforced on every run
+EXACT = {
+	("Loan", "Loan Manager", 0): _READ_ONLY,  # Loan is made by the HR Head (HR Manager)
+	("Loan Disbursement", "Loan Manager", 0): _READ_ONLY,  # disbursed by the Accounts Head
 }
 
 OWN_RECORD_DOCTYPES = ("Loan Application", "Loan")
@@ -118,6 +151,21 @@ def execute():
 		add_permission(doctype, role, permlevel, "read")
 		frappe.db.set_value("Custom DocPerm", key, {right: 1 for right in rights})
 		frappe.clear_cache(doctype=doctype)
+
+	for (doctype, role, permlevel), rights in EXACT.items():
+		if not (frappe.db.exists("DocType", doctype) and frappe.db.exists("Role", role)):
+			continue
+		key = {"parent": doctype, "role": role, "permlevel": permlevel, "if_owner": 0}
+		if not frappe.db.exists("Custom DocPerm", key):
+			add_permission(doctype, role, permlevel, "read")
+		values = {right: int(right in rights) for right in _FULL}
+		if any(frappe.db.get_value("Custom DocPerm", key, right) != value for right, value in values.items()):
+			frappe.db.set_value("Custom DocPerm", key, values)
+			frappe.clear_cache(doctype=doctype)
+
+
+def can_create_loan_disbursement(user=None):
+	return bool(frappe.has_permission("Loan Disbursement", "create", user=user or frappe.session.user))
 
 
 # ---------------------------------------------------------------------- own records only

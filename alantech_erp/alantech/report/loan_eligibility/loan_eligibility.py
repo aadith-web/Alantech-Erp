@@ -6,7 +6,8 @@ loan application today (or on As On Date) and whether the employee would pass it
 ClickUp: https://app.clickup.com/t/14yr2e57ghm (parent 14yr2e57ghb)
 
 Columns: employee, name, department, grade, matched Loan Rule, Eligible (Yes / No), first failed
-reason, next eligible date (cooling-off: last loan closed + the rule's cooling-off months).
+reason, next eligible date (cooling-off: last loan closed + the rule's cooling-off months), max
+eligible loan amount (Annual Salary Loan Eligibility % of annual gross salary).
 Filters: Company and Loan Product (required; a rule limited to products only matches a chosen
 product, so a blank product would show "No Loan Rule" for everyone; the form picks the product
 when the company has just one), Department (with its sub-departments), As On Date.
@@ -52,6 +53,8 @@ def get_columns():
 		{"fieldname": "eligible", "label": _("Eligible"), "fieldtype": "Data", "width": 80},
 		{"fieldname": "failed_reason", "label": _("First Failed Reason"), "fieldtype": "Data", "width": 320},
 		{"fieldname": "next_eligible_date", "label": _("Next Eligible Date"), "fieldtype": "Date", "width": 130},
+		# Loan Rule > Annual Salary Loan Eligibility (%) x annual gross salary; blank = no limit
+		{"fieldname": "max_eligible_amount", "label": _("Max Eligible Loan Amount"), "fieldtype": "Currency", "width": 160},
 	]
 
 
@@ -82,6 +85,7 @@ def get_data(filters):
 		results = engine.run_checks(rule, emp, filters.as_on_date, filters.loan_product, filters.company)
 		failures = engine.failure_messages(results)
 		cooling_off = next((r for r in results if r["check"] == engine.COOLING_OFF), None)
+		salary_limit = next((r for r in results if r["check"] == engine.SALARY_LIMIT), None)
 		row.update(
 			loan_rule=name,
 			eligible=NO if failures else YES,
@@ -89,6 +93,7 @@ def get_data(filters):
 			next_eligible_date=(
 				cooling_off.get("eligible_from") if cooling_off and not cooling_off["passed"] else None
 			),
+			max_eligible_amount=salary_limit.get("max_eligible_amount") if salary_limit else None,
 		)
 		data.append(row)
 	return data
