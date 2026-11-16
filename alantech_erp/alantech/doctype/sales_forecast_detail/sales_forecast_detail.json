@@ -1,0 +1,170 @@
+{
+ "actions": [],
+ "creation": "2026-11-11 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "sales_person",
+  "parent_sales_person",
+  "is_group",
+  "indent",
+  "target",
+  "closed_won",
+  "commit_amount",
+  "best_case",
+  "pipeline",
+  "weighted_pipeline",
+  "numbers_column",
+  "forecast",
+  "best_case_forecast",
+  "manager_adjusted",
+  "gap",
+  "achievement_pct",
+  "adjustment_remarks"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "sales_person",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Sales Person",
+   "options": "Sales Person",
+   "read_only": 1
+  },
+  {
+   "fieldname": "parent_sales_person",
+   "fieldtype": "Link",
+   "label": "Reports To",
+   "options": "Sales Person",
+   "read_only": 1
+  },
+  {
+   "fieldname": "is_group",
+   "fieldtype": "Check",
+   "label": "Team",
+   "read_only": 1
+  },
+  {
+   "fieldname": "indent",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Indent",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "target",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Target",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "closed_won",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Closed Won",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "commit_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Commit",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "best_case",
+   "fieldtype": "Currency",
+   "label": "Best Case",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pipeline",
+   "fieldtype": "Currency",
+   "label": "Pipeline",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "weighted_pipeline",
+   "fieldtype": "Currency",
+   "label": "Weighted Pipeline",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "numbers_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "description": "Closed Won + Commit",
+   "fieldname": "forecast",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "System Forecast",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "description": "Closed Won + Commit + Best Case",
+   "fieldname": "best_case_forecast",
+   "fieldtype": "Currency",
+   "label": "Best Case Forecast",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "description": "The figure the manager commits to; starts at the System Forecast",
+   "fieldname": "manager_adjusted",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Manager Forecast",
+   "options": "currency"
+  },
+  {
+   "columns": 1,
+   "fieldname": "gap",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Gap to Target",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "achievement_pct",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Achieved %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "adjustment_remarks",
+   "fieldtype": "Small Text",
+   "label": "Adjustment Remarks"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-11-11 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Sales Forecast Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

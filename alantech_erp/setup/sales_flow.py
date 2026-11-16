@@ -226,7 +226,8 @@ CUSTOM_FIELDS = {
 			"in_list_view": 1,
 			"in_standard_filter": 1,
 			"description": (
-				"Local: GSTIN is mandatory and the customer needs an address with that GSTIN. "
+				"Local: GSTIN is mandatory and the customer needs an address with that GSTIN, unless the "
+				"GST Category (Tax tab) is Unregistered: then no GSTIN, billing address in India. "
 				"Overseas: GST Category Overseas, no GSTIN."
 			),
 		},

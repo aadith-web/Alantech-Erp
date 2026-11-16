@@ -46,6 +46,7 @@ from alantech_erp.proposal import (
 	get_sub_assembly,
 	section_title_of,
 )
+from alantech_erp.sales.campaign import estimation_campaign
 
 CLOSED_DEAL_STATUSES = ("Lost", "Closed", "Converted")
 
@@ -171,6 +172,8 @@ class Estimation(Document):
 	def validate(self):
 		self.set_company_and_currency()
 		self.validate_customer()
+		# Campaign (CRM C24): from the Deal or the Customer when not chosen
+		estimation_campaign(self)
 		if cint(self.no_of_trains) < 1:
 			self.no_of_trains = 1
 		self.validate_sections()

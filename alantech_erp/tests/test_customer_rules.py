@@ -136,3 +136,49 @@ class TestCustomerRules(TestCase):
 		doc.alt_customer_stage = "Customer"
 		doc.save()
 		self.assertEqual(frappe.db.get_value("Customer", doc.name, "alt_customer_stage"), "Account")
+
+
+class TestLocalUnregistered(TestCase):
+	"""Tax Type Local: GSTIN mandatory for a Company registered under GST, not when its GST Category
+	is Unregistered (sales/customer.py gstin_required)."""
+
+	def setUp(self):
+		if not frappe.get_meta("Customer").has_field("gst_category"):
+			self.skipTest("India Compliance not installed")
+
+	def tearDown(self):
+		frappe.db.rollback()
+
+	def test_unregistered_company_needs_no_gstin(self):
+		doc = _customer(
+			"TEST-CUST Local Unregistered",
+			"+91-9847011101",
+			"unreg@test-cust.example",
+			alt_tax_type="Local",
+			gst_category="Unregistered",
+			gstin=None,
+			default_currency=None,
+		)
+		doc.insert()
+		self.assertEqual(doc.gst_category, "Unregistered")
+		self.assertFalse(doc.gstin)
+
+	def test_registered_company_needs_gstin(self):
+		doc = _customer(
+			"TEST-CUST Local Registered",
+			"+91-9847011102",
+			"reg@test-cust.example",
+			alt_tax_type="Local",
+			gst_category="Registered Regular",
+			gstin=None,
+			default_currency=None,
+		)
+		with self.assertRaises(frappe.ValidationError):
+			doc.insert()
+
+	def test_rule_helper(self):
+		from alantech_erp.sales.customer import gstin_required
+
+		self.assertTrue(gstin_required("Company", "Registered Regular"))
+		self.assertFalse(gstin_required("Company", "Unregistered"))
+		self.assertFalse(gstin_required("Individual", "Registered Regular"))
