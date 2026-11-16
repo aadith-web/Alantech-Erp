@@ -49,6 +49,14 @@ frappe.ui.form.on("Estimation", {
 
 	customer(frm) {
 		frm.set_value("contact_person", null);
+		// Campaign (CRM C24): the customer's campaign, unless one is already chosen
+		if (frm.doc.customer && !frm.doc.utm_campaign) {
+			frappe.db.get_value("Customer", frm.doc.customer, "alt_campaign").then(({ message }) => {
+				if (message && message.alt_campaign && !frm.doc.utm_campaign) {
+					frm.set_value("utm_campaign", message.alt_campaign);
+				}
+			});
+		}
 	},
 
 	plant_assembly(frm) {
