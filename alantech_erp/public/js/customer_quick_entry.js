@@ -2,7 +2,7 @@
 // address are mandatory, so the GST address is created with the customer
 // (alantech_erp/sales/customer.py). Overseas -> GST Category Overseas, no GSTIN.
 // CRM-F04: Email and Mobile Number mandatory (mobile with its country code, unique per customer,
-// sales/customer_unique.py); GSTIN optional for an Individual.
+// sales/customer_unique.py); GSTIN optional for an Individual or GST Category Unregistered.
 //
 // India Compliance and ERPNext each set frappe.ui.form.CustomerQuickEntryForm, in app order; the
 // property below wraps whichever class is set last, so this file can load before or after them.
@@ -10,7 +10,8 @@
 	frappe.provide("frappe.ui.form");
 
 	const LOCAL_ONLY = "eval:doc.alt_tax_type=='Local'";
-	const GSTIN_NEEDED = "eval:doc.alt_tax_type=='Local' && doc.customer_type!='Individual'";
+	// not for an Individual or a customer not registered under GST (GST Category Unregistered)
+	const GSTIN_NEEDED = "eval:doc.alt_tax_type=='Local' && doc.customer_type!='Individual' && doc.gst_category!='Unregistered'";
 	// ERPNext aliases (email_address / mobile_number), India Compliance and plain names
 	const EMAIL_FIELDS = ["email_address", "_email_id", "email_id"];
 	const MOBILE_FIELDS = ["mobile_number", "_mobile_no", "mobile_no"];
@@ -68,6 +69,15 @@
 					if (field) field.df.depends_on = "eval:doc.alt_tax_type!='Overseas'";
 				}
 
+				const gst_category = dialog.fields_dict.gst_category;
+				if (gst_category) {
+					const previous_category = gst_category.df.onchange;
+					gst_category.df.onchange = function () {
+						if (previous_category) previous_category.apply(this, arguments);
+						dialog.refresh_dependency();
+					};
+				}
+
 				const tax_type = dialog.fields_dict.alt_tax_type;
 				const previous = tax_type.df.onchange;
 				tax_type.df.onchange = function () {
@@ -75,7 +85,7 @@
 					const value = dialog.get_value("alt_tax_type");
 					if (dialog.fields_dict.gst_category) {
 						if (value === "Overseas") dialog.set_value("gst_category", "Overseas");
-						else if (value === "Local" && ["", "Overseas", "Unregistered"].includes(dialog.get_value("gst_category") || ""))
+						else if (value === "Local" && ["", "Overseas"].includes(dialog.get_value("gst_category") || ""))
 							dialog.set_value("gst_category", "Registered Regular");
 					}
 					if (value === "Overseas") {

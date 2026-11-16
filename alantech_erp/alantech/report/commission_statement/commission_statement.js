@@ -22,7 +22,7 @@ frappe.query_reports["Commission Statement"] = {
 			fieldname: "basis",
 			label: __("Basis"),
 			fieldtype: "Select",
-			options: ["", "Sales Order", "Sales Invoice", "Payment Received"],
+			options: ["", "Opportunity", "Sales Order", "Sales Invoice", "Payment Received"],
 		},
 		{ fieldname: "status", label: __("Status"), fieldtype: "Select", options: ["", "Paid", "Unpaid"] },
 	],

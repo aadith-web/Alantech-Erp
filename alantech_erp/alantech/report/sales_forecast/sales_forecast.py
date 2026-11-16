@@ -168,6 +168,16 @@ def drill_down(company, sales_person, column, from_date, to_date):
 	team = frappe.get_all("Sales Person", filters={"lft": [">=", lft], "rgt": ["<=", rgt]}, pluck="name")
 	if column == "closed_won":
 		source = forecast.settings().won_source
+		if source == forecast.OPPORTUNITY:
+			return {
+				"doctype": "Opportunity",
+				"filters": {
+					forecast.SALES_PERSON_FIELD: ["in", team],
+					"company": company,
+					forecast.CATEGORY_FIELD: forecast.CLOSED,
+					forecast.WON_DATE_FIELD: ["between", [str(from_date), str(to_date)]],
+				},
+			}
 		date_field = "transaction_date" if source == forecast.SALES_ORDER else "posting_date"
 		names = frappe.get_all(
 			"Sales Team",

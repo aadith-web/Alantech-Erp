@@ -25,12 +25,16 @@ from alantech_erp.sales.forecast import (
 	BEST_CASE,
 	CATEGORIES,
 	CATEGORY_FIELD,
+	CLOSED,
 	COMMIT,
 	OMITTED,
 	PIPELINE,
 	SALES_PERSON_FIELD,
 	SETTINGS,
 	STAGE_PROBABILITY_FIELD,
+	WON_AMOUNT_FIELD,
+	WON_BY_FIELD,
+	WON_DATE_FIELD,
 	category_for_status,
 )
 
@@ -59,6 +63,37 @@ CUSTOM_FIELDS = {
 			"search_index": 1,
 			"read_only": 1,
 			"description": "From the Deal owner's employee; the forecast rolls up the Sales Person tree from here",
+		},
+		{
+			"fieldname": WON_DATE_FIELD,
+			"label": "Won Date",
+			"fieldtype": "Date",
+			"insert_after": CATEGORY_FIELD,
+			"read_only": 1,
+			"no_copy": 1,
+			"in_standard_filter": 1,
+			"depends_on": f"eval:doc.{WON_DATE_FIELD}",
+			"description": "The Sales Order date, or the day it was closed by hand",
+		},
+		{
+			"fieldname": WON_AMOUNT_FIELD,
+			"label": "Won Amount (Company Currency)",
+			"fieldtype": "Currency",
+			"options": "Company:company:default_currency",
+			"insert_after": WON_DATE_FIELD,
+			"read_only": 1,
+			"no_copy": 1,
+			"depends_on": f"eval:doc.{WON_DATE_FIELD}",
+		},
+		{
+			"fieldname": WON_BY_FIELD,
+			"label": "Won By Sales Order",
+			"fieldtype": "Link",
+			"options": "Sales Order",
+			"insert_after": WON_AMOUNT_FIELD,
+			"read_only": 1,
+			"no_copy": 1,
+			"depends_on": f"eval:doc.{WON_BY_FIELD}",
 		},
 	],
 	"Sales Stage": [
@@ -120,19 +155,27 @@ def _seed_stages():
 
 
 def _backfill_deals():
+	"""Sales Person / category for Deals made before this feature; Won Date for Deals already won."""
 	from alantech_erp.sales.hierarchy import sales_person_of_user
 
 	deals = frappe.get_all(
 		"Opportunity",
-		or_filters={SALES_PERSON_FIELD: ["is", "not set"], CATEGORY_FIELD: ["is", "not set"]},
+		or_filters={
+			SALES_PERSON_FIELD: ["is", "not set"],
+			CATEGORY_FIELD: ["is", "not set"],
+			"status": "Converted",
+		},
 		fields=[
 			"name",
 			"opportunity_owner",
 			"owner",
 			"sales_stage",
 			"status",
+			"modified",
+			"base_opportunity_amount",
 			SALES_PERSON_FIELD,
 			CATEGORY_FIELD,
+			WON_DATE_FIELD,
 		],
 	)
 	categories = dict(frappe.get_all("Sales Stage", fields=["name", CATEGORY_FIELD], as_list=True))
@@ -146,6 +189,12 @@ def _backfill_deals():
 			values[CATEGORY_FIELD] = (
 				category_for_status(deal.status) or categories.get(deal.sales_stage) or PIPELINE
 			)
+		if (values.get(CATEGORY_FIELD) or deal.get(CATEGORY_FIELD)) == CLOSED and not deal.get(
+			WON_DATE_FIELD
+		):
+			# won before this feature: dated on its last change, at the Deal amount
+			values[WON_DATE_FIELD] = frappe.utils.getdate(deal.modified)
+			values[WON_AMOUNT_FIELD] = deal.base_opportunity_amount
 		if values:
 			frappe.db.set_value("Opportunity", deal.name, values, update_modified=False)
 

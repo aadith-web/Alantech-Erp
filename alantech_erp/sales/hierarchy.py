@@ -12,7 +12,7 @@ The ERPNext Sales Person tree follows the sales line (built from Employee by sal
 Each Sales Person is linked to its user through the Employee record (Employee.user_id), so the
 tree tells who sits under whom.
 
-Access (Lead, Customer, Estimation, Technical Offer, Quotation, Deal, Sales Order):
+Access (Lead, Customer, Estimation, Technical Offer, Quotation, Deal, Sales Order, Sales Activity):
     Sales Engineer   records they created, own or are assigned to
     Sales Manager    the same for themselves and everyone below them in the tree
     Sales Director   everything (top of the sales line), like any user outside the tree
@@ -51,6 +51,7 @@ USER_FIELDS = {
 	"Technical Offer": ("sales_user",),
 	"Quotation": ("alt_level_1_user", "alt_level_2_user"),  # the approvers named on it
 	"Sales Order": (),
+	"Sales Activity": ("activity_owner",),
 }
 
 
@@ -218,6 +219,7 @@ estimation_query = _make_query("Estimation")
 technical_offer_query = _make_query("Technical Offer")
 quotation_query = _make_query("Quotation")
 sales_order_query = _make_query("Sales Order")
+sales_activity_query = _make_query("Sales Activity")
 
 
 def has_permission(doc, ptype=None, user=None, debug=False):

@@ -57,12 +57,12 @@
   },
   {
    "default": "Sales Invoice",
-   "description": "Payment Received: only the paid share of each invoice counts",
+   "description": "Opportunity: the Won Amount of each Deal won (Zoho closed-won deals). Payment Received: only the paid share of each invoice counts",
    "fieldname": "basis",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Commission On",
-   "options": "Sales Invoice\nSales Order\nPayment Received",
+   "options": "Sales Invoice\nSales Order\nOpportunity\nPayment Received",
    "reqd": 1
   },
   {

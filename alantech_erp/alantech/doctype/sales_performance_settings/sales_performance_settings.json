@@ -28,11 +28,11 @@
   },
   {
    "default": "Sales Order",
-   "description": "Submitted documents counted as won business (net total, split by the Sales Team %)",
+   "description": "Counted as won business. Sales Order / Sales Invoice: submitted in the period, net total split by the Sales Team %. Opportunity: Deals won in the period (Won Date, Won Amount), to the Deal's Sales Person",
    "fieldname": "won_source",
    "fieldtype": "Select",
    "label": "Closed Won From",
-   "options": "Sales Order\nSales Invoice",
+   "options": "Sales Order\nSales Invoice\nOpportunity",
    "reqd": 1
   },
   {
@@ -65,7 +65,7 @@
    "fieldname": "default_basis",
    "fieldtype": "Select",
    "label": "Default Commission Basis",
-   "options": "Sales Invoice\nSales Order\nPayment Received"
+   "options": "Sales Invoice\nSales Order\nOpportunity\nPayment Received"
   },
   {
    "fieldname": "commission_column",

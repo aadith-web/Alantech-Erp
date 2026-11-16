@@ -385,3 +385,116 @@ class TestCommission(SalesPerformanceCase):
 			(paid[0].basis, flt(paid[0].base_amount), paid[0].against_voucher),
 			("Payment Received", 2500, inv.name),
 		)
+
+
+class TestDealWon(SalesPerformanceCase):
+	"""Opportunity as a source: won Deals in the forecast and Deal commission."""
+
+	def quotation_for(self, deal):
+		q = frappe.get_doc(
+			{"doctype": "Quotation", "company": self.company, "docstatus": 1, "opportunity": deal.name}
+		)
+		q.name = frappe.generate_hash(length=10)
+		q.db_insert()
+		return q.name
+
+	def order(self, quotation, amount=0):
+		so = frappe.get_doc(
+			{
+				"doctype": "Sales Order",
+				"company": self.company,
+				"transaction_date": today(),
+				"base_net_total": amount,
+				"items": [{"item_code": "_x", "prevdoc_docname": quotation}],
+			}
+		)
+		so.name = frappe.generate_hash(length=10)
+		return so
+
+	def test_closed_won_from_won_deals(self):
+		self.deal(ENG_A, 70000, forecast.CLOSED)
+		won = self.deal(ENG_A, 30000, forecast.CLOSED)
+		frappe.db.set_value(
+			"Opportunity", won.name, {forecast.WON_DATE_FIELD: today(), forecast.WON_AMOUNT_FIELD: 30000}
+		)
+		old = self.deal(ENG_B, 50000, forecast.CLOSED)
+		frappe.db.set_value(
+			"Opportunity",
+			old.name,
+			{forecast.WON_DATE_FIELD: add_days(self.start, -1), forecast.WON_AMOUNT_FIELD: 50000},
+		)
+		rows = {
+			r.name: r
+			for r in forecast.get_forecast(self.company, self.start, self.end, MANAGER, forecast.OPPORTUNITY)
+		}
+		# only Deals with a Won Date in the period count (the first has none, the last is last period)
+		self.assertEqual(rows[ENG_A].closed_won, 30000)
+		self.assertEqual(rows[ENG_B].closed_won, 0)
+		self.assertEqual(rows[MANAGER].closed_won, 30000)
+
+	def test_order_wins_deal_and_credits_commission(self):
+		self.make_plan(basis="Opportunity")
+		deal = self.deal(ENG_A, 50000, forecast.COMMIT, 90)
+		so = self.order(self.quotation_for(deal), 45000)
+		forecast.close_deals_won(so)
+
+		row = frappe.db.get_value(
+			"Opportunity",
+			deal.name,
+			[
+				forecast.CATEGORY_FIELD,
+				forecast.WON_DATE_FIELD,
+				forecast.WON_AMOUNT_FIELD,
+				forecast.WON_BY_FIELD,
+				"probability",
+			],
+			as_dict=True,
+		)
+		self.assertEqual(row[forecast.CATEGORY_FIELD], forecast.CLOSED)
+		self.assertEqual(getdate(row[forecast.WON_DATE_FIELD]), getdate(today()))
+		self.assertEqual(
+			(row[forecast.WON_AMOUNT_FIELD], row[forecast.WON_BY_FIELD], row.probability),
+			(50000, so.name, 100),
+		)
+		entries = frappe.get_all(
+			commission.LEDGER,
+			filters={"voucher_no": deal.name},
+			fields=["basis", "sales_person", "base_amount"],
+		)
+		self.assertEqual(
+			[(e.basis, e.sales_person, e.base_amount) for e in entries], [("Opportunity", ENG_A, 50000)]
+		)
+
+		payout_row, _entries = commission.compute_payout_row(ENG_A, self.company, self.start, self.end)
+		self.assertEqual((payout_row.basis, payout_row.commission_amount), ("Opportunity", 1000))  # 2% slab
+
+		forecast.close_deals_won(so)  # submitted twice / re-run: still one credit
+		self.assertEqual(len(frappe.get_all(commission.LEDGER, filters={"voucher_no": deal.name})), 1)
+
+		forecast.reopen_deals(so)  # order cancelled
+		row = frappe.db.get_value(
+			"Opportunity", deal.name, [forecast.CATEGORY_FIELD, forecast.WON_DATE_FIELD], as_dict=True
+		)
+		self.assertNotEqual(row[forecast.CATEGORY_FIELD], forecast.CLOSED)
+		self.assertIsNone(row[forecast.WON_DATE_FIELD])
+		total = sum(frappe.get_all(commission.LEDGER, filters={"voucher_no": deal.name}, pluck="base_amount"))
+		self.assertEqual(total, 0)
+
+	def test_closed_by_hand(self):
+		opp = frappe.new_doc("Opportunity")
+		opp.status = "Open"
+		opp.base_opportunity_amount = 12000
+		opp.set(forecast.CATEGORY_FIELD, forecast.CLOSED)
+		forecast.opportunity_validate(opp)
+		self.assertEqual(getdate(opp.get(forecast.WON_DATE_FIELD)), getdate(today()))
+		self.assertEqual((opp.get(forecast.WON_AMOUNT_FIELD), opp.probability), (12000, 100))
+		opp.set(forecast.CATEGORY_FIELD, forecast.COMMIT)
+		forecast.opportunity_validate(opp)
+		self.assertIsNone(opp.get(forecast.WON_DATE_FIELD))
+
+	def test_won_deal_keeps_closed_when_stage_moves(self):
+		stage = frappe.db.get_value("Sales Stage", {forecast.CATEGORY_FIELD: forecast.COMMIT}, "name")
+		if stage:
+			self.assertEqual(forecast.stage_values(stage, "Open", won=True), {})
+
+	make_plan = TestCommission.make_plan

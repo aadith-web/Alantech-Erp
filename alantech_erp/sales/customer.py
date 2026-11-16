@@ -6,7 +6,9 @@ Company / Partnership  Territory and Industry mandatory; Mobile No and Email ID 
           Contact's) mandatory, as for every customer.
 Individual  Industry hidden; GSTIN optional when Local (GST Category Unregistered without one).
 
-Local     GSTIN is mandatory for a Company (GST Category from the GSTIN, India Compliance), and the customer needs
+Local     GSTIN is mandatory for a Company (GST Category from the GSTIN, India Compliance), unless its
+          GST Category is Unregistered (a Local customer not registered under GST: no GSTIN, still a
+          billing address in India). With a GSTIN, the customer needs
           an Address carrying that GSTIN: the quick entry creates it from its address fields, a
           converted Lead brings its own, otherwise the form asks for it right after the first save.
           Later saves, quotation approval and Sales Order confirmation are blocked until it exists.
@@ -60,9 +62,9 @@ def is_individual(doc_or_type):
 	return customer_type == INDIVIDUAL
 
 
-def gstin_required(customer_type):
-	"""Local customers need a GSTIN, except Individuals."""
-	return not is_individual(customer_type)
+def gstin_required(customer_type, gst_category=None):
+	"""Local customers need a GSTIN, except Individuals and those with GST Category Unregistered."""
+	return not is_individual(customer_type) and gst_category != UNREGISTERED_CATEGORY
 
 
 def before_validate(doc, method=None):
@@ -74,10 +76,14 @@ def before_validate(doc, method=None):
 	if tax_type == TAX_OVERSEAS:
 		doc.gst_category = OVERSEAS_CATEGORY
 		doc.gstin = None
-	elif is_individual(doc) and not doc.get("gstin"):
-		doc.gst_category = UNREGISTERED_CATEGORY
+	elif not doc.get("gstin"):
+		# no GSTIN: an Individual is Unregistered; a Company keeps Unregistered if chosen
+		if is_individual(doc) or doc.get("gst_category") == UNREGISTERED_CATEGORY:
+			doc.gst_category = UNREGISTERED_CATEGORY
+		elif doc.get("gst_category") in NOT_LOCAL_CATEGORIES:
+			doc.gst_category = LOCAL_DEFAULT_CATEGORY  # then GSTIN required (validate)
 	elif doc.get("gst_category") in NOT_LOCAL_CATEGORIES:
-		# refined from the GSTIN by India Compliance (SEZ, Composition...)
+		# a GSTIN: registered; refined from the GSTIN by India Compliance (SEZ, Composition...)
 		doc.gst_category = LOCAL_DEFAULT_CATEGORY
 
 
@@ -106,10 +112,16 @@ def validate(doc, method=None):
 		return
 	if tax_type != TAX_LOCAL:
 		return
-	if _has_gst() and not doc.get("gstin") and gstin_required(doc.get("customer_type")):
+	if _has_gst() and not doc.get("gstin") and gstin_required(doc.get("customer_type"), doc.get("gst_category")):
 		frappe.throw(
-			_("GSTIN is mandatory for a {0} {1} customer. Enter the GSTIN, or set Tax Type to {2}.").format(
-				frappe.bold(_(TAX_LOCAL)), frappe.bold(_(doc.customer_type)), frappe.bold(_(TAX_OVERSEAS))
+			_(
+				"GSTIN is mandatory for a {0} {1} customer registered under GST. Enter the GSTIN, set GST "
+				"Category to {2} if the customer is not registered, or set Tax Type to {3}."
+			).format(
+				frappe.bold(_(TAX_LOCAL)),
+				frappe.bold(_(doc.customer_type)),
+				frappe.bold(_(UNREGISTERED_CATEGORY)),
+				frappe.bold(_(TAX_OVERSEAS)),
 			),
 			title=_("GSTIN Required"),
 		)
@@ -335,7 +347,7 @@ def check_tax_details(customer, address=None, before=None):
 	values = frappe.db.get_value(
 		"Customer",
 		customer,
-		[TAX_TYPE_FIELD, "customer_type", "default_currency"] + (["gstin"] if _has_gst() else []),
+		[TAX_TYPE_FIELD, "customer_type", "default_currency"] + (["gstin", "gst_category"] if _has_gst() else []),
 		as_dict=True,
 	)
 	if not values:
@@ -355,7 +367,7 @@ def check_tax_details(customer, address=None, before=None):
 		return
 
 	gstin = values.get("gstin")
-	if _has_gst() and not gstin and gstin_required(values.get("customer_type")):
+	if _has_gst() and not gstin and gstin_required(values.get("customer_type"), values.get("gst_category")):
 		frappe.throw(
 			_("Customer {0} is {1}: enter its GSTIN before {2}.").format(link, frappe.bold(_(TAX_LOCAL)), before),
 			title=_("GSTIN Required"),

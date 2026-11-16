@@ -1,6 +1,9 @@
 """Sales Person commission (Zoho CRM style plans on top of the ERPNext Sales Team).
 
 Credit
+    A won Deal (Opportunity, sales/forecast.py: its Sales Order submitted or closed by hand)
+    credits its Sales Person with the Won Amount on the Won Date (basis Opportunity); re-opened,
+    lost or cancelled order: the credit is reversed (sync_deal_commission).
     Every submitted Sales Order, Sales Invoice (credit notes too) and Payment Entry against a
     Sales Invoice writes Commission Ledger Entries: one per Sales Person in the document's Sales
     Team and Item Group, amount = net amount (company currency) x the Sales Team allocation %.
@@ -37,7 +40,8 @@ from alantech_erp.sales.forecast import SETTINGS
 BASIS_ORDER = "Sales Order"
 BASIS_INVOICE = "Sales Invoice"
 BASIS_PAYMENT = "Payment Received"
-BASES = (BASIS_ORDER, BASIS_INVOICE, BASIS_PAYMENT)
+BASIS_DEAL = "Opportunity"  # Deal won (Zoho: closed-won deal), the Deal's Sales Person
+BASES = (BASIS_DEAL, BASIS_ORDER, BASIS_INVOICE, BASIS_PAYMENT)
 
 # Calculation methods
 FLAT = "Flat Rate"
@@ -352,6 +356,71 @@ def on_payment_entry_submit(doc, method=None):
 		groups = _item_group_amounts(invoice, ratio)
 		_write(
 			doc.doctype, doc.name, _entries(invoice, BASIS_PAYMENT, groups, doc.posting_date, against=invoice)
+		)
+
+
+def sync_deal_commission(name):
+	"""Ledger entries of a Deal follow its won state (won once, at the Won Amount / Won Date)."""
+	from alantech_erp.sales import forecast as fc
+
+	if not enabled() or not frappe.get_meta("Opportunity").has_field(fc.WON_DATE_FIELD):
+		return
+	deal = frappe.db.get_value(
+		"Opportunity",
+		name,
+		[
+			"name",
+			"company",
+			"opportunity_from",
+			"party_name",
+			fc.CATEGORY_FIELD,
+			fc.SALES_PERSON_FIELD,
+			fc.WON_DATE_FIELD,
+			fc.WON_AMOUNT_FIELD,
+		],
+		as_dict=True,
+	)
+	wanted = None
+	if (
+		deal
+		and deal.get(fc.CATEGORY_FIELD) == fc.CLOSED
+		and deal.get(fc.WON_DATE_FIELD)
+		and deal.get(fc.SALES_PERSON_FIELD)
+		and flt(deal.get(fc.WON_AMOUNT_FIELD))
+	):
+		wanted = (
+			deal.get(fc.SALES_PERSON_FIELD),
+			flt(deal.get(fc.WON_AMOUNT_FIELD), 2),
+			getdate(deal.get(fc.WON_DATE_FIELD)),
+		)
+	active = frappe.get_all(
+		LEDGER,
+		filters={"voucher_type": "Opportunity", "voucher_no": name, "is_reversal": 0, "reversed": 0},
+		fields=["sales_person", "base_amount", "posting_date"],
+	)
+	current = (
+		(active[0].sales_person, flt(active[0].base_amount, 2), getdate(active[0].posting_date))
+		if len(active) == 1
+		else None
+	)
+	if active and current != wanted:
+		_reverse("Opportunity", name)
+		active = []
+	if wanted and not active:
+		_write(
+			"Opportunity",
+			name,
+			[
+				{
+					"sales_person": wanted[0],
+					"basis": BASIS_DEAL,
+					"base_amount": wanted[1],
+					"allocated_percentage": 100,
+					"customer": deal.party_name if deal.opportunity_from == "Customer" else None,
+					"company": deal.company,
+					"posting_date": wanted[2],
+				}
+			],
 		)
 
 

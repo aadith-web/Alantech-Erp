@@ -4,7 +4,9 @@ Forecast category on every Deal, as in Zoho:
     Pipeline   early stages, counted only in the pipeline
     Best Case  could close this period
     Commit     the salesperson commits to closing it this period
-    Closed     won (the Deal is Converted / its quotation is Client Accepted with an order)
+    Closed     won: its Sales Order is submitted (Won Date = order date, Won Amount = the Deal
+               amount, close_deals_won), or the category / status Converted is set by hand.
+               Cancelling that Sales Order re-opens the Deal (reopen_deals).
     Omitted    lost or parked, left out of every number
 
 The category and probability come from the Deal's Sales Stage (Sales Stage.alt_forecast_category /
@@ -16,8 +18,11 @@ Numbers per Sales Person for a period (month or quarter), rolled up the Sales Pe
     Target      Sales Person > Sales Targets (Target Detail) for the fiscal year, spread over the
                 months by its Monthly Distribution (equal twelfths without one). A group without
                 its own target gets the sum of its team's.
-    Closed Won  submitted Sales Orders (or Sales Invoices, Sales Performance Settings) in the
-                period, net total in company currency, split by the Sales Team allocation %
+    Closed Won  from the source in Sales Performance Settings:
+                Sales Order / Sales Invoice: submitted in the period, net total in company
+                currency, split by the Sales Team allocation %
+                Opportunity: Deals won in the period (Won Date), Won Amount, to the Deal's
+                Sales Person
     Commit / Best Case / Pipeline
                 open Deals expected to close in the period, by category (company currency)
     Weighted    open Deals x probability
@@ -55,6 +60,12 @@ QUARTER = "Quarter"
 
 SALES_ORDER = "Sales Order"
 SALES_INVOICE = "Sales Invoice"
+OPPORTUNITY = "Opportunity"  # Deals won (Closed), on their won date
+
+# set when a Deal is won (its Sales Order is submitted, or it is closed by hand)
+WON_DATE_FIELD = "alt_won_date"
+WON_AMOUNT_FIELD = "alt_won_amount"
+WON_BY_FIELD = "alt_won_by"
 
 # Opportunity statuses that are no longer in the pipeline
 CLOSED_STATUSES = ("Lost", "Closed", "Converted")
@@ -126,10 +137,12 @@ def category_for_status(status):
 	return None
 
 
-def stage_values(stage, status=None):
+def stage_values(stage, status=None, won=False):
 	"""Opportunity values to write when its Sales Stage moves (used where the stage is set with
-	db.set_value, e.g. sales/quotation.py sync_deal, which skips validate)."""
+	db.set_value, e.g. sales/quotation.py sync_deal, which skips validate). A won Deal stays Closed."""
 	values = {}
+	if won and status != "Lost":
+		return values
 	category, probability = stage_defaults(stage)
 	category = category_for_status(status) or category
 	if category:
@@ -153,8 +166,9 @@ def opportunity_validate(doc, method=None):
 
 	if not meta.has_field(CATEGORY_FIELD):
 		return
+	won = bool(doc.get(WON_DATE_FIELD)) and doc.get(CATEGORY_FIELD) == CLOSED
 	stage_moved = doc.is_new() or doc.has_value_changed("sales_stage")
-	if stage_moved:
+	if stage_moved and not won:
 		category, probability = stage_defaults(doc.get("sales_stage"))
 		if category and (not doc.is_new() or not doc.get(CATEGORY_FIELD)):
 			doc.set(CATEGORY_FIELD, category)
@@ -165,11 +179,96 @@ def opportunity_validate(doc, method=None):
 	by_status = category_for_status(doc.get("status"))
 	if by_status:
 		doc.set(CATEGORY_FIELD, by_status)
-	elif doc.get(CATEGORY_FIELD) in (CLOSED, OMITTED) and doc.has_value_changed("status"):
-		# re-opened: back to the stage's category
+	elif _reopened(doc):
+		# back from Converted / Lost / Closed: the stage's category again
 		doc.set(CATEGORY_FIELD, stage_defaults(doc.get("sales_stage"))[0] or PIPELINE)
 	if not doc.get(CATEGORY_FIELD):
 		doc.set(CATEGORY_FIELD, PIPELINE)
+	_set_won(doc)
+
+
+def _reopened(doc):
+	if doc.is_new() or doc.get(CATEGORY_FIELD) not in (CLOSED, OMITTED):
+		return False
+	before = doc.get_doc_before_save()
+	return bool(before) and before.get("status") in CLOSED_STATUSES and doc.status not in CLOSED_STATUSES
+
+
+def _set_won(doc):
+	"""Won Date / Amount follow the Closed category (closed by hand: today, the Deal amount)."""
+	if not doc.meta.has_field(WON_DATE_FIELD):
+		return
+	if doc.get(CATEGORY_FIELD) == CLOSED:
+		if not doc.get(WON_DATE_FIELD):
+			doc.set(WON_DATE_FIELD, getdate())
+		if not flt(doc.get(WON_AMOUNT_FIELD)) or not doc.get(WON_BY_FIELD):
+			doc.set(WON_AMOUNT_FIELD, flt(doc.get("base_opportunity_amount")))
+		doc.probability = 100
+	elif doc.get(WON_DATE_FIELD):
+		doc.update({WON_DATE_FIELD: None, WON_AMOUNT_FIELD: 0, WON_BY_FIELD: None})
+
+
+def opportunity_on_update(doc, method=None):
+	"""Opportunity on_update: commission credit follows the Deal's won state."""
+	from alantech_erp.sales.commission import sync_deal_commission
+
+	sync_deal_commission(doc.name)
+
+
+# --------------------------------------------------------------------------- Deal won by the order
+def deals_of_order(order):
+	"""Deals (Opportunities) behind a Sales Order, through its quotations."""
+	quotations = {r.get("prevdoc_docname") for r in order.get("items") or [] if r.get("prevdoc_docname")}
+	deals = set()
+	for quotation in quotations:
+		deal = frappe.db.get_value("Quotation", quotation, "opportunity")
+		if deal and frappe.db.exists("Opportunity", deal):
+			deals.add(deal)
+	if order.get("opportunity") and frappe.db.exists("Opportunity", order.opportunity):
+		deals.add(order.opportunity)
+	return sorted(deals)
+
+
+def close_deals_won(doc, method=None):
+	"""Sales Order on_submit: its Deals are won on the order date."""
+	if not frappe.get_meta("Opportunity").has_field(WON_DATE_FIELD):
+		return
+	from alantech_erp.sales.commission import sync_deal_commission
+
+	for deal in deals_of_order(doc):
+		row = frappe.db.get_value(
+			"Opportunity", deal, ["status", WON_DATE_FIELD, "base_opportunity_amount"], as_dict=True
+		)
+		if row.get(WON_DATE_FIELD) or row.status == "Lost":
+			continue
+		frappe.db.set_value(
+			"Opportunity",
+			deal,
+			{
+				CATEGORY_FIELD: CLOSED,
+				WON_DATE_FIELD: doc.transaction_date,
+				WON_AMOUNT_FIELD: flt(row.base_opportunity_amount) or flt(doc.base_net_total),
+				WON_BY_FIELD: doc.name,
+				"probability": 100,
+			},
+		)
+		sync_deal_commission(deal)
+
+
+def reopen_deals(doc, method=None):
+	"""Sales Order on_cancel: Deals it won go back to their stage's category."""
+	if not frappe.get_meta("Opportunity").has_field(WON_BY_FIELD):
+		return
+	from alantech_erp.sales.commission import sync_deal_commission
+
+	for deal in frappe.get_all(
+		"Opportunity", filters={WON_BY_FIELD: doc.name}, fields=["name", "sales_stage", "status"]
+	):
+		values = {WON_DATE_FIELD: None, WON_AMOUNT_FIELD: 0, WON_BY_FIELD: None}
+		values.update(stage_values(deal.sales_stage))
+		values.setdefault(CATEGORY_FIELD, COMMIT)
+		frappe.db.set_value("Opportunity", deal.name, values)
+		sync_deal_commission(deal.name)
 
 
 # --------------------------------------------------------------------------- the tree
@@ -283,10 +382,12 @@ def targets(sales_persons, from_date, to_date, company=None):
 
 # --------------------------------------------------------------------------- actuals
 def closed_won(sales_persons, from_date, to_date, company=None, source=None):
-	"""{sales person: net sales in company currency} from submitted orders / invoices."""
+	"""{sales person: net sales in company currency} from submitted orders / invoices, or won Deals."""
 	if not sales_persons:
 		return {}
 	source = source or settings().won_source
+	if source == OPPORTUNITY:
+		return won_deals(sales_persons, from_date, to_date, company)
 	date_field = "transaction_date" if source == SALES_ORDER else "posting_date"
 	conditions = ""
 	values = {"sp": tuple(sales_persons), "from": from_date, "to": to_date}
@@ -303,6 +404,29 @@ def closed_won(sales_persons, from_date, to_date, company=None, source=None):
 		group by st.sales_person
 		""",
 		dict(values, doctype=source),
+		as_dict=True,
+	)
+	return {r.sales_person: flt(r.amount) for r in rows}
+
+
+def won_deals(sales_persons, from_date, to_date, company=None):
+	"""{sales person: Won Amount} of Deals won in the period."""
+	if not frappe.get_meta("Opportunity").has_field(WON_DATE_FIELD):
+		return {}
+	conditions = ""
+	values = {"sp": tuple(sales_persons), "from": from_date, "to": to_date, "closed": CLOSED}
+	if company:
+		conditions = "and company = %(company)s"
+		values["company"] = company
+	rows = frappe.db.sql(
+		f"""
+		select {SALES_PERSON_FIELD} as sales_person, sum({WON_AMOUNT_FIELD}) as amount
+		from `tabOpportunity`
+		where docstatus < 2 and {CATEGORY_FIELD} = %(closed)s and {SALES_PERSON_FIELD} in %(sp)s
+			and {WON_DATE_FIELD} between %(from)s and %(to)s {conditions}
+		group by {SALES_PERSON_FIELD}
+		""",
+		values,
 		as_dict=True,
 	)
 	return {r.sales_person: flt(r.amount) for r in rows}

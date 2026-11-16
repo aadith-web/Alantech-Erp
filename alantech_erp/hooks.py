@@ -45,6 +45,8 @@ app_include_js = [
     "/assets/alantech_erp/js/customer_quick_entry.js",
     # Home page check-in reminder popup (HR-F02)
     "/assets/alantech_erp/js/checkin_reminder.js",
+    # Activity menu + Activities panel on Lead, Customer and Deal (CRM C10, sales/activity.py)
+    "/assets/alantech_erp/js/sales_activity.js",
 ]
 
 # include js, css files in header of web template
@@ -88,6 +90,8 @@ doctype_js = {
     # Loan Eligibility check list rendered as a table, not raw HTML text
     "Loan Application": "public/js/loan_application.js",
     "Employee Checkin": "public/js/employee_checkin.js",
+    # Campaign owner, budget, costs, child campaigns and results (CRM C36)
+    "Campaign": "public/js/campaign.js",
 }
 extend_doctype_class = {
     # "Create User Automatically" without an email: no user, no error (setup/employee_user.py)
@@ -202,6 +206,7 @@ permission_query_conditions = {
 	"Technical Offer": f"{_SALES_HIERARCHY}.technical_offer_query",
 	"Quotation": f"{_SALES_HIERARCHY}.quotation_query",
 	"Sales Order": f"{_SALES_HIERARCHY}.sales_order_query",
+	"Sales Activity": f"{_SALES_HIERARCHY}.sales_activity_query",
 	# a Sales Engineer / Manager sees the forecasts of their own part of the tree
 	"Sales Forecast": "alantech_erp.sales.forecast.sales_forecast_query",
 }
@@ -216,7 +221,9 @@ has_permission = {
 	"Salary Slip": "alantech_erp.setup.salary_access.has_permission",
 	**{
 		doctype: f"{_SALES_HIERARCHY}.has_permission"
-		for doctype in ("Lead", "Customer", "Opportunity", "Estimation", "Technical Offer", "Quotation", "Sales Order")
+		for doctype in (
+			"Lead", "Customer", "Opportunity", "Estimation", "Technical Offer", "Quotation", "Sales Order", "Sales Activity",
+		)
 	},
 }
 # DocType Class
@@ -370,6 +377,8 @@ doc_events = {
     # GSTIN and name duplicates (alantech_erp/sales/customer_unique.py)
     "Customer": {
         "before_validate": [
+            # Campaign of the Lead the customer was made from (CRM C24, sales/campaign.py)
+            "alantech_erp.sales.campaign.customer_before_validate",
             "alantech_erp.sales.customer.before_validate",
             "alantech_erp.sales.customer_unique.before_validate",
         ],
@@ -394,7 +403,11 @@ doc_events = {
             "alantech_erp.sales.deal.validate_opportunity",
             # Forecast Category / probability from the Sales Stage, Sales Person from the owner
             "alantech_erp.sales.forecast.opportunity_validate",
+            # Campaign from the Quotation / party (CRM C24)
+            "alantech_erp.sales.campaign.opportunity_validate",
         ],
+        # a won Deal credits commission (basis Opportunity); re-opened / lost: reversed
+        "on_update": "alantech_erp.sales.forecast.opportunity_on_update",
     },
     # Prospect flow not used (alantech_erp/sales/prospect.py)
     "Prospect": {
@@ -402,7 +415,11 @@ doc_events = {
     },
     # Sales flow: Lead -> Customer -> Estimation -> Quotation (manager + client approval) -> Sales Order
     "Quotation": {
-        "validate": "alantech_erp.sales.quotation.validate",
+        "validate": [
+            "alantech_erp.sales.quotation.validate",
+            # Campaign from the Estimation / Deal / Customer (CRM C24)
+            "alantech_erp.sales.campaign.quotation_validate",
+        ],
         "before_submit": "alantech_erp.sales.quotation.before_submit",
         "before_update_after_submit": "alantech_erp.sales.quotation.before_update_after_submit",
         "on_update_after_submit": "alantech_erp.sales.quotation.on_update_after_submit",
@@ -414,20 +431,41 @@ doc_events = {
             "alantech_erp.sales.sales_order.validate",
             # empty Sales Team: the quotation's Sales Person at 100% (forecast + commission credit)
             "alantech_erp.sales.commission.fill_sales_team",
+            # Campaign from the Quotation / Customer (CRM C24)
+            "alantech_erp.sales.campaign.sales_order_validate",
         ],
         "before_submit": "alantech_erp.sales.sales_order.before_submit",
         "on_submit": [
             "alantech_erp.sales.sales_order.on_submit",
+            # the campaign's Income / ROI (CRM C36)
+            "alantech_erp.sales.campaign.sales_order_changed",
             "alantech_erp.sales.commission.on_sales_order_submit",
+            # the order's Deals are won (forecast Closed Won from Opportunity, Deal commission)
+            "alantech_erp.sales.forecast.close_deals_won",
         ],
         "on_cancel": [
             "alantech_erp.sales.sales_order.on_cancel",
             "alantech_erp.sales.commission.on_cancel",
+            "alantech_erp.sales.forecast.reopen_deals",
+            "alantech_erp.sales.campaign.sales_order_changed",
         ],
+    },
+    # Sales activities (CRM C10, sales/activity.py): emails and comments on a Lead / Customer / Deal
+    # are logged as activities; closing an activity's ToDo completes it
+    "Communication": {"after_insert": "alantech_erp.sales.activity.communication_after_insert"},
+    "Comment": {"after_insert": "alantech_erp.sales.activity.comment_after_insert"},
+    "ToDo": {"on_update": "alantech_erp.sales.activity.todo_on_update"},
+    # Campaign: owner / company defaults, child campaign checks, Actual Cost, Income, ROI (CRM C36)
+    "Campaign": {
+        "validate": "alantech_erp.sales.campaign.campaign_validate",
     },
     # Sales commission (alantech_erp/sales/commission.py): Commission Ledger Entries per Sales Team
     "Sales Invoice": {
-        "validate": "alantech_erp.sales.commission.fill_sales_team",
+        "validate": [
+            "alantech_erp.sales.commission.fill_sales_team",
+            # Campaign from the Sales Order / Customer (CRM C24)
+            "alantech_erp.sales.campaign.sales_invoice_validate",
+        ],
         "on_submit": "alantech_erp.sales.commission.on_sales_invoice_submit",
         "on_cancel": "alantech_erp.sales.commission.on_cancel",
     },
@@ -447,6 +485,8 @@ scheduler_events = {
         "alantech_erp.alantech.doctype.document.document.send_expiry_alerts",
         "alantech_erp.alantech.doctype.session_log.builder.build_yesterday_logs",  # "Daily Scheduler"
         "alantech_erp.alantech.doctype.employee_asset_handover.exit_alerts.send_daily_reminders",
+        # sales follow-ups due today / overdue, one notification per owner (CRM C10)
+        "alantech_erp.sales.activity.send_follow_up_reminders",
     ],
     "monthly": [
         "alantech_erp.setup.shifts.ensure_holiday_lists",
@@ -475,9 +515,16 @@ override_whitelisted_methods = {
 # override_doctype_dashboards = {
 # 	"Task": "alantech_erp.task.get_dashboard_data"
 # }
+# calls, meetings, tasks and notes on the Lead / Customer / Deal timeline (CRM C10)
+additional_timeline_content = {
+	doctype: ["alantech_erp.sales.activity.timeline_content"] for doctype in ("Lead", "Customer", "Opportunity")
+}
 override_doctype_dashboards = {
 	"Customer": "alantech_erp.sales.dashboards.customer",
 	"Lead": "alantech_erp.sales.dashboards.lead",
+	"Opportunity": "alantech_erp.sales.dashboards.opportunity",
+	# child campaigns on the Campaign's Connections (CRM C36)
+	"Campaign": "alantech_erp.sales.dashboards.campaign",
 	"Employee": "alantech_erp.alantech.dashboards.employee",
 }
 
@@ -577,6 +624,8 @@ after_migrate = [
     "alantech_erp.sales.sales_person.execute",
     # Sales forecast + commission: Deal Forecast Category / Sales Person, Sales Stage defaults
     "alantech_erp.setup.sales_performance.execute",
+    # Campaigns (CRM C24, C36): Campaign owner / budget / costs / results, Customer campaign
+    "alantech_erp.setup.campaigns.execute",
     # Employee Loan Rules: Lending Settings > Require Loan Rule (LR-02)
     "alantech_erp.setup.loan_rule_settings.execute",
     # Employee Loan Rules: Loan Eligibility section on Loan Application (LR-03)

@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\": \"sp00\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Sales Forecast &amp; Commission</b></span>\", \"col\": 12}}, {\"id\": \"sp01\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Forecast Report\", \"col\": 3}}, {\"id\": \"sp02\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Forecasts\", \"col\": 3}}, {\"id\": \"sp03\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Forecast Accuracy\", \"col\": 3}}, {\"id\": \"sp04\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Commission Plans\", \"col\": 3}}, {\"id\": \"sp05\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Commission Payouts\", \"col\": 3}}, {\"id\": \"sp06\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Commission Statement\", \"col\": 3}}, {\"id\": \"sp07\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Settings\", \"col\": 3}}]",
+ "content": "[{\"id\": \"sp00\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Sales Forecast &amp; Commission</b></span>\", \"col\": 12}}, {\"id\": \"sp01\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Forecast Report\", \"col\": 3}}, {\"id\": \"sp02\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Forecasts\", \"col\": 3}}, {\"id\": \"sp03\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Forecast Accuracy\", \"col\": 3}}, {\"id\": \"sp04\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Commission Plans\", \"col\": 3}}, {\"id\": \"sp05\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Commission Payouts\", \"col\": 3}}, {\"id\": \"sp06\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Commission Statement\", \"col\": 3}}, {\"id\": \"sp07\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Settings\", \"col\": 3}}, {\"id\": \"sp10\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"sp11\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Campaigns</b></span>\", \"col\": 12}}, {\"id\": \"sp12\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Campaigns\", \"col\": 3}}, {\"id\": \"sp13\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Campaign ROI\", \"col\": 3}}, {\"id\": \"sp20\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"sp21\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Sales Activities</b></span>\", \"col\": 12}}, {\"id\": \"sp22\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Activities\", \"col\": 3}}, {\"id\": \"sp23\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Activity Calendar\", \"col\": 3}}, {\"id\": \"sp24\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Activity Summary\", \"col\": 3}}]",
  "creation": "2026-11-11 12:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -12,7 +12,7 @@
  "label": "Sales Performance",
  "link_type": "DocType",
  "links": [],
- "modified": "2026-11-11 12:00:00.000000",
+ "modified": "2026-11-12 14:00:00.000000",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Sales Performance",
@@ -77,6 +77,36 @@
    "label": "Settings",
    "link_to": "Sales Performance Settings",
    "type": "DocType"
+  },
+  {
+   "doc_view": "List",
+   "label": "Campaigns",
+   "link_to": "Campaign",
+   "type": "DocType"
+  },
+  {
+   "label": "Campaign ROI",
+   "link_to": "Campaign ROI",
+   "report_ref_doctype": "Campaign",
+   "type": "Report"
+  },
+  {
+   "doc_view": "List",
+   "label": "Sales Activities",
+   "link_to": "Sales Activity",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "Calendar",
+   "label": "Activity Calendar",
+   "link_to": "Sales Activity",
+   "type": "DocType"
+  },
+  {
+   "label": "Sales Activity Summary",
+   "link_to": "Sales Activity Summary",
+   "report_ref_doctype": "Sales Activity",
+   "type": "Report"
   }
  ],
  "standard": 0,

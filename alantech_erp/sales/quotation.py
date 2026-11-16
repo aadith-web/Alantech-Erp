@@ -424,7 +424,10 @@ def sync_deal(doc):
 		# db.set_value skips the Opportunity validate: move the forecast category / probability too
 		from alantech_erp.sales.forecast import stage_values
 
-		values.update(stage_values(values["sales_stage"], deal.status))
+		won = frappe.get_meta("Opportunity").has_field("alt_won_date") and frappe.db.get_value(
+			"Opportunity", doc.opportunity, "alt_won_date"
+		)
+		values.update(stage_values(values["sales_stage"], deal.status, won=bool(won)))
 	if values:
 		frappe.db.set_value("Opportunity", doc.opportunity, values)
 
