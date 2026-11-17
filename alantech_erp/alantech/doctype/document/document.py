@@ -5,6 +5,7 @@ from frappe.utils import add_days, cint, get_fullname, get_link_to_form, getdate
 
 from alantech_erp.alantech.doctype.document.document_files import file_restrictions, validate_attachments
 from alantech_erp.alantech.doctype.document.document_number import validate_document_number
+from alantech_erp.alantech.doctype.document.employee_numbers import fill_from_employee, update_employee
 
 DOCTYPE = "Document"
 APPROVER_ROLE = "HR Manager"
@@ -28,6 +29,7 @@ class Document(Document):
 		self.validate_reference_access()
 		self.validate_dates()
 		validate_attachments(self)  # PDF / JPG / PNG, at most 5 MB
+		fill_from_employee(self)  # new Aadhaar / PAN document: the Employee's number (employee_numbers.py)
 		validate_document_number(self)  # also blocks approving a wrong number until it is fixed
 		if self.flags.approval_action:      # approve()/reject() set the fields themselves
 			return
@@ -35,9 +37,11 @@ class Document(Document):
 		self.set_approval_status()
 
 	def on_update(self):
+		update_employee(self)  # approved Aadhaar / PAN number -> Employee (employee_numbers.py)
 		if self.flags.timeline_note:
 			self.add_comment("Info", self.flags.timeline_note)   # shows in Activity Log
 		if self.flags.notify_hr:
+			self.flags.notify_hr = False  # once per change, even if this object is saved again
 			notify_hr_managers(self)
 
 	# --- reference -------------------------------------------------------
@@ -240,8 +244,19 @@ def email_configured():
 	)
 
 
-def send_notification(users, subject, message, doc):
+def has_unread_notification(user, subject, doc):
+	return frappe.db.exists("Notification Log", {
+		"for_user": user, "document_type": doc.doctype, "document_name": doc.name,
+		"subject": subject, "read": 0,
+	})
+
+
+def send_notification(users, subject, message, doc, skip_unread_duplicates=False):
+	"""Bell + email, once per user. With skip_unread_duplicates, a user who still has the same
+	unread notification for this document is skipped (ClickUp 14yr2e57q0t)."""
 	users = sorted({u for u in users if u and u not in ("Administrator", "Guest")})
+	if skip_unread_duplicates:
+		users = [u for u in users if not has_unread_notification(u, subject, doc)]
 	if not users:
 		return
 	for user in users:
@@ -252,11 +267,25 @@ def send_notification(users, subject, message, doc):
 		}).insert(ignore_permissions=True)
 	# "Alert" notifications never email by themselves in v16, so send the email here,
 	# but only when an outgoing email account exists (otherwise saving the document would fail)
-	emails = [e for e in frappe.get_all("User", filters={"name": ["in", users]}, pluck="email") if e]
-	if emails and email_configured():
-		frappe.sendmail(recipients=emails, subject=frappe.utils.strip_html(subject),
-		                message=f"<p>{message}</p><p>{get_link_to_form(doc.doctype, doc.name)}</p>",
-		                reference_doctype=doc.doctype, reference_name=doc.name)
+	if email_configured():
+		emails = sorted({e for e in frappe.get_all("User", filters={"name": ["in", users]}, pluck="email") if e})
+		for email in emails:
+			send_email(email, subject, message, doc)
+
+
+def send_email(email, subject, message, doc):
+	"""One Email Queue per recipient, owned by Administrator (ClickUp 14yr2e57q0t).
+	A shared queue is retried as a whole (Email Retry Limit, 3 by default) when one address
+	fails, which can deliver the same email up to four times. When it finally fails, Frappe
+	puts "Failed to send email with subject: ..." in the bell of the queue's owner: that would
+	be the HR Manager who approved, or the employee who uploaded, instead of the recipient."""
+	queue = frappe.sendmail(
+		recipients=[email], subject=frappe.utils.strip_html(subject),
+		message=f"<p>{message}</p><p>{get_link_to_form(doc.doctype, doc.name)}</p>",
+		reference_doctype=doc.doctype, reference_name=doc.name,
+	)
+	if queue and getattr(queue, "name", None):
+		frappe.db.set_value("Email Queue", queue.name, "owner", "Administrator", update_modified=False)
 
 
 def notify_hr_managers(doc):
@@ -264,11 +293,15 @@ def notify_hr_managers(doc):
 	subject = _("{0} needs approval: {1} for {2}").format(doc.name, doc.document_type, doc.reference_title)
 	message = _("{0} uploaded or changed a {1} document for {2}. Please review and approve or reject it.").format(
 		get_fullname(frappe.session.user), doc.document_type, doc.reference_title)
-	send_notification(recipients, subject, message, doc)
+	# an HR Manager who has not opened the earlier request yet is not told again
+	send_notification(recipients, subject, message, doc, skip_unread_duplicates=True)
 
 
 def notify_employee(doc, outcome):
-	recipient = doc.submitted_by or doc.get_linked_user()
+	"""Only the employee the document belongs to: never the HR Manager who reviewed it."""
+	recipient = doc.get_linked_user() or doc.submitted_by
+	if not recipient or recipient == frappe.session.user:
+		return
 	if outcome == APPROVED:
 		subject = _("Your {0} document has been approved").format(doc.document_type)
 		message = _("{0} approved your {1} document ({2}).").format(
@@ -403,3 +436,57 @@ def get_files(names: list[str] | str) -> dict:
 	):
 		files.setdefault(row.parent, []).append({"file": row.file, "description": row.description})
 	return files
+
+
+# Documents every new employee must upload (Document Type Master > Mandatory at Joining, optionally
+# only for one Nationality). ClickUp 14yr2e57mhp. Shown in the Employee Documents section.
+MISSING = "Missing"
+# the best document of a type decides its status: an approved one beats a pending one, etc.
+STATUS_RANK = {APPROVED: 3, PENDING: 2, REJECTED: 1}
+
+
+def mandatory_document_types(nationality=None):
+	"""Enabled document types mandatory at joining for an employee of `nationality`."""
+	types = frappe.get_all(
+		"Document Type Master",
+		filters={"disabled": 0, "mandatory_at_joining": 1},
+		fields=["name", "mandatory_for_nationality"],
+		order_by="name asc",
+	)
+	return [t.name for t in types if not t.mandatory_for_nationality or t.mandatory_for_nationality == nationality]
+
+
+def mandatory_document_status(employee):
+	"""[{document_type, status, document}] for each mandatory type: Missing, or the status of the
+	employee's best document of that type (Approved > Pending Approval > Rejected)."""
+	nationality = frappe.db.get_value("Employee", employee, "alt_nationality")
+	required = mandatory_document_types(nationality)
+	best = {}
+	for doc in frappe.get_all(
+		DOCTYPE,
+		filters={"reference_doctype": "Employee", "reference_name": employee, "document_type": ["in", required or [""]]},
+		fields=["name", "document_type", "approval_status"],
+		order_by="creation desc",
+	):
+		doc.approval_status = doc.approval_status or APPROVED  # uploaded before the approval flow
+		rank = STATUS_RANK.get(doc.approval_status, 0)
+		if rank > best.get(doc.document_type, (0, None))[0]:
+			best[doc.document_type] = (rank, doc)
+	rows = []
+	for document_type in required:
+		doc = best.get(document_type, (0, None))[1]
+		rows.append(
+			{
+				"document_type": document_type,
+				"status": doc.approval_status if doc else MISSING,
+				"document": doc.name if doc else None,
+			}
+		)
+	return rows
+
+
+@frappe.whitelist()
+def get_mandatory_documents(employee: str):
+	"""Employee Documents section: the mandatory documents and whether each is uploaded."""
+	frappe.has_permission("Employee", "read", employee, throw=True)
+	return mandatory_document_status(employee)

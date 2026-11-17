@@ -552,8 +552,8 @@ def _employees(company):
 				"date_of_joining": f"{2015 + int(number) % 9}-04-01",
 				"alt_nationality": "India",  # mandatory (setup/employee_nationality.py)
 				# Indian nationals need both; demo values in the valid formats, not real numbers
-				"alt_aadhaar_number": f"2345{int(number):08d}",
-				"pan_number": f"DEMOE{int(number) % 10000:04d}A",
+				"alt_aadhaar_number": _demo_aadhaar(number),
+				"pan_number": f"DEMPE{int(number) % 10000:04d}A",
 				"company": company,
 				"status": "Active",
 				"designation": designation,
@@ -577,6 +577,14 @@ def _employees(company):
 
 			update_password(email, _password())
 	return f"{created} created"
+
+
+def _demo_aadhaar(number):
+	"""A demo Aadhaar with a valid check digit (the Document rules check it), not a real one."""
+	from stdnum import verhoeff
+
+	base = f"2345{int(number) % 10**7:07d}"
+	return base + verhoeff.calc_check_digit(base)
 
 
 def _demo_employees(company):

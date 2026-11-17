@@ -336,6 +336,8 @@ doc_events = {
             # Sales department employees get a linked Sales Person (alantech_erp.sales.sales_person)
             "alantech_erp.sales.sales_person.employee_on_update",
             "alantech_erp.setup.employee_fields.sync_user_employee_number",
+            # changed Aadhaar / PAN -> the employee's Aadhaar / PAN documents (ClickUp 14yr2e57r7k)
+            "alantech_erp.alantech.doctype.document.employee_numbers.update_documents",
         ],
         "on_trash": "alantech_erp.sales.sales_person.employee_on_trash",
     },

@@ -47,17 +47,26 @@ const alt_employee_docs = {
 		const $list = $(`<div class="alt-doc-list"></div>`).appendTo($wrapper);
 
 		if (!frappe.model.can_create("Document")) $toolbar.find(".alt-doc-upload").remove();
-		$toolbar.find(".alt-doc-upload").on("click", () =>
-			frappe.new_doc("Document", { reference_doctype: "Employee", reference_name: frm.doc.name })
-		);
+		$toolbar.find(".alt-doc-upload").on("click", () => alt_employee_docs.upload(frm));
 		$toolbar.find(".alt-doc-refresh").on("click", () => alt_employee_docs.load(frm, $list, $toolbar));
 
 		alt_employee_docs.load(frm, $list, $toolbar);
 	},
 
+	upload(frm, document_type) {
+		frappe.new_doc("Document", {
+			reference_doctype: "Employee",
+			reference_name: frm.doc.name,
+			...(document_type ? { document_type } : {}),
+		});
+	},
+
+	// One table: the mandatory document types first (Document Type Master > Mandatory at Joining,
+	// ClickUp 14yr2e57mhp) with their documents, or a "Missing" row with Upload; then the other
+	// uploaded documents.
 	load(frm, $list, $toolbar) {
 		$list.html(`<p class="text-muted">${__("Loading...")}</p>`);
-		frappe.db
+		const documents = frappe.db
 			.get_list("Document", {
 				filters: { reference_doctype: "Employee", reference_name: frm.doc.name },
 				fields: ["name", "document_type", "card_number", "issue_date", "expiry_date", "approval_status", "submitted_by"],
@@ -71,14 +80,22 @@ const alt_employee_docs = {
 						names: rows.map((r) => r.name),
 					})
 					.then((files) => rows.map((r) => ({ ...r, files: files[r.name] || [] })))
-			)
-			.then((rows) => {
-				$toolbar.find(".alt-doc-count").text(__("{0} document(s)", [rows.length]));
-				if (!rows.length) {
+			);
+		const mandatory = frappe
+			.xcall("alantech_erp.alantech.doctype.document.document.get_mandatory_documents", {
+				employee: frm.doc.name,
+			})
+			.catch(() => []);
+
+		Promise.all([documents, mandatory])
+			.then(([rows, required]) => {
+				required = required || [];
+				$toolbar.find(".alt-doc-count").html(alt_employee_docs.summary(rows, required));
+				if (!rows.length && !required.length) {
 					$list.html(`<p class="text-muted">${__("No documents uploaded yet.")}</p>`);
 					return;
 				}
-				$list.html(alt_employee_docs.table(rows));
+				$list.html(alt_employee_docs.table(alt_employee_docs.combine(rows, required)));
 				$list.find("[data-doc]").on("click", (e) => {
 					e.preventDefault();
 					frappe.set_route("Form", "Document", $(e.currentTarget).attr("data-doc"));
@@ -87,6 +104,10 @@ const alt_employee_docs = {
 					e.preventDefault();
 					const row = rows.find((r) => r.name === $(e.currentTarget).attr("data-files"));
 					if (row) alt_employee_docs.preview(row.files, `${row.document_type || ""} - ${row.name}`);
+				});
+				$list.find("[data-upload]").on("click", (e) => {
+					e.preventDefault();
+					alt_employee_docs.upload(frm, $(e.currentTarget).attr("data-upload"));
 				});
 				$list.find("[data-review]").on("click", (e) => {
 					e.preventDefault();
@@ -97,11 +118,59 @@ const alt_employee_docs = {
 			.catch(() => $list.html(`<p class="text-muted">${__("Could not load documents.")}</p>`));
 	},
 
+	summary(rows, required) {
+		const count = __("{0} document(s)", [rows.length]);
+		if (!required.length) return count;
+		const done = required.filter((r) => ["Approved", "Pending Approval"].includes(r.status)).length;
+		const colour = done === required.length ? "text-success" : "text-danger";
+		return `${count} · <span class="${colour}" style="font-weight:600;">${__(
+			"Mandatory documents: {0} of {1} uploaded",
+			[done, required.length]
+		)}</span>`;
+	},
+
+	// Table rows: each mandatory type's documents (or one Missing row), then the other documents.
+	// A rejected mandatory type also gets an Upload button.
+	combine(rows, required) {
+		const out = [];
+		const shown = new Set();
+		required.forEach((req) => {
+			const docs = rows.filter((r) => r.document_type === req.document_type);
+			const reupload = req.status === "Rejected";
+			if (!docs.length) {
+				out.push({ document_type: req.document_type, mandatory: true, missing: true });
+				return;
+			}
+			docs.forEach((d, i) => {
+				shown.add(d.name);
+				out.push({ ...d, mandatory: true, reupload: reupload && i === 0 });
+			});
+		});
+		rows.filter((r) => !shown.has(r.name)).forEach((r) => out.push(r));
+		return out;
+	},
+
 	table(rows) {
 		const esc = frappe.utils.escape_html;
 		const today = frappe.datetime.get_today();
+		const can_upload = frappe.model.can_create("Document");
+		const upload_btn = (type) =>
+			can_upload
+				? `<button class="btn btn-primary btn-xs" data-upload="${esc(type)}">${__("Upload")}</button>`
+				: "";
 		const body = rows
 			.map((r) => {
+				const type = `${esc(r.document_type || "")}${
+					r.mandatory ? ` <span class="text-danger" title="${__("Mandatory")}">*</span>` : ""
+				}`;
+				if (r.missing) {
+					return `<tr>
+						<td>${type}</td><td></td><td></td><td></td><td></td>
+						<td><span class="indicator-pill red">${__("Missing")}</span></td>
+						<td><span class="text-muted">${__("No file")}</span></td>
+						<td style="white-space:nowrap;">${upload_btn(r.document_type)}</td>
+					</tr>`;
+				}
 				const colour = alt_employee_docs.STATUS_COLOURS[r.approval_status] || "gray";
 				const status = r.approval_status
 					? `<span class="indicator-pill ${colour}">${__(r.approval_status)}</span>`
@@ -112,9 +181,14 @@ const alt_employee_docs = {
 					if (days < 0) expiry = `<span class="text-danger">${expiry}</span>`;
 					else if (days <= 30) expiry = `<span class="text-warning">${expiry}</span>`;
 				}
+				const review = alt_employee_docs.can_review(r)
+					? `<button class="btn btn-success btn-xs" data-review="approve" data-name="${esc(r.name)}">${__("Approve")}</button>
+						<button class="btn btn-danger btn-xs" data-review="reject" data-name="${esc(r.name)}"
+							style="margin-left:4px;">${__("Reject")}</button>`
+					: "";
 				return `<tr>
+					<td>${type}</td>
 					<td><a href="#" data-doc="${esc(r.name)}">${esc(r.name)}</a></td>
-					<td>${esc(r.document_type || "")}</td>
 					<td>${esc(r.card_number || "")}</td>
 					<td>${r.issue_date ? frappe.datetime.str_to_user(r.issue_date) : ""}</td>
 					<td>${expiry}</td>
@@ -124,22 +198,19 @@ const alt_employee_docs = {
 						}</button>`
 						: `<span class="text-muted">${__("No file")}</span>`
 					}</td>
-					<td style="white-space:nowrap;">${alt_employee_docs.can_review(r)
-						? `<button class="btn btn-success btn-xs" data-review="approve" data-name="${esc(r.name)}">${__("Approve")}</button>
-							   <button class="btn btn-danger btn-xs" data-review="reject" data-name="${esc(r.name)}"
-								style="margin-left:4px;">${__("Reject")}</button>`
-						: ""
-					}</td>
+					<td style="white-space:nowrap;">${review}${r.reupload ? upload_btn(r.document_type) : ""}</td>
 				</tr>`;
 			})
 			.join("");
 		return `<table class="table table-bordered table-hover" style="margin: 0;">
 			<thead><tr>
-				<th>${__("Document")}</th><th>${__("Document Type")}</th><th>${__("Number")}</th>
-				<th>${__("Issue Date")}</th><th>${__("Expiry Date")}</th><th>${__("Approval Status")}</th><th>${__("File")}</th><th>${__("Action")}</th>
+				<th>${__("Document Type")}</th><th>${__("Document")}</th><th>${__("Number")}</th>
+				<th>${__("Issue Date")}</th><th>${__("Expiry Date")}</th><th>${__("Status")}</th>
+				<th>${__("File")}</th><th>${__("Action")}</th>
 			</tr></thead>
 			<tbody>${body}</tbody>
-		</table>`;
+		</table>
+		<p class="text-muted small" style="margin-top: var(--margin-xs);">${__("* Mandatory at joining")}</p>`;
 	},
 
 	// HR Manager may approve/reject pending documents they did not submit themselves
@@ -461,5 +532,40 @@ frappe.ui.form.on("Employee", {
 	pan_number(frm) {
 		const upper = (frm.doc.pan_number || "").toUpperCase();
 		if (frm.doc.pan_number && frm.doc.pan_number !== upper) frm.set_value("pan_number", upper);
+	},
+});
+
+// Aadhaar Number in groups of four while typing ("2345 6789 0124"), the way it is stored on the
+// Employee and the Aadhaar documents (employee_nationality.format_aadhaar).
+function alt_format_aadhaar(value) {
+	const digits = (value || "").replace(/\D/g, "").slice(0, 12);
+	return digits.replace(/(\d{4})(?=\d)/g, "$1 ");
+}
+
+frappe.ui.form.on("Employee", {
+	refresh(frm) {
+		const $input = frm.get_field("alt_aadhaar_number")?.$input;
+		if (!$input || $input.data("alt-aadhaar")) return;
+		$input.data("alt-aadhaar", true);
+		$input.attr("inputmode", "numeric");
+		$input.on("input", function () {
+			const formatted = alt_format_aadhaar(this.value);
+			if (this.value === formatted) return;
+			// keep the cursor after the same number of digits
+			const digits_before = this.value.slice(0, this.selectionStart).replace(/\D/g, "").length;
+			this.value = formatted;
+			let pos = 0;
+			for (let seen = 0; pos < formatted.length && seen < digits_before; pos++) {
+				if (/\d/.test(formatted[pos])) seen++;
+			}
+			this.setSelectionRange(pos, pos);
+		});
+	},
+	alt_aadhaar_number(frm) {
+		const value = frm.doc.alt_aadhaar_number || "";
+		const formatted = alt_format_aadhaar(value);
+		if (value && /^\d{12}$/.test(value.replace(/\D/g, "")) && formatted !== value) {
+			frm.set_value("alt_aadhaar_number", formatted);
+		}
 	},
 });

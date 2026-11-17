@@ -394,6 +394,81 @@ class IntegrationTestDocument(IntegrationTestCase):
 		self.assertNotIn(self.emp_user, notified)
 		self.assertIn("needs approval", self.notifications(doc, self.hr_manager)[0].subject)
 
+	# --- duplicate / wrong recipients (ClickUp 14yr2e57q0t) ---------------
+	def send_back_for_approval(self, doc):
+		"""HR edits (auto-approved), then the employee edits again: Pending Approval once more."""
+		doc = self.fresh(doc, self.hr_user)
+		doc.remarks = f"checked {frappe.generate_hash(length=4)}"
+		doc.save()
+		doc = self.fresh(doc, self.emp_user)
+		doc.place_of_issue = f"Kochi {frappe.generate_hash(length=4)}"
+		doc.save()
+		self.assertEqual(doc.approval_status, PENDING)
+		return doc
+
+	def needs_approval(self, doc, user):
+		return [n for n in self.notifications(doc, user) if "needs approval" in n.subject]
+
+	def test_hr_manager_notified_once_per_employee_change(self):
+		doc = self.make_doc(user=self.emp_user)
+		self.assertEqual(len(self.needs_approval(doc, self.hr_manager2)), 1)
+		doc.save()  # the same object saved again in the same request
+		self.assertEqual(len(self.needs_approval(doc, self.hr_manager2)), 1)
+
+	def test_unread_request_not_repeated(self):
+		doc = self.make_doc(user=self.emp_user)
+		doc = self.send_back_for_approval(doc)
+		self.assertEqual(len(self.needs_approval(doc, self.hr_manager2)), 1)
+
+		frappe.db.set_value("Notification Log", {"for_user": self.hr_manager2, "document_name": doc.name}, "read", 1)
+		self.send_back_for_approval(doc)
+		self.assertEqual(len(self.needs_approval(doc, self.hr_manager2)), 2)
+
+	def test_approval_notifies_only_the_employee(self):
+		doc = self.make_doc(user=self.emp_user)
+		before = {n.for_user for n in self.notifications(doc)}
+		doc = self.fresh(doc, self.hr_manager2)
+		doc.approve()
+		logs = frappe.get_all(
+			"Notification Log",
+			filters={"document_name": doc.name, "subject": ["like", "%has been approved%"]},
+			pluck="for_user",
+		)
+		self.assertEqual(logs, [self.emp_user])
+		self.assertEqual({n.for_user for n in self.notifications(doc)} - before, {self.emp_user})
+
+	def test_rejection_notifies_only_the_employee(self):
+		doc = self.make_doc(user=self.emp_user)
+		doc = self.fresh(doc, self.hr_manager2)
+		doc.reject("Scan is blurred")
+		logs = frappe.get_all(
+			"Notification Log",
+			filters={"document_name": doc.name, "subject": ["like", "%has been rejected%"]},
+			pluck="for_user",
+		)
+		self.assertEqual(logs, [self.emp_user])
+
+	def test_one_email_per_recipient_owned_by_administrator(self):
+		from alantech_erp.alantech.doctype.document.document import email_configured
+
+		if not email_configured():
+			self.skipTest("No outgoing email account on the site")
+		doc = self.make_doc(user=self.emp_user)
+		queues = frappe.get_all(
+			"Email Queue", filters={"reference_doctype": "Document", "reference_name": doc.name},
+			fields=["name", "owner"],
+		)
+		self.assertTrue(queues)
+		recipients = []
+		for q in queues:
+			self.assertEqual(q.owner, "Administrator")
+			rows = frappe.get_all("Email Queue Recipient", filters={"parent": q.name}, pluck="recipient")
+			self.assertEqual(len(rows), 1)
+			recipients += rows
+		self.assertEqual(len(recipients), len(set(recipients)))  # nobody emailed twice
+		self.assertIn(self.hr_manager2, recipients)
+		self.assertNotIn(self.emp_user, recipients)
+
 	def test_hr_managers_own_upload_needs_approval(self):
 		doc = self.make_doc(employee=self.hr_emp, user=self.hr_manager)
 		self.assertEqual(doc.approval_status, PENDING)

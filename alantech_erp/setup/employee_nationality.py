@@ -19,8 +19,11 @@ Nationality India (validate_indian_ids):
   Other nationalities: both optional.
 - Checked for new employees and when Nationality, Aadhaar or PAN changes, so system saves of older
   records are not blocked.
-- Format (any nationality, new or changed values): Aadhaar 12 digits, not starting with 0 or 1 (spaces
-  removed); PAN 5 letters, 4 digits, 1 letter (upper-cased), e.g. ABCDE1234F.
+- Format (any nationality, new or changed values): the Document module's rules
+  (document_number.clean_number): Aadhaar 12 digits, not starting with 0 or 1, with a valid
+  Verhoeff check digit, stored in groups of four like the documents ("2345 6789 0124"); PAN 5 letters (4th = holder type, e.g. P),
+  4 digits, 1 letter, upper-cased, e.g. ABCPE1234F.
+- Kept equal to the employee's Aadhaar / PAN documents (alantech/doctype/document/employee_numbers.py).
 - Aadhaar unique across employees (any company, any status): "Aadhaar Number ... already belongs
   to <name> (<ID>)." Checked for new or changed values, like employee_validation's emails.
 
@@ -37,13 +40,13 @@ from frappe import _
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 from frappe.custom.doctype.property_setter.property_setter import make_property_setter
 
+from alantech_erp.alantech.doctype.document.document_number import clean_number
+
 FIELD = "alt_nationality"
 INDIA = "India"
 AADHAAR_FIELD = "alt_aadhaar_number"
 PAN_FIELD = "pan_number"
 INDIA_CONDITION = f"eval:doc.{FIELD} == '{INDIA}'"
-AADHAAR_PATTERN = re.compile(r"^[2-9][0-9]{11}$")
-PAN_PATTERN = re.compile(r"^[A-Z]{5}[0-9]{4}[A-Z]$")
 
 CUSTOM_FIELDS = {
     "Employee": [
@@ -97,45 +100,54 @@ class InvalidIdentityNumberError(frappe.ValidationError):
     pass
 
 
+def format_aadhaar(value):
+    """Aadhaar the way the Employee and the Aadhaar documents store it: "2345 6789 0124".
+    Anything that is not 12 digits is left as typed (trimmed), for the format check to report."""
+    digits = re.sub(r"[\s\-./]", "", value or "")
+    if re.fullmatch(r"[0-9]{12}", digits):
+        return f"{digits[:4]} {digits[4:8]} {digits[8:]}"
+    return (value or "").strip()
+
+
+def check_identity_number(field, value, employee=None):
+    """Aadhaar / PAN value (compact) for `employee`: the Document module's rules (Verhoeff check
+    digit, PAN holder letter), so a number accepted here is accepted on the documents too
+    (alantech/doctype/document/employee_numbers.py keeps them equal); Aadhaar unique."""
+    fmt = "Aadhaar" if field == AADHAAR_FIELD else "PAN"
+    _value, error = clean_number(fmt, value, frappe._dict(number_format=fmt))
+    if error:
+        frappe.throw(error, InvalidIdentityNumberError, title=_("Invalid {0} Number").format(fmt))
+    if field != AADHAAR_FIELD:
+        return
+    # stored "2345 6789 0124"; an older record may still have the digits only
+    value = format_aadhaar(value)
+    duplicate = frappe.db.get_value(
+        "Employee",
+        {AADHAAR_FIELD: ["in", [value, value.replace(" ", "")]], "name": ["!=", employee or ""]},
+        ["name", "employee_name"],
+        as_dict=True,
+    )
+    if duplicate:
+        frappe.throw(
+            _("Aadhaar Number {0} already belongs to {1} ({2}).").format(
+                frappe.bold(value), frappe.bold(duplicate.employee_name), duplicate.name
+            ),
+            frappe.DuplicateEntryError,
+            title=_("Duplicate Aadhaar Number"),
+        )
+
+
 def validate_indian_ids(doc, method=None):
     """Employee.validate: Aadhaar / PAN format, and both mandatory when Nationality is India."""
-    aadhaar = re.sub(r"[\s-]", "", doc.get(AADHAAR_FIELD) or "")
+    aadhaar = format_aadhaar(doc.get(AADHAAR_FIELD))
     pan = (doc.get(PAN_FIELD) or "").strip().upper()
     doc.set(AADHAAR_FIELD, aadhaar or None)
     doc.set(PAN_FIELD, pan or None)
     # new or changed values only: an old malformed value does not block system saves
     changed = lambda field: doc.is_new() or doc.has_value_changed(field)  # noqa: E731
-    if aadhaar and changed(AADHAAR_FIELD) and not AADHAAR_PATTERN.match(aadhaar):
-        frappe.throw(
-            _("Aadhaar Number {0} is not valid: it has 12 digits and does not start with 0 or 1.").format(
-                frappe.bold(aadhaar)
-            ),
-            InvalidIdentityNumberError,
-            title=_("Invalid Aadhaar Number"),
-        )
-    if aadhaar and changed(AADHAAR_FIELD):
-        duplicate = frappe.db.get_value(
-            "Employee",
-            {AADHAAR_FIELD: aadhaar, "name": ["!=", doc.name or ""]},
-            ["name", "employee_name"],
-            as_dict=True,
-        )
-        if duplicate:
-            frappe.throw(
-                _("Aadhaar Number {0} already belongs to {1} ({2}).").format(
-                    frappe.bold(aadhaar), frappe.bold(duplicate.employee_name), duplicate.name
-                ),
-                frappe.DuplicateEntryError,
-                title=_("Duplicate Aadhaar Number"),
-            )
-    if pan and changed(PAN_FIELD) and not PAN_PATTERN.match(pan):
-        frappe.throw(
-            _("PAN Number {0} is not valid: 5 letters, 4 digits and 1 letter, e.g. ABCDE1234F.").format(
-                frappe.bold(pan)
-            ),
-            InvalidIdentityNumberError,
-            title=_("Invalid PAN Number"),
-        )
+    for field in (AADHAAR_FIELD, PAN_FIELD):
+        if doc.get(field) and changed(field):
+            check_identity_number(field, doc.get(field), doc.name)
 
     if frappe.flags.in_test and not frappe.flags.alt_check_employee_required:
         return

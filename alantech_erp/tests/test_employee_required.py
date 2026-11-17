@@ -47,8 +47,8 @@ def full_employee(**changes):
 		"default_shift": "General Shift",
 		"grade": frappe.db.get_value("Employee Grade", {}, "name"),
 		"alt_nationality": "India",  # mandatory too (setup/employee_nationality.py)
-		"alt_aadhaar_number": "234567890123",  # Indian nationals: Aadhaar + PAN
-		"pan_number": "ABCDE1234F",
+		"alt_aadhaar_number": "234567890124",  # Indian nationals: Aadhaar + PAN
+		"pan_number": "ABCPE1234F",
 		**ref,
 		**changes,
 	}

@@ -18,3 +18,6 @@ alantech_erp.patches.v16.document_number_key
 alantech_erp.patches.v16.document_expiry_alert_sent
 alantech_erp.patches.v16.loan_hr_manager_create_loan
 alantech_erp.patches.v16.loan_applicant_name
+alantech_erp.patches.v16.document_types_at_joining
+alantech_erp.patches.v16.employee_numbers_from_documents
+alantech_erp.patches.v16.employee_aadhaar_spaced

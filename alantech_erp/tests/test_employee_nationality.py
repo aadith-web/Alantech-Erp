@@ -14,7 +14,7 @@ Covered:
 - Nationality India: Aadhaar and PAN mandatory (new employee, changing to India, clearing one);
   other nationalities optional; unchanged older records still saved by the system.
 - Aadhaar / PAN formats checked and normalised (spaces removed, PAN upper-cased).
-- Aadhaar unique across employees (new and changed values).
+- Aadhaar unique across employees (new and changed values); stored "2345 6789 0124".
 
 Run:
     bench --site alantech.localhost run-tests --module alantech_erp.tests.test_employee_nationality
@@ -43,8 +43,9 @@ COMPANY = "Alantech Industries India Pvt Ltd"
 PREFIX = "TEST-P13"
 MESSAGE = "Citizen is required. Please select Nationality."
 INDIA_MESSAGE = "Aadhaar Number and PAN Number are required when Nationality is India."
-AADHAAR = "234567890123"
-PAN = "ABCDE1234F"
+AADHAAR = "234567890124"  # valid Verhoeff check digit
+AADHAAR_SHOWN = "2345 6789 0124"  # how the Employee stores it
+PAN = "ABCPE1234F"  # 4th letter P: a person
 
 
 def new_employee(first_name, **values):
@@ -204,15 +205,15 @@ class TestIndianIds(TestCase):
 		doc.save(ignore_permissions=True)  # Aadhaar / PAN untouched: a system save goes through
 
 	def test_formats_normalised_and_checked(self):
-		doc = new_employee("Format", **{FIELD: "India", AADHAAR_FIELD: " 2345 6789-0123 ", "pan_number": " abcde1234f"})
+		doc = new_employee("Format", **{FIELD: "India", AADHAAR_FIELD: " 2345 6789-0124 ", "pan_number": " abcpe1234f"})
 		validate_indian_ids(doc)
-		self.assertEqual(doc.get(AADHAAR_FIELD), AADHAAR)
+		self.assertEqual(doc.get(AADHAAR_FIELD), AADHAAR_SHOWN)
 		self.assertEqual(doc.pan_number, PAN)
-		for aadhaar in ("123456789012", "23456789012", "23456789012A"):
+		for aadhaar in ("123456789012", "23456789012", "23456789012A", "234567890123"):  # last: check digit
 			doc = new_employee("Bad", **{FIELD: "India", AADHAAR_FIELD: aadhaar, "pan_number": PAN})
 			with self.assertRaises(InvalidIdentityNumberError, msg=aadhaar):
 				validate_indian_ids(doc)
-		for pan in ("ABCD1234F", "ABCDE12345", "12345ABCDE"):
+		for pan in ("ABCD1234F", "ABCDE12345", "12345ABCDE", "ABCDE1234F"):  # last: D no holder type
 			doc = new_employee("Bad", **{FIELD: "India", AADHAAR_FIELD: AADHAAR, "pan_number": pan})
 			with self.assertRaises(InvalidIdentityNumberError, msg=pan):
 				validate_indian_ids(doc)
@@ -232,10 +233,10 @@ class TestIndianIds(TestCase):
 		first = new_employee("Aadhaar One", **{FIELD: "India", AADHAAR_FIELD: AADHAAR, "pan_number": PAN})
 		first.insert(ignore_permissions=True)
 		# also when typed with spaces, and on another nationality
-		second = new_employee("Aadhaar Two", **{FIELD: "United Arab Emirates", AADHAAR_FIELD: "2345 6789 0123"})
+		second = new_employee("Aadhaar Two", **{FIELD: "United Arab Emirates", AADHAAR_FIELD: "2345 6789 0124"})
 		with self.assertRaises(frappe.DuplicateEntryError) as raised:
 			second.insert(ignore_permissions=True)
-		self.assertIn(f"Aadhaar Number <strong>{AADHAAR}</strong> already belongs to", str(raised.exception))
+		self.assertIn(f"Aadhaar Number <strong>{AADHAAR_SHOWN}</strong> already belongs to", str(raised.exception))
 		self.assertIn(first.name, str(raised.exception))
 		# changing an existing employee to that number is refused too; its own number is fine
 		other = new_employee("Aadhaar Three").insert(ignore_permissions=True)
@@ -246,3 +247,15 @@ class TestIndianIds(TestCase):
 		first.reload()
 		first.middle_name = "Changed"
 		first.save(ignore_permissions=True)
+
+	def test_aadhaar_grouped_and_old_digits_only_value_still_unique(self):
+		from alantech_erp.setup.employee_nationality import format_aadhaar
+
+		self.assertEqual(format_aadhaar("234567890124"), AADHAAR_SHOWN)
+		self.assertEqual(format_aadhaar(" 2345-6789.0124 "), AADHAAR_SHOWN)
+		self.assertEqual(format_aadhaar("2345678901"), "2345678901")  # not 12 digits: left for the check
+		frappe.flags.alt_check_employee_required = None
+		old = new_employee("Aadhaar Old").insert(ignore_permissions=True)
+		frappe.db.set_value("Employee", old.name, AADHAAR_FIELD, AADHAAR)  # stored before the grouping
+		with self.assertRaises(frappe.DuplicateEntryError):
+			new_employee("Aadhaar New", **{AADHAAR_FIELD: AADHAAR_SHOWN}).insert(ignore_permissions=True)

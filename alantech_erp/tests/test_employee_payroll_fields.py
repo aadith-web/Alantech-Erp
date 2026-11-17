@@ -34,7 +34,7 @@ PREFIX = "TEST-P12"
 
 COMPLETE = {
 	"salary_mode": "Cash",
-	"pan_number": "ABCDE1234F",
+	"pan_number": "ABCPE1234F",
 	"grade": "G1",
 	"payroll_cost_center": "Main - AIIPL",
 	"holiday_list": "HL",
@@ -114,7 +114,7 @@ class TestPayrollRefused(TestCase):
 		self.complete = self.make_employee(
 			"Complete",
 			salary_mode="Cash",
-			pan_number="ABCDE1234F",
+			pan_number="ABCPE1234F",
 			grade=self.any_record("Employee Grade"),
 			payroll_cost_center=frappe.get_cached_value("Company", COMPANY, "cost_center"),
 			holiday_list=self.any_record("Holiday List"),

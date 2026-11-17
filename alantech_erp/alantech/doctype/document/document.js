@@ -30,11 +30,17 @@ frappe.ui.form.on("Document", {
 		alt_doc.check_number_on_input(frm);
 		alt_doc.limit_date_pickers(frm);
 		alt_doc.add_review_buttons(frm);
+		alt_doc.fill_from_employee(frm);
 	},
 
 	document_type(frm) {
 		alt_doc.set_card_number_label(frm);
 		alt_doc.check_number(frm, "typing");
+		alt_doc.fill_from_employee(frm);
+	},
+
+	reference_name(frm) {
+		alt_doc.fill_from_employee(frm);
 	},
 
 	card_number(frm) {
@@ -187,6 +193,25 @@ const alt_doc = {
 				if (mode === "blur" && !r.error && r.value !== (card_number || "")) {
 					frm.set_value("card_number", r.value);
 				}
+			});
+	},
+
+	// New Aadhaar / PAN document for an employee: the number saved on the Employee, written the
+	// document's way; saving an approved one updates the Employee (employee_numbers.py)
+	fill_from_employee(frm) {
+		const { document_type, reference_doctype, reference_name, card_number } = frm.doc;
+		if (!frm.is_new() || card_number || !document_type || reference_doctype !== "Employee" || !reference_name) {
+			return;
+		}
+		frappe
+			.xcall("alantech_erp.alantech.doctype.document.employee_numbers.get_employee_number", {
+				employee: reference_name,
+				document_type,
+			})
+			.then((number) => {
+				const same = frm.doc.document_type === document_type && frm.doc.reference_name === reference_name;
+				if (!number || !same || frm.doc.card_number) return;
+				frm.set_value("card_number", number).then(() => alt_doc.check_number(frm, "blur"));
 			});
 	},
 
