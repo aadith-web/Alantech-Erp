@@ -86,7 +86,15 @@ def execute():
 def show_employee_number_in_list(doc=None, method=None):
     """Employee form and list: Employee Number shown, as a column and filter, and searchable in
     Employee links. Also HR Settings.on_update: with "Employee Naming By" = Naming Series, HRMS
-    hides the field on every HR Settings save."""
+    hides the field on every HR Settings save.
+
+    Employee import template (https://app.clickup.com/t/14yr2e57mja): Employee Number is ticked by
+    "Select Mandatory" but stays optional: a blank number gets the next E###
+    (employee_validation.set_employee_number). Series stays mandatory; the blank template comes
+    with it pre-filled HR-EMP- (setup/employee_import.py)."""
+    make_property_setter(
+        "Employee", "employee_number", "in_import_template", 1, "Check", validate_fields_for_doctype=False
+    )
     make_property_setter("Employee", "employee_number", "hidden", 0, "Check", validate_fields_for_doctype=False)
     # unique and never changed once saved (employee_validation.py)
     make_property_setter("Employee", "employee_number", "set_only_once", 1, "Check", validate_fields_for_doctype=False)

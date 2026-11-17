@@ -25,7 +25,11 @@
   "expiry_required",
   "alert_days_before",
   "column_break_expiry",
-  "expiry_date_mandatory"
+  "expiry_date_mandatory",
+  "joining_section",
+  "mandatory_at_joining",
+  "column_break_joining",
+  "mandatory_for_nationality"
  ],
  "fields": [
   {
@@ -148,12 +152,36 @@
    "in_list_view": 1,
    "label": "Expiry Date Mandatory",
    "description": "A document of this type cannot be saved without an Expiry Date."
+  },
+  {
+   "fieldname": "joining_section",
+   "fieldtype": "Section Break",
+   "label": "At Joining"
+  },
+  {
+   "fieldname": "mandatory_at_joining",
+   "fieldtype": "Check",
+   "label": "Mandatory at Joining",
+   "default": "0",
+   "description": "Every new employee must upload this document; listed in the Documents section of the Employee until uploaded."
+  },
+  {
+   "fieldname": "column_break_joining",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mandatory_for_nationality",
+   "fieldtype": "Link",
+   "options": "Country",
+   "label": "Only for Nationality",
+   "depends_on": "eval:doc.mandatory_at_joining",
+   "description": "Mandatory only for employees of this Nationality (e.g. India for Aadhaar and PAN). Leave blank for every employee."
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-15 15:22:59.971667",
+ "modified": "2026-11-12 13:58:27.831263",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Document Type Master",

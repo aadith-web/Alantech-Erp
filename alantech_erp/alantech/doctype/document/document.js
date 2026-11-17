@@ -30,11 +30,22 @@ frappe.ui.form.on("Document", {
 		alt_doc.check_number_on_input(frm);
 		alt_doc.limit_date_pickers(frm);
 		alt_doc.add_review_buttons(frm);
+		alt_doc.setup_review_fields(frm);
+		alt_doc.fill_from_employee(frm);
+	},
+
+	approval_status(frm) {
+		alt_doc.toggle_rejection_reason(frm);
 	},
 
 	document_type(frm) {
 		alt_doc.set_card_number_label(frm);
 		alt_doc.check_number(frm, "typing");
+		alt_doc.fill_from_employee(frm);
+	},
+
+	reference_name(frm) {
+		alt_doc.fill_from_employee(frm);
 	},
 
 	card_number(frm) {
@@ -53,7 +64,7 @@ frappe.ui.form.on("Document", {
 	},
 
 	validate(frm) {
-		if (!frm.is_new() && alt_doc.snapshot_of(frm) === frm.__alt_doc_snapshot) {
+		if (!frm.is_new() && alt_doc.snapshot_of(frm) === frm.__alt_doc_snapshot && !alt_doc.review_chosen(frm)) {
 			frappe.throw({ title: __("Nothing to save"), message: __("No changes to save."), indicator: "orange" });
 		}
 		const error = alt_doc.local_number_error(frm, frm.doc.card_number);
@@ -187,6 +198,25 @@ const alt_doc = {
 				if (mode === "blur" && !r.error && r.value !== (card_number || "")) {
 					frm.set_value("card_number", r.value);
 				}
+			});
+	},
+
+	// New Aadhaar / PAN document for an employee: the number saved on the Employee, written the
+	// document's way; saving an approved one updates the Employee (employee_numbers.py)
+	fill_from_employee(frm) {
+		const { document_type, reference_doctype, reference_name, card_number } = frm.doc;
+		if (!frm.is_new() || card_number || !document_type || reference_doctype !== "Employee" || !reference_name) {
+			return;
+		}
+		frappe
+			.xcall("alantech_erp.alantech.doctype.document.employee_numbers.get_employee_number", {
+				employee: reference_name,
+				document_type,
+			})
+			.then((number) => {
+				const same = frm.doc.document_type === document_type && frm.doc.reference_name === reference_name;
+				if (!number || !same || frm.doc.card_number) return;
+				frm.set_value("card_number", number).then(() => alt_doc.check_number(frm, "blur"));
 			});
 	},
 
@@ -329,6 +359,40 @@ const alt_doc = {
 				(values) => alt_doc.run_review(frm, "reject", { reason: values.reason }),
 				__("Reject Document"), __("Reject"));
 		}, group);
+	},
+
+	// HR Manager reviewing someone else's pending document may also set Approval Status in the
+	// form and save (Rejected asks for the reason); the server applies it like the Review buttons
+	// (Document.get_review_request) and ignores it from anyone else.
+	can_review(frm) {
+		return (
+			!frm.is_new() &&
+			frm.__alt_saved_status === ALT_DOC_STATUS.PENDING &&
+			frappe.user.has_role("HR Manager") &&
+			!alt_doc.is_own_document(frm)
+		);
+	},
+
+	setup_review_fields(frm) {
+		frm.__alt_saved_status = frm.doc.approval_status;
+		const editable = alt_doc.can_review(frm);
+		frm.set_df_property("approval_status", "read_only", editable ? 0 : 1);
+		frm.set_df_property(
+			"approval_status",
+			"description",
+			editable ? __("Choose Approved or Rejected and save to review this document.") : ""
+		);
+		alt_doc.toggle_rejection_reason(frm);
+	},
+
+	toggle_rejection_reason(frm) {
+		const rejecting = alt_doc.can_review(frm) && frm.doc.approval_status === ALT_DOC_STATUS.REJECTED;
+		frm.set_df_property("rejection_reason", "read_only", rejecting ? 0 : 1);
+		frm.toggle_reqd("rejection_reason", rejecting);
+	},
+
+	review_chosen(frm) {
+		return alt_doc.can_review(frm) && frm.doc.approval_status !== frm.__alt_saved_status;
 	},
 
 	run_review(frm, method, args) {

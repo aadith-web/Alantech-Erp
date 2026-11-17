@@ -299,9 +299,12 @@ def apply_designation_defaults(doc, method=None):
         doc.department = dept
 
     if not doc.reports_to and parent_desig:
-        managers = _active_holders(parent_desig, doc)
-        if not managers:  # parent post vacant: the Managing Director until it is filled
-            managers = _active_holders(TOP_DESIGNATION, doc)
+        from alantech_erp.setup.reports_to import manager_holders
+
+        # only a holder who is a manager (setup/reports_to.py, ClickUp 14yr2e57t0m)
+        managers = manager_holders(_active_holders(parent_desig, doc))
+        if not managers:  # parent post vacant (or no manager in it): the Managing Director
+            managers = manager_holders(_active_holders(TOP_DESIGNATION, doc))
         if managers:  # several (e.g. two Production Managers): the first created one
             doc.reports_to = managers[0]
 
@@ -328,6 +331,12 @@ def fill_vacant_post(doc, method=None):
     if before and before.designation == doc.designation and before.status == doc.status:
         return
     if len(_active_holders(doc.designation, frappe._dict(company=doc.company, name=""))) != 1:
+        return
+    from alantech_erp.setup.reports_to import is_manager
+
+    from alantech_erp.setup.reports_to import rule_active
+
+    if rule_active() and not is_manager(doc.name):  # no manager role yet (e.g. no user): the MD stays meanwhile
         return
     child_desigs = frappe.get_all("Designation", filters={"alt_reports_to": doc.designation}, pluck="name")
     md = _active_holders(TOP_DESIGNATION, doc)

@@ -20,3 +20,7 @@ alantech_erp.patches.v16.loan_hr_manager_create_loan
 alantech_erp.patches.v16.campaign_carry_through
 alantech_erp.patches.v16.sales_activities_from_events
 alantech_erp.patches.v16.loan_applicant_name
+alantech_erp.patches.v16.document_types_at_joining
+alantech_erp.patches.v16.employee_numbers_from_documents
+alantech_erp.patches.v16.employee_aadhaar_spaced
+alantech_erp.patches.v16.employee_notice_periods

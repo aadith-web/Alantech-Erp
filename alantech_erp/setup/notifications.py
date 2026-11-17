@@ -29,3 +29,48 @@ def get_notification_logs(limit: int = 20):
 	if getattr(frappe.local, "response_headers", None) is not None:
 		frappe.local.response_headers.set("Cache-Control", NO_STORE)
 	return result
+
+
+# ---------------------------------------------------------------------- read on view
+# ClickUp: https://app.clickup.com/t/14yr2e57yr3
+# Frappe v16's bell has no way to mark one notification read (only "Mark all as read"), and its
+# count changes only on a new notification. public/js/notification_read.js marks a notification
+# read when it is opened from the bell (or its document is opened while the bell lists it unread)
+# and sets every bell count to the real number of unread notifications.
+READ_EVENT = "alt_notification_read"
+
+
+def unread_count(user=None):
+	return frappe.db.count("Notification Log", {"for_user": user or frappe.session.user, "read": 0})
+
+
+@frappe.whitelist(methods=["POST"])
+def mark_read(names: list[str] | str | None = None, document_type: str | None = None, document_name: str | None = None):
+	"""Mark the current user's notifications read: `names`, and/or every unread one about
+	`document_type` / `document_name`. Returns the unread count left; other open tabs of the user
+	get it through the realtime event READ_EVENT."""
+	user = frappe.session.user
+	names = frappe.parse_json(names) if isinstance(names, str) and names.startswith("[") else names
+	if isinstance(names, str):
+		names = [names]
+	filters = []
+	if names:
+		filters.append({"name": ["in", list(names)]})
+	if document_type and document_name:
+		filters.append({"document_type": document_type, "document_name": document_name})
+	changed = []
+	for extra in filters:
+		changed += frappe.get_all(
+			"Notification Log", filters={"for_user": user, "read": 0, **extra}, pluck="name"
+		)
+	if changed and not frappe.flags.read_only:
+		# own notifications only (for_user filter above), so no document permission is needed
+		frappe.db.set_value("Notification Log", {"name": ["in", changed]}, "read", 1, update_modified=False)
+	count = unread_count(user)
+	frappe.publish_realtime(READ_EVENT, {"unread": count, "names": changed}, user=user, after_commit=True)
+	return {"unread": count, "names": changed}
+
+
+@frappe.whitelist(methods=["GET"])
+def get_unread_count():
+	return unread_count()

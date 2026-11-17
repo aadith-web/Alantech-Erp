@@ -4,6 +4,7 @@
 frappe.ui.form.on("Employee", {
 	refresh(frm) {
 		alt_employee_docs.render(frm);
+		alt_notice_period.render(frm);
 
 		// Company Policy card on Connections: open the policy list
 		if (!frm.is_new()) {
@@ -47,17 +48,26 @@ const alt_employee_docs = {
 		const $list = $(`<div class="alt-doc-list"></div>`).appendTo($wrapper);
 
 		if (!frappe.model.can_create("Document")) $toolbar.find(".alt-doc-upload").remove();
-		$toolbar.find(".alt-doc-upload").on("click", () =>
-			frappe.new_doc("Document", { reference_doctype: "Employee", reference_name: frm.doc.name })
-		);
+		$toolbar.find(".alt-doc-upload").on("click", () => alt_employee_docs.upload(frm));
 		$toolbar.find(".alt-doc-refresh").on("click", () => alt_employee_docs.load(frm, $list, $toolbar));
 
 		alt_employee_docs.load(frm, $list, $toolbar);
 	},
 
+	upload(frm, document_type) {
+		frappe.new_doc("Document", {
+			reference_doctype: "Employee",
+			reference_name: frm.doc.name,
+			...(document_type ? { document_type } : {}),
+		});
+	},
+
+	// One table: the mandatory document types first (Document Type Master > Mandatory at Joining,
+	// ClickUp 14yr2e57mhp) with their documents, or a "Missing" row with Upload; then the other
+	// uploaded documents.
 	load(frm, $list, $toolbar) {
 		$list.html(`<p class="text-muted">${__("Loading...")}</p>`);
-		frappe.db
+		const documents = frappe.db
 			.get_list("Document", {
 				filters: { reference_doctype: "Employee", reference_name: frm.doc.name },
 				fields: ["name", "document_type", "card_number", "issue_date", "expiry_date", "approval_status", "submitted_by"],
@@ -71,14 +81,22 @@ const alt_employee_docs = {
 						names: rows.map((r) => r.name),
 					})
 					.then((files) => rows.map((r) => ({ ...r, files: files[r.name] || [] })))
-			)
-			.then((rows) => {
-				$toolbar.find(".alt-doc-count").text(__("{0} document(s)", [rows.length]));
-				if (!rows.length) {
+			);
+		const mandatory = frappe
+			.xcall("alantech_erp.alantech.doctype.document.document.get_mandatory_documents", {
+				employee: frm.doc.name,
+			})
+			.catch(() => []);
+
+		Promise.all([documents, mandatory])
+			.then(([rows, required]) => {
+				required = required || [];
+				$toolbar.find(".alt-doc-count").html(alt_employee_docs.summary(rows, required));
+				if (!rows.length && !required.length) {
 					$list.html(`<p class="text-muted">${__("No documents uploaded yet.")}</p>`);
 					return;
 				}
-				$list.html(alt_employee_docs.table(rows));
+				$list.html(alt_employee_docs.table(alt_employee_docs.combine(rows, required)));
 				$list.find("[data-doc]").on("click", (e) => {
 					e.preventDefault();
 					frappe.set_route("Form", "Document", $(e.currentTarget).attr("data-doc"));
@@ -87,6 +105,10 @@ const alt_employee_docs = {
 					e.preventDefault();
 					const row = rows.find((r) => r.name === $(e.currentTarget).attr("data-files"));
 					if (row) alt_employee_docs.preview(row.files, `${row.document_type || ""} - ${row.name}`);
+				});
+				$list.find("[data-upload]").on("click", (e) => {
+					e.preventDefault();
+					alt_employee_docs.upload(frm, $(e.currentTarget).attr("data-upload"));
 				});
 				$list.find("[data-review]").on("click", (e) => {
 					e.preventDefault();
@@ -97,11 +119,59 @@ const alt_employee_docs = {
 			.catch(() => $list.html(`<p class="text-muted">${__("Could not load documents.")}</p>`));
 	},
 
+	summary(rows, required) {
+		const count = __("{0} document(s)", [rows.length]);
+		if (!required.length) return count;
+		const done = required.filter((r) => ["Approved", "Pending Approval"].includes(r.status)).length;
+		const colour = done === required.length ? "text-success" : "text-danger";
+		return `${count} · <span class="${colour}" style="font-weight:600;">${__(
+			"Mandatory documents: {0} of {1} uploaded",
+			[done, required.length]
+		)}</span>`;
+	},
+
+	// Table rows: each mandatory type's documents (or one Missing row), then the other documents.
+	// A rejected mandatory type also gets an Upload button.
+	combine(rows, required) {
+		const out = [];
+		const shown = new Set();
+		required.forEach((req) => {
+			const docs = rows.filter((r) => r.document_type === req.document_type);
+			const reupload = req.status === "Rejected";
+			if (!docs.length) {
+				out.push({ document_type: req.document_type, mandatory: true, missing: true });
+				return;
+			}
+			docs.forEach((d, i) => {
+				shown.add(d.name);
+				out.push({ ...d, mandatory: true, reupload: reupload && i === 0 });
+			});
+		});
+		rows.filter((r) => !shown.has(r.name)).forEach((r) => out.push(r));
+		return out;
+	},
+
 	table(rows) {
 		const esc = frappe.utils.escape_html;
 		const today = frappe.datetime.get_today();
+		const can_upload = frappe.model.can_create("Document");
+		const upload_btn = (type) =>
+			can_upload
+				? `<button class="btn btn-primary btn-xs" data-upload="${esc(type)}">${__("Upload")}</button>`
+				: "";
 		const body = rows
 			.map((r) => {
+				const type = `${esc(r.document_type || "")}${
+					r.mandatory ? ` <span class="text-danger" title="${__("Mandatory")}">*</span>` : ""
+				}`;
+				if (r.missing) {
+					return `<tr>
+						<td>${type}</td><td></td><td></td><td></td><td></td>
+						<td><span class="indicator-pill red">${__("Missing")}</span></td>
+						<td><span class="text-muted">${__("No file")}</span></td>
+						<td style="white-space:nowrap;">${upload_btn(r.document_type)}</td>
+					</tr>`;
+				}
 				const colour = alt_employee_docs.STATUS_COLOURS[r.approval_status] || "gray";
 				const status = r.approval_status
 					? `<span class="indicator-pill ${colour}">${__(r.approval_status)}</span>`
@@ -112,9 +182,14 @@ const alt_employee_docs = {
 					if (days < 0) expiry = `<span class="text-danger">${expiry}</span>`;
 					else if (days <= 30) expiry = `<span class="text-warning">${expiry}</span>`;
 				}
+				const review = alt_employee_docs.can_review(r)
+					? `<button class="btn btn-success btn-xs" data-review="approve" data-name="${esc(r.name)}">${__("Approve")}</button>
+						<button class="btn btn-danger btn-xs" data-review="reject" data-name="${esc(r.name)}"
+							style="margin-left:4px;">${__("Reject")}</button>`
+					: "";
 				return `<tr>
+					<td>${type}</td>
 					<td><a href="#" data-doc="${esc(r.name)}">${esc(r.name)}</a></td>
-					<td>${esc(r.document_type || "")}</td>
 					<td>${esc(r.card_number || "")}</td>
 					<td>${r.issue_date ? frappe.datetime.str_to_user(r.issue_date) : ""}</td>
 					<td>${expiry}</td>
@@ -124,22 +199,19 @@ const alt_employee_docs = {
 						}</button>`
 						: `<span class="text-muted">${__("No file")}</span>`
 					}</td>
-					<td style="white-space:nowrap;">${alt_employee_docs.can_review(r)
-						? `<button class="btn btn-success btn-xs" data-review="approve" data-name="${esc(r.name)}">${__("Approve")}</button>
-							   <button class="btn btn-danger btn-xs" data-review="reject" data-name="${esc(r.name)}"
-								style="margin-left:4px;">${__("Reject")}</button>`
-						: ""
-					}</td>
+					<td style="white-space:nowrap;">${review}${r.reupload ? upload_btn(r.document_type) : ""}</td>
 				</tr>`;
 			})
 			.join("");
 		return `<table class="table table-bordered table-hover" style="margin: 0;">
 			<thead><tr>
-				<th>${__("Document")}</th><th>${__("Document Type")}</th><th>${__("Number")}</th>
-				<th>${__("Issue Date")}</th><th>${__("Expiry Date")}</th><th>${__("Approval Status")}</th><th>${__("File")}</th><th>${__("Action")}</th>
+				<th>${__("Document Type")}</th><th>${__("Document")}</th><th>${__("Number")}</th>
+				<th>${__("Issue Date")}</th><th>${__("Expiry Date")}</th><th>${__("Status")}</th>
+				<th>${__("File")}</th><th>${__("Action")}</th>
 			</tr></thead>
 			<tbody>${body}</tbody>
-		</table>`;
+		</table>
+		<p class="text-muted small" style="margin-top: var(--margin-xs);">${__("* Mandatory at joining")}</p>`;
 	},
 
 	// HR Manager may approve/reject pending documents they did not submit themselves
@@ -307,7 +379,7 @@ frappe.ui.form.on("Employee", {
 const ALT_EMPLOYEE_REQUIRED = [
 	"first_name", "gender", "date_of_birth", "date_of_joining", "company", "status",
 	"department", "designation", "branch", "reports_to", "employment_type", "cell_number",
-	"default_shift",
+	"default_shift", "grade",
 ];
 const ALT_TOP_DESIGNATION = "Managing Director"; // reports to no one (org_structure.TOP_DESIGNATION)
 
@@ -389,3 +461,183 @@ const alt_employee_required = {
 			});
 	},
 };
+
+// Fields needed before the first payroll (ClickUp 14yr2e57mhp): listed at the top of a saved,
+// active employee until filled. Salary Structure Assignment / Payroll Entry are refused without
+// them (setup/employee_payroll_fields.py, which also decides the list).
+frappe.ui.form.on("Employee", {
+	refresh(frm) {
+		frm.set_intro("");
+		if (frm.is_new() || frm.doc.status !== "Active") return;
+		frappe
+			.xcall("alantech_erp.setup.employee_payroll_fields.get_missing_payroll_fields", {
+				employee: frm.doc.name,
+			})
+			.then((missing) => {
+				if (!missing || !missing.length || frm.doc.__unsaved) return;
+				const fields = missing.map((label) => frappe.utils.escape_html(label)).join(", ");
+				frm.set_intro(__("Needed before the first payroll: {0}", [fields]), "orange");
+			});
+	},
+});
+
+// Nationality (Citizen) is mandatory on new and existing employees (ClickUp 14yr2e57r7h). The
+// server refuses a new employee without it and never lets it be cleared
+// (setup/employee_nationality.py); older employees are asked for it on their next edit here.
+frappe.ui.form.on("Employee", {
+	refresh(frm) {
+		frm.toggle_reqd("alt_nationality", true);
+	},
+});
+
+// Minimum age: 18 on the Date of Joining (today when blank). Shown under Date of Birth as soon as
+// either date is entered; the save is refused by employee_validation.validate_minimum_age.
+const ALT_MINIMUM_AGE = 18;
+frappe.ui.form.on("Employee", {
+	date_of_birth: (frm) => alt_check_minimum_age(frm),
+	date_of_joining: (frm) => alt_check_minimum_age(frm),
+});
+
+function alt_check_minimum_age(frm) {
+	const { date_of_birth: dob, date_of_joining: doj } = frm.doc;
+	let note = "";
+	if (dob) {
+		const on = doj || frappe.datetime.get_today();
+		const age = Math.max(moment(on).diff(moment(dob), "years"), 0);
+		if (age < ALT_MINIMUM_AGE) {
+			note = `<span class="text-danger">${__(
+				"Must be at least {0} years old on the Date of Joining (now {1}).",
+				[ALT_MINIMUM_AGE, age]
+			)}</span>`;
+		}
+	}
+	frm.set_df_property("date_of_birth", "description", note);
+}
+
+// PAN Number in capitals while typing (ClickUp 14yr2e57r7k); the server upper-cases it too
+// (employee_nationality.validate_indian_ids).
+frappe.ui.form.on("Employee", {
+	refresh(frm) {
+		const $input = frm.get_field("pan_number")?.$input;
+		if (!$input || $input.data("alt-uppercase")) return;
+		$input.data("alt-uppercase", true);
+		$input.css("text-transform", "uppercase");
+		$input.on("input", function () {
+			const upper = this.value.toUpperCase();
+			if (this.value === upper) return;
+			const { selectionStart: start, selectionEnd: end } = this;
+			this.value = upper;
+			this.setSelectionRange(start, end);
+		});
+	},
+	pan_number(frm) {
+		const upper = (frm.doc.pan_number || "").toUpperCase();
+		if (frm.doc.pan_number && frm.doc.pan_number !== upper) frm.set_value("pan_number", upper);
+	},
+});
+
+// Aadhaar Number in groups of four while typing ("2345 6789 0124"), the way it is stored on the
+// Employee and the Aadhaar documents (employee_nationality.format_aadhaar).
+function alt_format_aadhaar(value) {
+	const digits = (value || "").replace(/\D/g, "").slice(0, 12);
+	return digits.replace(/(\d{4})(?=\d)/g, "$1 ");
+}
+
+frappe.ui.form.on("Employee", {
+	refresh(frm) {
+		const $input = frm.get_field("alt_aadhaar_number")?.$input;
+		if (!$input || $input.data("alt-aadhaar")) return;
+		$input.data("alt-aadhaar", true);
+		$input.attr("inputmode", "numeric");
+		$input.on("input", function () {
+			const formatted = alt_format_aadhaar(this.value);
+			if (this.value === formatted) return;
+			// keep the cursor after the same number of digits
+			const digits_before = this.value.slice(0, this.selectionStart).replace(/\D/g, "").length;
+			this.value = formatted;
+			let pos = 0;
+			for (let seen = 0; pos < formatted.length && seen < digits_before; pos++) {
+				if (/\d/.test(formatted[pos])) seen++;
+			}
+			this.setSelectionRange(pos, pos);
+		});
+	},
+	alt_aadhaar_number(frm) {
+		const value = frm.doc.alt_aadhaar_number || "";
+		const formatted = alt_format_aadhaar(value);
+		if (value && /^\d{12}$/.test(value.replace(/\D/g, "")) && formatted !== value) {
+			frm.set_value("alt_aadhaar_number", formatted);
+		}
+	},
+});
+
+// Notice Period tab (ClickUp 14yr2e57r71): the employee's Employee Notice Period, created with the
+// employee (company policy default, HR Settings > Default Notice Period (Days)).
+const alt_notice_period = {
+	render(frm) {
+		const field = frm.fields_dict.alt_notice_period_html;
+		if (!field) return;
+		const $wrapper = $(field.wrapper).empty();
+		if (frm.is_new()) {
+			$wrapper.html(
+				`<p class="text-muted">${__(
+					"The notice period is created when the employee is saved (company policy: HR Settings > Default Notice Period)."
+				)}</p>`
+			);
+			return;
+		}
+		frappe
+			.xcall(
+				"alantech_erp.alantech.doctype.employee_notice_period.employee_notice_period.get_notice_period",
+				{ employee: frm.doc.name }
+			)
+			.then((r) => {
+				if (!r) {
+					$wrapper.html(`<p class="text-muted">${__("No notice period yet. Save the employee to create it.")}</p>`);
+					return;
+				}
+				const esc = frappe.utils.escape_html;
+				const row = (label, value) => `
+					<div class="col-sm-4" style="margin-bottom: var(--margin-md);">
+						<div class="text-muted small">${label}</div>
+						<div class="bold">${value}</div>
+					</div>`;
+				const can_edit = frappe.model.can_write("Employee Notice Period");
+				$wrapper.html(`
+					<div class="row">
+						${row(__("Notice Days"), __("{0} days", [r.notice_days]))}
+						${row(__("Effective From"), r.effective_from ? frappe.datetime.str_to_user(r.effective_from) : "-")}
+						${row(__("Source"), esc(__(r.source || "")))}
+					</div>
+					${r.remarks ? `<p class="text-muted">${esc(r.remarks)}</p>` : ""}
+					${
+						// HR only: an employee just reads the details here (their record is read-only)
+						can_edit
+							? `<button class="btn btn-default btn-xs alt-notice-open">${__("Edit Notice Period")}</button>`
+							: ""
+					}`);
+				$wrapper
+					.find(".alt-notice-open")
+					.on("click", () => frappe.set_route("Form", "Employee Notice Period", r.name));
+			});
+	},
+};
+
+// Reports To lists managers only (ClickUp 14yr2e57t0m): employees whose user has a Manager role or
+// Leave Approver (setup/reports_to.py, which also checks it on save). Replaces ERPNext's query.
+frappe.ui.form.on("Employee", {
+	refresh(frm) {
+		frm.set_query("reports_to", () => ({
+			query: "alantech_erp.setup.reports_to.reports_to_query",
+			filters: [
+				["status", "=", "Active"],
+				["name", "!=", frm.doc.name],
+			],
+		}));
+		frm.set_df_property(
+			"reports_to",
+			"description",
+			__("Managers only: employees whose user has a Manager role or Leave Approver.")
+		);
+	},
+});
