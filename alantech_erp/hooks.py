@@ -527,6 +527,7 @@ override_whitelisted_methods = {
 # 	"Task": "alantech_erp.task.get_dashboard_data"
 # }
 
+
 # override_doctype_dashboards = {
 # 	"Customer": "alantech_erp.sales.dashboards.customer",
 # 	"Lead": "alantech_erp.sales.dashboards.lead",
@@ -534,6 +535,9 @@ override_whitelisted_methods = {
 # }
 
 # calls, meetings, tasks and notes on the Lead / Customer / Deal timeline (CRM C10)4
+
+# calls, meetings, tasks and notes on the Lead / Customer / Deal timeline (CRM C10)
+
 additional_timeline_content = {
 	doctype: ["alantech_erp.sales.activity.timeline_content"] for doctype in ("Lead", "Customer", "Opportunity")
 }
@@ -545,7 +549,6 @@ override_doctype_dashboards = {
 	"Campaign": "alantech_erp.sales.dashboards.campaign",
 	"Employee": "alantech_erp.alantech.dashboards.employee",
 }
-
 
 # exempt linked doctypes from being automatically cancelled
 #
