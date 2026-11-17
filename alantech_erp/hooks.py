@@ -254,6 +254,7 @@ has_permission = {
 fixtures = [
     {"dt": "Print Format", "filters": [["name", "in", ["Offer Letter", "Appointment Letter"]]]},
     {"dt": "Letter Head", "filters": [["name", "in", ["AlanTech"]]]},
+    {"dt": "Dashboard Chart", "filters": [["name", "in", ["Attendance Count"]]]},
     {"dt": "Custom Field", "or_filters": [
         ["fieldname", "like", "alt\\_%"],
         ["name", "in", [
