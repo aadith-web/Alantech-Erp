@@ -562,6 +562,61 @@ class IntegrationTestDocument(IntegrationTestCase):
 		self.assertFalse(doc.reviewed_by)
 		self.assertIn("Corrected and resubmitted", " ".join(self.comments(doc)))
 
+	# --- Approval Status set in the form by the HR Manager -------------------
+	def test_hr_manager_approves_from_status_field(self):
+		doc = self.make_doc(user=self.emp_user)
+		doc = self.fresh(doc, self.hr_manager2)
+		doc.approval_status = APPROVED
+		doc.save()
+		doc = self.fresh(doc, self.hr_manager2)
+		self.assertEqual(doc.approval_status, APPROVED)
+		self.assertEqual(doc.reviewed_by, self.hr_manager2)
+		self.assertTrue(doc.reviewed_on)
+		self.assertIn("Approved by", " ".join(self.comments(doc)))
+		self.assertIn("has been approved", self.notifications(doc, self.emp_user)[0].subject)
+		self.assertNotIn("Auto-approved", " ".join(self.comments(doc)))
+
+	def test_hr_manager_rejects_from_status_field(self):
+		doc = self.make_doc(user=self.emp_user)
+		doc = self.fresh(doc, self.hr_manager2)
+		doc.approval_status = REJECTED
+		doc.rejection_reason = "Scan is blurred"
+		doc.save()
+		doc = self.fresh(doc, self.hr_manager2)
+		self.assertEqual(doc.approval_status, REJECTED)
+		self.assertEqual(doc.rejection_reason, "Scan is blurred")
+		self.assertIn("has been rejected", self.notifications(doc, self.emp_user)[0].subject)
+
+	def test_status_field_reject_needs_a_reason(self):
+		doc = self.make_doc(user=self.emp_user)
+		doc = self.fresh(doc, self.hr_manager2)
+		doc.approval_status = REJECTED
+		with self.assertRaises(frappe.ValidationError):
+			doc.save()
+		self.assertEqual(frappe.db.get_value("Document", doc.name, "approval_status"), PENDING)
+
+	def test_status_field_ignored_for_non_reviewers(self):
+		# HR User (no HR Manager role) and the HR Manager on their own document
+		for user, employee, uploader in (
+			(self.hr_user, None, self.emp_user),
+			(self.hr_manager, self.hr_emp, self.hr_manager),
+		):
+			with self.subTest(user=user):
+				doc = self.make_doc(employee=employee, user=uploader)
+				doc = self.fresh(doc, user)
+				doc.approval_status = REJECTED
+				doc.rejection_reason = "x"
+				doc.save()
+				self.assertNotEqual(frappe.db.get_value("Document", doc.name, "approval_status"), REJECTED)
+
+	def test_status_field_only_for_pending_documents(self):
+		doc = self.make_doc()  # HR upload: Approved
+		doc = self.fresh(doc, self.hr_manager2)
+		doc.approval_status = REJECTED
+		doc.rejection_reason = "x"
+		doc.save()
+		self.assertEqual(frappe.db.get_value("Document", doc.name, "approval_status"), APPROVED)
+
 	def test_only_hr_manager_reviews(self):
 		doc = self.make_doc(user=self.emp_user)
 		for user in (self.hr_user, self.emp_user):
@@ -704,6 +759,24 @@ class IntegrationTestDocument(IntegrationTestCase):
 
 		send_expiry_alerts()  # next day's run (same date here): no second advance alert
 		self.assertEqual(len(self.notifications(late, self.emp_user)), 1)
+
+	def test_expiry_alert_wording_for_employee_and_hr(self):
+		doc = self.expiring(0)
+		send_expiry_alerts()
+		own = self.notifications(doc, self.emp_user)
+		self.assertEqual(len(own), 1)
+		self.assertTrue(own[0].subject.startswith(f"Your {PASSPORT} expires today"))
+		self.assertNotIn(doc.reference_title, own[0].subject)
+		hr = self.notifications(doc, self.hr_manager2)
+		self.assertEqual(len(hr), 1)
+		self.assertIn(f"for {doc.reference_title} expires today", hr[0].subject)
+
+	def test_expiry_alert_for_hr_managers_own_document(self):
+		doc = self.expiring(3, employee=self.hr_emp)
+		send_expiry_alerts()
+		own = self.notifications(doc, self.hr_manager)
+		self.assertEqual(len(own), 1)  # only the "Your ..." one, not the HR one as well
+		self.assertTrue(own[0].subject.startswith(f"Your {PASSPORT} expires in 3 days"))
 
 	def test_expiry_alert_tomorrow_wording(self):
 		doc = self.expiring(1)

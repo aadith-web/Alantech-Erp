@@ -45,6 +45,8 @@ app_include_js = [
     "/assets/alantech_erp/js/customer_quick_entry.js",
     # Home page check-in reminder popup (HR-F02)
     "/assets/alantech_erp/js/checkin_reminder.js",
+    # bell: a notification viewed is marked read, count kept right (ClickUp 14yr2e57yr3)
+    "/assets/alantech_erp/js/notification_read.js",
     # Activity menu + Activities panel on Lead, Customer and Deal (CRM C10, sales/activity.py)
     "/assets/alantech_erp/js/sales_activity.js",
     # Lending forms: employee name under the Applicant box (loan_rules/loan.get_applicant_name)
@@ -213,6 +215,10 @@ permission_query_conditions = {
 	"Sales Activity": f"{_SALES_HIERARCHY}.sales_activity_query",
 	# a Sales Engineer / Manager sees the forecasts of their own part of the tree
 	"Sales Forecast": "alantech_erp.sales.forecast.sales_forecast_query",
+	# HR imports employees: only imports into doctypes the user may import
+	"Data Import": "alantech_erp.setup.data_import_permissions.get_permission_query_conditions",
+	# employees see only their own notice period
+	"Employee Notice Period": "alantech_erp.alantech.doctype.employee_notice_period.employee_notice_period.get_permission_query_conditions",
 }
 has_permission = {
 	"Document": "alantech_erp.alantech.doctype.document.document.has_permission",
@@ -223,6 +229,8 @@ has_permission = {
 	"Loan": "alantech_erp.setup.loan_permissions.has_permission",
 	"Salary Structure Assignment": "alantech_erp.setup.salary_access.has_permission",
 	"Salary Slip": "alantech_erp.setup.salary_access.has_permission",
+	"Data Import": "alantech_erp.setup.data_import_permissions.has_permission",
+	"Employee Notice Period": "alantech_erp.alantech.doctype.employee_notice_period.employee_notice_period.has_permission",
 	**{
 		doctype: f"{_SALES_HIERARCHY}.has_permission"
 		for doctype in (
@@ -317,6 +325,8 @@ doc_events = {
         "after_insert": "alantech_erp.setup.employee_user.employee_after_insert",
         "validate": [
             "alantech_erp.org_structure.apply_designation_defaults",
+            # Reports To: managers only (ClickUp 14yr2e57t0m)
+            "alantech_erp.setup.reports_to.validate_reports_to",
             "alantech_erp.setup.employee_validation.validate_unique_employee",
             "alantech_erp.setup.employee_validation.validate_unique_email",
             "alantech_erp.setup.employee_validation.validate_mobile_number",
@@ -347,8 +357,13 @@ doc_events = {
             "alantech_erp.setup.employee_fields.sync_user_employee_number",
             # changed Aadhaar / PAN -> the employee's Aadhaar / PAN documents (ClickUp 14yr2e57r7k)
             "alantech_erp.alantech.doctype.document.employee_numbers.update_documents",
+            # new employee -> Employee Notice Period (default 30 days); Notice (days) kept in sync (ClickUp 14yr2e57r71)
+            "alantech_erp.alantech.doctype.employee_notice_period.employee_notice_period.employee_on_update",
         ],
-        "on_trash": "alantech_erp.sales.sales_person.employee_on_trash",
+        "on_trash": [
+            "alantech_erp.sales.sales_person.employee_on_trash",
+            "alantech_erp.alantech.doctype.employee_notice_period.employee_notice_period.employee_on_trash",
+        ],
     },
     "Employee Separation": {
         "after_insert": "alantech_erp.alantech.doctype.employee_asset_handover.exit_alerts.employee_separation_after_insert",
@@ -539,6 +554,9 @@ override_whitelisted_methods = {
 	"frappe.desk.doctype.notification_log.notification_log.get_notification_logs": "alantech_erp.setup.notifications.get_notification_logs",
 	# blank Employee template with Series pre-filled HR-EMP- (setup/employee_import.py, ClickUp 14yr2e57mja)
 	"frappe.core.doctype.data_import.data_import.download_template": "alantech_erp.setup.employee_import.download_template",
+	# Employee form "Create Assignments": no Salary Structure permission error for employees
+	# (setup/employee_assignments.py)
+	"hrms.overrides.employee_master.get_assignable_masters": "alantech_erp.setup.employee_assignments.get_assignable_masters",
 }
 #
 # each overriding function accepts a `data` argument;
@@ -668,6 +686,10 @@ after_migrate = [
     "alantech_erp.setup.loan_application_fields.execute",
     # Employee Loan Rules: HR roles on Loan Application / Loan Product / Loan (LR-09)
     "alantech_erp.setup.loan_permissions.execute",
+    # HR Manager / HR User may open the Import dialog (Data Import rights, Employee import)
+    "alantech_erp.setup.data_import_permissions.execute",
+    # HR Settings > Default Notice Period (Days); Employee > Notice Period tab (ClickUp 14yr2e57r71)
+    "alantech_erp.alantech.doctype.employee_notice_period.employee_notice_period.execute",
     # Loan Management flow (HR-F05-x): existing HR Managers get Loan Manager
     "alantech_erp.setup.loan_roles.execute",
     # Loan Management flow (HR-F05-x): employee loan ledgers, Loan Product accounts, Company settings

@@ -4,6 +4,7 @@
 frappe.ui.form.on("Employee", {
 	refresh(frm) {
 		alt_employee_docs.render(frm);
+		alt_notice_period.render(frm);
 
 		// Company Policy card on Connections: open the policy list
 		if (!frm.is_new()) {
@@ -567,5 +568,76 @@ frappe.ui.form.on("Employee", {
 		if (value && /^\d{12}$/.test(value.replace(/\D/g, "")) && formatted !== value) {
 			frm.set_value("alt_aadhaar_number", formatted);
 		}
+	},
+});
+
+// Notice Period tab (ClickUp 14yr2e57r71): the employee's Employee Notice Period, created with the
+// employee (company policy default, HR Settings > Default Notice Period (Days)).
+const alt_notice_period = {
+	render(frm) {
+		const field = frm.fields_dict.alt_notice_period_html;
+		if (!field) return;
+		const $wrapper = $(field.wrapper).empty();
+		if (frm.is_new()) {
+			$wrapper.html(
+				`<p class="text-muted">${__(
+					"The notice period is created when the employee is saved (company policy: HR Settings > Default Notice Period)."
+				)}</p>`
+			);
+			return;
+		}
+		frappe
+			.xcall(
+				"alantech_erp.alantech.doctype.employee_notice_period.employee_notice_period.get_notice_period",
+				{ employee: frm.doc.name }
+			)
+			.then((r) => {
+				if (!r) {
+					$wrapper.html(`<p class="text-muted">${__("No notice period yet. Save the employee to create it.")}</p>`);
+					return;
+				}
+				const esc = frappe.utils.escape_html;
+				const row = (label, value) => `
+					<div class="col-sm-4" style="margin-bottom: var(--margin-md);">
+						<div class="text-muted small">${label}</div>
+						<div class="bold">${value}</div>
+					</div>`;
+				const can_edit = frappe.model.can_write("Employee Notice Period");
+				$wrapper.html(`
+					<div class="row">
+						${row(__("Notice Days"), __("{0} days", [r.notice_days]))}
+						${row(__("Effective From"), r.effective_from ? frappe.datetime.str_to_user(r.effective_from) : "-")}
+						${row(__("Source"), esc(__(r.source || "")))}
+					</div>
+					${r.remarks ? `<p class="text-muted">${esc(r.remarks)}</p>` : ""}
+					${
+						// HR only: an employee just reads the details here (their record is read-only)
+						can_edit
+							? `<button class="btn btn-default btn-xs alt-notice-open">${__("Edit Notice Period")}</button>`
+							: ""
+					}`);
+				$wrapper
+					.find(".alt-notice-open")
+					.on("click", () => frappe.set_route("Form", "Employee Notice Period", r.name));
+			});
+	},
+};
+
+// Reports To lists managers only (ClickUp 14yr2e57t0m): employees whose user has a Manager role or
+// Leave Approver (setup/reports_to.py, which also checks it on save). Replaces ERPNext's query.
+frappe.ui.form.on("Employee", {
+	refresh(frm) {
+		frm.set_query("reports_to", () => ({
+			query: "alantech_erp.setup.reports_to.reports_to_query",
+			filters: [
+				["status", "=", "Active"],
+				["name", "!=", frm.doc.name],
+			],
+		}));
+		frm.set_df_property(
+			"reports_to",
+			"description",
+			__("Managers only: employees whose user has a Manager role or Leave Approver.")
+		);
 	},
 });

@@ -148,10 +148,32 @@ def validate_mobile_number(doc, method=None):
     Checked for new employees and changed numbers only (old numbers: patches/v16/employee_mobile_country_code)."""
     if not doc.cell_number or not (doc.is_new() or doc.has_value_changed("cell_number")):
         return
+    if frappe.flags.in_import:
+        doc.cell_number = restore_plus_sign(doc.cell_number)
     error = check_mobile_number(doc.cell_number)
     if error:
         frappe.throw(error, frappe.InvalidPhoneNumberError, title=_("Invalid Mobile Number"))
     doc.cell_number = format_mobile_number(doc.cell_number)
+
+
+def restore_plus_sign(mobile):
+    """Data Import: spreadsheets (Excel, LibreOffice) read +919876798789 as a formula or a number
+    and save 919876798789, without the "+". When the digits are a valid mobile number with the
+    "+" (or written 00919876798789), the "+" is put back; anything else is left as it was and
+    check_mobile_number reports it. A float cell (919876798789.0) is read as its digits."""
+    import re
+
+    value = str(mobile or "").strip()
+    if not value or value.startswith("+"):
+        return mobile
+    value = re.sub(r"\.0+$", "", value)
+    digits = re.sub(r"[\s\-().]", "", value)
+    if not digits.isdigit():
+        return mobile
+    if digits.startswith("00"):
+        digits = digits[2:]
+    candidate = f"+{digits}"
+    return candidate if check_mobile_number(candidate) is None else mobile
 
 
 @frappe.whitelist()

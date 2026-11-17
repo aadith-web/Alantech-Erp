@@ -33,7 +33,11 @@ class Document(Document):
 		validate_document_number(self)  # also blocks approving a wrong number until it is fixed
 		if self.flags.approval_action:      # approve()/reject() set the fields themselves
 			return
+		review = self.get_review_request()  # HR Manager chose Approved / Rejected in the form
 		self.restore_approval_fields()
+		if review:
+			self.apply_review(*review)
+			return
 		self.set_approval_status()
 
 	def on_update(self):
@@ -43,6 +47,14 @@ class Document(Document):
 		if self.flags.notify_hr:
 			self.flags.notify_hr = False  # once per change, even if this object is saved again
 			notify_hr_managers(self)
+		if self.flags.review_outcome:
+			outcome, self.flags.review_outcome = self.flags.review_outcome, None
+			reviewer = get_fullname(frappe.session.user)
+			if outcome == APPROVED:
+				self.add_comment("Info", _("Approved by {0}.").format(reviewer))
+			else:
+				self.add_comment("Info", _("Rejected by {0}. Reason: {1}").format(reviewer, self.rejection_reason))
+			notify_employee(self, outcome)
 
 	# --- reference -------------------------------------------------------
 	def set_reference_details(self):
@@ -161,7 +173,16 @@ class Document(Document):
 			if previous in (PENDING, REJECTED):
 				self.flags.timeline_note = _("Auto-approved: updated by {0}.").format(get_fullname(user))
 
-	# --- approve / reject (called from the Review buttons) ---------------
+	# --- approve / reject (Review buttons, or Approval Status set in the form) ---
+	def can_review(self, user=None):
+		user = user or frappe.session.user
+		return (
+			self.approval_status == PENDING
+			and APPROVER_ROLE in frappe.get_roles(user)
+			and not self.is_linked_user(user)
+			and self.submitted_by != user
+		)
+
 	def check_can_review(self):
 		if self.approval_status != PENDING:
 			frappe.throw(_("Only documents with status Pending Approval can be approved or rejected."))
@@ -171,32 +192,42 @@ class Document(Document):
 		if self.is_linked_user(user) or self.submitted_by == user:
 			frappe.throw(_("You cannot approve or reject your own document."), frappe.PermissionError)
 
+	def get_review_request(self):
+		"""(status, reason) when an HR Manager changed Approval Status of a pending document in
+		the form. Anyone else's change is ignored: restore_approval_fields puts the value back."""
+		if self.is_new() or self.approval_status not in (APPROVED, REJECTED):
+			return None
+		before = self.get_doc_before_save()
+		if not before or before.approval_status != PENDING:
+			return None
+		# checked on the saved document: submitted_by from the browser is not trusted
+		if not before.can_review():
+			return None
+		return self.approval_status, (self.rejection_reason or "").strip()
+
+	def apply_review(self, status, reason=None):
+		reason = (reason or "").strip()
+		if status == REJECTED and not reason:
+			frappe.throw(_("Please enter a reason for rejection."), title=_("Rejection Reason Required"))
+		self.approval_status = status
+		self.reviewed_by = frappe.session.user
+		self.reviewed_on = now_datetime()
+		self.rejection_reason = reason if status == REJECTED else None
+		self.flags.review_outcome = status  # comment + employee notification in on_update
+
 	@frappe.whitelist()
 	def approve(self):
 		self.check_can_review()
-		self.approval_status = APPROVED
-		self.reviewed_by = frappe.session.user
-		self.reviewed_on = now_datetime()
-		self.rejection_reason = None
+		self.apply_review(APPROVED)
 		self.flags.approval_action = True
 		self.save()
-		self.add_comment("Info", _("Approved by {0}.").format(get_fullname(frappe.session.user)))
-		notify_employee(self, APPROVED)
 
 	@frappe.whitelist()
 	def reject(self, reason=None):
 		self.check_can_review()
-		reason = (reason or "").strip()
-		if not reason:
-			frappe.throw(_("Please enter a reason for rejection."))
-		self.approval_status = REJECTED
-		self.reviewed_by = frappe.session.user
-		self.reviewed_on = now_datetime()
-		self.rejection_reason = reason
+		self.apply_review(REJECTED, reason)
 		self.flags.approval_action = True
 		self.save()
-		self.add_comment("Info", _("Rejected by {0}. Reason: {1}").format(get_fullname(frappe.session.user), reason))
-		notify_employee(self, REJECTED)
 
 
 # --- small helpers -------------------------------------------------------
@@ -396,16 +427,28 @@ def send_expiry_alerts():
 
 
 def send_expiry_alert(doc, days_left, hr_managers):
+	"""HR reads "Driving License for Simna Jose expires today"; Simna Jose herself reads "Your
+	Driving License expires today" (no own name), also when she is an HR Manager."""
+	expiry_on = frappe.utils.formatdate(doc.expiry_date)
+	number = doc.card_number or doc.name
+	employee_user = doc.get_linked_user()
+
 	if days_left <= 0:
 		subject = _("{0} for {1} expires today").format(doc.document_type, doc.reference_title)
+		own_subject = _("Your {0} expires today").format(doc.document_type)
 	elif days_left == 1:
 		subject = _("{0} for {1} expires tomorrow").format(doc.document_type, doc.reference_title)
+		own_subject = _("Your {0} expires tomorrow").format(doc.document_type)
 	else:
 		subject = _("{0} for {1} expires in {2} days").format(doc.document_type, doc.reference_title, days_left)
-	message = _("{0} ({1}) for {2} expires on {3}.").format(
-		doc.document_type, doc.card_number or doc.name, doc.reference_title, frappe.utils.formatdate(doc.expiry_date)
-	)
-	send_notification([*hr_managers, doc.get_linked_user()], subject, message, doc)
+		own_subject = _("Your {0} expires in {1} days").format(doc.document_type, days_left)
+	message = _("{0} ({1}) for {2} expires on {3}.").format(doc.document_type, number, doc.reference_title, expiry_on)
+	own_message = _("Your {0} ({1}) expires on {2}. Please renew it and upload the new document.").format(
+		doc.document_type, number, expiry_on)
+
+	send_notification([u for u in hr_managers if u != employee_user], subject, message, doc)
+	if employee_user:
+		send_notification([employee_user], own_subject, own_message, doc)
 
 
 # --- approve / reject from other pages (Employee Documents section) -------

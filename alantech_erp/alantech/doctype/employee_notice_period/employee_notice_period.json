@@ -1,0 +1,156 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "field:employee",
+ "creation": "2026-11-17 12:00:00.000000",
+ "modified": "2026-11-17 12:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "module": "AlanTech",
+ "name": "Employee Notice Period",
+ "owner": "Administrator",
+ "modified_by": "Administrator",
+ "naming_rule": "By fieldname",
+ "links": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "show_title_field_in_link": 0,
+ "track_changes": 1,
+ "search_fields": "employee_name",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "department",
+  "column_break_notice",
+  "notice_days",
+  "effective_from",
+  "source",
+  "remarks_section",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1,
+   "unique": 1,
+   "set_only_once": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "fetch_from": "employee.employee_name",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "fetch_from": "employee.company",
+   "read_only": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department",
+   "fetch_from": "employee.department",
+   "read_only": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "column_break_notice",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "notice_days",
+   "fieldtype": "Int",
+   "label": "Notice Days",
+   "reqd": 1,
+   "in_list_view": 1,
+   "non_negative": 1,
+   "description": "Days of notice the employee must serve before leaving. Default from HR Settings > Default Notice Period (Days)."
+  },
+  {
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "label": "Effective From",
+   "description": "Date of Joining for the record created with the employee."
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "Company Policy\nManual",
+   "default": "Company Policy",
+   "read_only": 1,
+   "in_list_view": 1,
+   "description": "Company Policy: the default notice period. Manual: changed by HR for this employee."
+  },
+  {
+   "fieldname": "remarks_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "print": 1,
+   "export": 1,
+   "email": 1,
+   "share": 1,
+   "create": 1,
+   "write": 1,
+   "delete": 1
+  },
+  {
+   "role": "HR Manager",
+   "read": 1,
+   "report": 1,
+   "print": 1,
+   "export": 1,
+   "email": 1,
+   "share": 1,
+   "create": 1,
+   "write": 1,
+   "delete": 1
+  },
+  {
+   "role": "HR User",
+   "read": 1,
+   "report": 1,
+   "print": 1,
+   "export": 1,
+   "email": 1,
+   "share": 1,
+   "create": 1,
+   "write": 1
+  },
+  {
+   "role": "Employee",
+   "read": 1,
+   "print": 1
+  }
+ ]
+}
