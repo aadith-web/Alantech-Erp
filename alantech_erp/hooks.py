@@ -485,6 +485,12 @@ doc_events = {
 # ---------------
 
 scheduler_events = {
+    "cron": {
+        # midnight: add missing check-outs for the previous day (setting-gated)
+        "0 0 * * *": [
+            "alantech_erp.setup.auto_checkout.auto_create_missing_checkout",
+        ],
+    },
     "daily": [
         "alantech_erp.alantech.doctype.document.document.send_expiry_alerts",
         "alantech_erp.alantech.doctype.session_log.builder.build_yesterday_logs",  # "Daily Scheduler"
@@ -519,6 +525,13 @@ override_whitelisted_methods = {
 # override_doctype_dashboards = {
 # 	"Task": "alantech_erp.task.get_dashboard_data"
 # }
+<<<<<<< HEAD
+# override_doctype_dashboards = {
+# 	"Customer": "alantech_erp.sales.dashboards.customer",
+# 	"Lead": "alantech_erp.sales.dashboards.lead",
+# 	"Employee": "alantech_erp.alantech.dashboards.employee",
+# }
+=======
 # calls, meetings, tasks and notes on the Lead / Customer / Deal timeline (CRM C10)
 additional_timeline_content = {
 	doctype: ["alantech_erp.sales.activity.timeline_content"] for doctype in ("Lead", "Customer", "Opportunity")
@@ -531,6 +544,7 @@ override_doctype_dashboards = {
 	"Campaign": "alantech_erp.sales.dashboards.campaign",
 	"Employee": "alantech_erp.alantech.dashboards.employee",
 }
+>>>>>>> d2dd2bb1a95fa717c5623dfdb58f372313739b9b
 
 # exempt linked doctypes from being automatically cancelled
 #
