@@ -58,6 +58,7 @@ web_include_css = [
 	"/assets/alantech_erp/css/alantech_tokens.css",
 	"/assets/alantech_erp/css/alantech_web.css",
 ]
+web_include_js = ["/assets/alantech_erp/js/alantech_desk.js"]
 # web_include_js = "/assets/alantech_erp/js/alantech_web.js"
 
 # include custom scss in every website theme (without file extension ".scss")
@@ -571,7 +572,18 @@ override_whitelisted_methods = {
 # override_doctype_dashboards = {
 # 	"Task": "alantech_erp.task.get_dashboard_data"
 # }
+
+
+# override_doctype_dashboards = {
+# 	"Customer": "alantech_erp.sales.dashboards.customer",
+# 	"Lead": "alantech_erp.sales.dashboards.lead",
+# 	"Employee": "alantech_erp.alantech.dashboards.employee",
+# }
+
+# calls, meetings, tasks and notes on the Lead / Customer / Deal timeline (CRM C10)4
+
 # calls, meetings, tasks and notes on the Lead / Customer / Deal timeline (CRM C10)
+
 additional_timeline_content = {
 	doctype: ["alantech_erp.sales.activity.timeline_content"] for doctype in ("Lead", "Customer", "Opportunity")
 }

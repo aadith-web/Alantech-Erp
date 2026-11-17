@@ -1,3 +1,14 @@
+// Login always lands on /desk: drop the saved last-visited route and ?redirect-to
+// before Frappe's login handler reads them.
+(() => {
+	if (!location.pathname.startsWith("/login")) return;
+	try { localStorage.removeItem("last_visited"); } catch (e) { }
+	const url = new URL(location.href);
+	if (url.searchParams.has("redirect-to")) {
+		url.searchParams.delete("redirect-to");
+		history.replaceState(null, "", url.pathname + url.search + url.hash);
+	}
+})();
 // Alantech ERP — apps screen (/desk) welcome banner for Frappe v16.
 // Adds a greeting hero above the app icons. Pure decoration: if the v16 markup
 // changes and .desktop-container is not found, nothing happens.
