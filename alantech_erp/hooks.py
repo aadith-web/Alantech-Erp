@@ -361,10 +361,14 @@ doc_events = {
     "Shift Type": {
         "validate": "alantech_erp.setup.shift_ot_fields.validate",
     },
-    "Employee Checkin": {
+      "Employee Checkin": {
         # IN/OUT must alternate; a missed check-out blocks the next punch (setup/checkin_validation.py)
         "validate": "alantech_erp.setup.checkin_validation.validate",
-        "after_insert": "alantech_erp.alantech.doctype.session_log.builder.on_checkin",  # "On Check-out"
+        "after_insert": [
+            "alantech_erp.alantech.doctype.session_log.builder.on_checkin",  # "On Check-out"
+            # in-shift check-out: show the Check-in Reminder popup again (api/checkin_reminder.py)
+            "alantech_erp.api.checkin_reminder.notify_reentry"
+        ],
         # a punch edited later (Log Type set after saving, time / employee corrected) rebuilds too
         "on_update": "alantech_erp.alantech.doctype.session_log.builder.on_checkin_update",
     },
