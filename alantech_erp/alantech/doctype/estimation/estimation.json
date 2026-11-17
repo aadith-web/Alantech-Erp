@@ -10,6 +10,7 @@
   "customer_name",
   "contact_person",
   "opportunity",
+  "utm_campaign",
   "column_break_customer",
   "plant_assembly",
   "estimation_date",
@@ -118,6 +119,15 @@
    "description": "Deals are created from the Quotation (Create Deal)",
    "read_only": 1,
    "depends_on": "eval:doc.opportunity"
+  },
+  {
+   "fieldname": "utm_campaign",
+   "fieldtype": "Link",
+   "label": "Campaign",
+   "options": "UTM Campaign",
+   "in_standard_filter": 1,
+   "read_only_depends_on": "eval:doc.docstatus > 0",
+   "description": "From the Customer (or the Deal); passed on to the Quotation"
   },
   {
    "fieldname": "column_break_customer",
@@ -474,7 +484,7 @@
    "group": "Proposal"
   }
  ],
- "modified": "2026-11-03 16:00:00.000000",
+ "modified": "2026-11-12 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Estimation",

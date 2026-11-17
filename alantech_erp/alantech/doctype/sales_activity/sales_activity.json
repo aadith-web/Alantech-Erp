@@ -1,0 +1,399 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "naming_series:",
+ "creation": "2026-11-12 14:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "activity_section",
+  "naming_series",
+  "activity_type",
+  "subject",
+  "status",
+  "priority",
+  "column_break_ref",
+  "reference_doctype",
+  "reference_name",
+  "party_name",
+  "contact_person",
+  "activity_owner",
+  "schedule_section",
+  "activity_date",
+  "ends_on",
+  "column_break_schedule",
+  "follow_up_date",
+  "follow_up_done",
+  "previous_activity",
+  "call_section",
+  "call_direction",
+  "call_purpose",
+  "column_break_call",
+  "phone",
+  "call_result",
+  "meeting_section",
+  "meeting_mode",
+  "location",
+  "column_break_meeting",
+  "attendees",
+  "details_section",
+  "description",
+  "summary",
+  "links_section",
+  "event",
+  "todo",
+  "column_break_links",
+  "communication",
+  "comment",
+  "completed_on",
+  "completed_by"
+ ],
+ "fields": [
+  {
+   "fieldname": "activity_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "SACT-.YY.-",
+   "default": "SACT-.YY.-",
+   "hidden": 1,
+   "reqd": 1,
+   "no_copy": 1,
+   "print_hide": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "activity_type",
+   "fieldtype": "Select",
+   "label": "Activity Type",
+   "options": "Call\nMeeting\nTask\nNote\nEmail\nComment",
+   "reqd": 1,
+   "default": "Call",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only_depends_on": "eval:in_list([\"Email\",\"Comment\"], doc.activity_type) && !doc.__islocal"
+  },
+  {
+   "fieldname": "subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Open\nCompleted\nCancelled",
+   "default": "Open",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "priority",
+   "fieldtype": "Select",
+   "label": "Priority",
+   "options": "Low\nMedium\nHigh",
+   "default": "Medium"
+  },
+  {
+   "fieldname": "column_break_ref",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "label": "Related To",
+   "options": "DocType",
+   "reqd": 1,
+   "in_standard_filter": 1,
+   "set_only_once": 1,
+   "description": "Lead, Customer or Deal (Opportunity)"
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Record",
+   "options": "reference_doctype",
+   "reqd": 1,
+   "in_standard_filter": 1,
+   "set_only_once": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "party_name",
+   "fieldtype": "Data",
+   "label": "Lead / Customer / Deal Name",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "contact_person",
+   "fieldtype": "Link",
+   "label": "Contact",
+   "options": "Contact"
+  },
+  {
+   "fieldname": "activity_owner",
+   "fieldtype": "Link",
+   "label": "Activity Owner",
+   "options": "User",
+   "reqd": 1,
+   "default": "__user",
+   "in_standard_filter": 1,
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "schedule_section",
+   "fieldtype": "Section Break",
+   "label": "Date & Follow-up"
+  },
+  {
+   "fieldname": "activity_date",
+   "fieldtype": "Datetime",
+   "label": "Date",
+   "reqd": 1,
+   "default": "Now",
+   "in_list_view": 0,
+   "search_index": 1,
+   "description": "When the call / meeting happens or happened; the task's start; when the note / email was made"
+  },
+  {
+   "fieldname": "ends_on",
+   "fieldtype": "Datetime",
+   "label": "Ends On",
+   "depends_on": "eval:in_list([\"Call\",\"Meeting\"], doc.activity_type)"
+  },
+  {
+   "fieldname": "column_break_schedule",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "follow_up_date",
+   "fieldtype": "Date",
+   "label": "Follow-up Due Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "search_index": 1,
+   "description": "The owner gets a ToDo and a reminder; for a Task this is its due date"
+  },
+  {
+   "fieldname": "follow_up_done",
+   "fieldtype": "Check",
+   "label": "Follow-up Done",
+   "depends_on": "eval:doc.follow_up_date",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "previous_activity",
+   "fieldtype": "Link",
+   "label": "Follow-up Of",
+   "options": "Sales Activity",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "call_section",
+   "fieldtype": "Section Break",
+   "label": "Call",
+   "depends_on": "eval:doc.activity_type==\"Call\""
+  },
+  {
+   "fieldname": "call_direction",
+   "fieldtype": "Select",
+   "label": "Call Type",
+   "options": "\nOutbound\nInbound",
+   "default": "Outbound"
+  },
+  {
+   "fieldname": "call_purpose",
+   "fieldtype": "Select",
+   "label": "Call Purpose",
+   "options": "\nProspecting\nRequirement Discussion\nFollow-up\nNegotiation\nDemo\nSupport\nOther"
+  },
+  {
+   "fieldname": "column_break_call",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "call_result",
+   "fieldtype": "Select",
+   "label": "Call Result",
+   "options": "\nConnected\nNo Answer\nBusy\nLeft Voicemail\nWrong Number"
+  },
+  {
+   "fieldname": "meeting_section",
+   "fieldtype": "Section Break",
+   "label": "Meeting",
+   "depends_on": "eval:doc.activity_type==\"Meeting\""
+  },
+  {
+   "fieldname": "meeting_mode",
+   "fieldtype": "Select",
+   "label": "Meeting Mode",
+   "options": "\nIn Person\nOnline\nPhone",
+   "default": "In Person"
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Data",
+   "label": "Location / Link"
+  },
+  {
+   "fieldname": "column_break_meeting",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "attendees",
+   "fieldtype": "Table MultiSelect",
+   "label": "Our Attendees",
+   "options": "Sales Activity Attendee"
+  },
+  {
+   "fieldname": "details_section",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Notes / Agenda"
+  },
+  {
+   "fieldname": "summary",
+   "fieldtype": "Small Text",
+   "label": "Outcome / Summary",
+   "description": "What was discussed and agreed; required to complete a call or meeting",
+   "mandatory_depends_on": "eval:in_list([\"Call\",\"Meeting\"], doc.activity_type) && doc.status==\"Completed\""
+  },
+  {
+   "fieldname": "links_section",
+   "fieldtype": "Section Break",
+   "label": "Links",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "event",
+   "fieldtype": "Link",
+   "label": "Calendar Event",
+   "options": "Event",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "todo",
+   "fieldtype": "Link",
+   "label": "ToDo",
+   "options": "ToDo",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "column_break_links",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "communication",
+   "fieldtype": "Link",
+   "label": "Email",
+   "options": "Communication",
+   "read_only": 1,
+   "no_copy": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "comment",
+   "fieldtype": "Data",
+   "label": "Comment",
+   "read_only": 1,
+   "no_copy": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "completed_on",
+   "fieldtype": "Datetime",
+   "label": "Completed On",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "completed_by",
+   "fieldtype": "Link",
+   "label": "Completed By",
+   "options": "User",
+   "read_only": 1,
+   "no_copy": 1
+  }
+ ],
+ "links": [
+  {
+   "link_doctype": "Sales Activity",
+   "link_fieldname": "previous_activity",
+   "group": "Follow-ups"
+  }
+ ],
+ "modified": "2026-11-12 14:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AlanTech",
+ "name": "Sales Activity",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "row_format": "Dynamic",
+ "sort_field": "activity_date",
+ "sort_order": "DESC",
+ "states": [],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1,
+   "share": 1,
+   "create": 1,
+   "write": 1,
+   "delete": 1,
+   "import": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1,
+   "share": 1,
+   "create": 1,
+   "write": 1,
+   "delete": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "email": 1,
+   "share": 1,
+   "create": 1,
+   "write": 1
+  }
+ ],
+ "search_fields": "subject,party_name,activity_type",
+ "show_title_field_in_link": 1,
+ "title_field": "subject",
+ "track_changes": 1
+}

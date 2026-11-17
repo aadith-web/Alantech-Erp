@@ -116,6 +116,7 @@ def make_deal(quotation, probability=None, expected_closing=None, opportunity_ow
 		deal.meta.get_field("status").options or ""
 	).split("\n"):
 		deal.status = "Quotation"
+	deal.flags.keep_probability = True  # typed in the dialog; the stage's default must not replace it
 	deal.insert()
 
 	doc.db_set("opportunity", deal.name)

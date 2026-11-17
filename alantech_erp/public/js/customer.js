@@ -1,6 +1,7 @@
 // Customer (Company = Zoho Account, Individual = Zoho Contact): Estimation and Quotation are made
 // for the customer; the Deal comes from the Quotation.
-// Tax Type (alantech_erp/sales/customer.py): Local -> GSTIN mandatory (optional for an Individual)
+// Tax Type (alantech_erp/sales/customer.py): Local -> GSTIN mandatory (optional for an Individual,
+// and for a customer whose GST Category is Unregistered)
 // and an address with that GSTIN; Overseas -> GST Category Overseas, no GSTIN, Default Currency.
 // CRM-F04: Mobile No and Email ID mandatory and unique (sales/customer_unique.py); Company /
 // Partnership: Territory and Industry mandatory; Customer Type / Tax Type / GSTIN locked after
@@ -51,10 +52,15 @@ frappe.ui.form.on("Customer", {
 				if (frm.doc.gstin) frm.set_value("gstin", "");
 			} else if (tax_type === ALT_LOCAL && frm.doc.customer_type === ALT_INDIVIDUAL && !frm.doc.gstin) {
 				frm.set_value("gst_category", "Unregistered");
-			} else if (tax_type === ALT_LOCAL && ["", "Overseas", "Unregistered"].includes(frm.doc.gst_category || "")) {
+			} else if (tax_type === ALT_LOCAL && ["", "Overseas"].includes(frm.doc.gst_category || "")) {
 				frm.set_value("gst_category", "Registered Regular");
 			}
 		}
+		alt_apply_tax_type(frm);
+	},
+
+	// Local + Unregistered: no GSTIN needed
+	gst_category(frm) {
 		alt_apply_tax_type(frm);
 	},
 
@@ -73,12 +79,17 @@ frappe.ui.form.on("Customer", {
 function alt_apply_tax_type(frm) {
 	const local = frm.doc.alt_tax_type === ALT_LOCAL;
 	if (frm.fields_dict.gstin) {
-		frm.toggle_reqd("gstin", local && frm.doc.customer_type !== ALT_INDIVIDUAL);
+		frm.toggle_reqd("gstin", alt_gstin_needed(frm.doc));
 		frm.set_df_property("gstin", "read_only", frm.doc.alt_tax_type === ALT_OVERSEAS ? 1 : 0);
 	}
 	if (frm.fields_dict.default_currency) {
 		frm.toggle_reqd("default_currency", frm.doc.alt_tax_type === ALT_OVERSEAS);
 	}
+}
+
+// Local customers registered under GST need a GSTIN; not an Individual or GST Category Unregistered
+function alt_gstin_needed(doc) {
+	return doc.alt_tax_type === ALT_LOCAL && doc.customer_type !== ALT_INDIVIDUAL && doc.gst_category !== "Unregistered";
 }
 
 function alt_apply_customer_type(frm) {
