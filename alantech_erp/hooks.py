@@ -299,6 +299,7 @@ fixtures = [
 ]
 
 doc_events = {
+    "Dashboard Chart": {"validate": "alantech_erp.install.dashboard_chart_validate"},
     # Loan Management flow (HR-F05-x): an HR Manager is also a Loan Manager
     "User": {"validate": "alantech_erp.setup.loan_roles.user_validate"},
     # new Loan Products get the employee loan ledgers for accounts left blank (HR-F05-x)
@@ -670,6 +671,7 @@ after_install = [
     ]
 after_migrate = [
     "alantech_erp.install.apply_branding",
+    "alantech_erp.install.fix_dashboard_chart_types",
     "alantech_erp.setup.access.extend_role_profiles",
     "alantech_erp.org_structure.setup_if_ready",
     "alantech_erp.setup.designations.execute",
