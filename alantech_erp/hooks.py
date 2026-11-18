@@ -253,6 +253,12 @@ override_doctype_class = {
     "Data Import": "alantech_erp.setup.employee_import.AlantechDataImport",
 }
 
+# Employee import: every error of the file listed together before importing (ClickUp 14yr2e587b3,
+# setup/employee_import_check.py)
+data_import_providers = {
+    "Employee": "alantech_erp.setup.employee_import_check.EmployeeImportProvider",
+}
+
 # Document Events
 # ---------------
 # Hook on document methods and events

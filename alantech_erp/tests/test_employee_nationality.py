@@ -113,7 +113,7 @@ class TestEmployeeNationality(TestCase):
 	def test_skipped_in_other_tests(self):
 		new_employee("Bare").insert(ignore_permissions=True)
 
-	def test_data_import_row_without_nationality_fails(self):
+	def test_data_import_row_without_nationality_blocked(self):
 		self.check_on()
 		csv = (
 			"First Name,Company,Gender,Date of Birth,Date of Joining,Status,Nationality\n"
@@ -138,12 +138,15 @@ class TestEmployeeNationality(TestCase):
 			patch("alantech_erp.setup.employee_validation.validate_required_on_create"),
 		):
 			data_import.get_importer().import_data()
-		logs = frappe.get_all(
-			"Data Import Log", filters={"data_import": data_import.name}, fields=["success", "messages"]
+		# the file is checked before importing (setup/employee_import_check.py, ClickUp 14yr2e587b3):
+		# nothing is imported and the error is listed against the row
+		self.assertFalse(frappe.get_all("Data Import Log", filters={"data_import": data_import.name}))
+		data_import.reload()
+		warnings = frappe.parse_json(data_import.template_warnings)
+		self.assertIn(
+			(2, "alt_nationality", MESSAGE),
+			[(w["row"], (w.get("field") or {}).get("fieldname"), w["message"]) for w in warnings],
 		)
-		self.assertEqual(len(logs), 1, logs)
-		self.assertFalse(logs[0].success)
-		self.assertIn(MESSAGE, logs[0].messages)
 
 
 class TestIndianIds(TestCase):
