@@ -71,18 +71,18 @@
       "label": "Lock"
     },
     {
-      "default": "0",
-      "description": "At midnight, add the missing check-out at shift end for employees whose last check-in has no check-out.",
+      "default": "1",
+      "description": "At day-end, system should automatically add a check-out at shift end time for employees whose last check-in has no check-out.",
       "fieldname": "auto_create_missing_checkout",
       "fieldtype": "Check",
-      "label": "Auto Create Missing Checkout"
+      "label": "Auto Checkout"
     }
   ],
   "grid_page_length": 50,
   "index_web_pages_for_search": 1,
   "issingle": 1,
   "links": [],
-  "modified": "2026-11-06 12:00:00.000000",
+  "modified": "2026-11-18 13:00:00.000000",
   "modified_by": "Administrator",
   "module": "AlanTech",
   "name": "Session Log Settings",
