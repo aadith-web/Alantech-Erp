@@ -1,0 +1,51 @@
+ID,Level,Band,Employee Category,Minimum Gross,Maximum Gross,Default Base Pay,Sub Band (Sub Bands),Gross Amount (Sub Bands)
+L1-B1,L1,B1,Trainee / Support Staff,16000,18000,16000,A,16000
+,,,,,,,B,16500
+,,,,,,,C,17000
+,,,,,,,D,17500
+,,,,,,,E,18000
+L2-B2,L2,B2,Operator / Skilled Technician,18000,22000,18000,A,18000
+,,,,,,,B,19000
+,,,,,,,C,20000
+,,,,,,,D,21000
+,,,,,,,E,22000
+L3-B3,L3,B3,Junior Executive / Junior Engineer,20000,28000,20000,A,20000
+,,,,,,,B,22000
+,,,,,,,C,24000
+,,,,,,,D,26000
+,,,,,,,E,28000
+L4-B4,L4,B4,Executive / Engineer,25000,35000,25000,A,25000
+,,,,,,,B,27500
+,,,,,,,C,30000
+,,,,,,,D,32500
+,,,,,,,E,35000
+L5-B5,L5,B5,Senior Engineer / Senior Executive / Supervisor,30000,45000,30000,A,30000
+,,,,,,,B,33750
+,,,,,,,C,37500
+,,,,,,,D,41250
+,,,,,,,E,45000
+L6-B6,L6,B6,Assistant Manager / Section Manager,40000,60000,40000,A,40000
+,,,,,,,B,45000
+,,,,,,,C,50000
+,,,,,,,D,55000
+,,,,,,,E,60000
+L7-B7,L7,B7,Manager / Department Manager,50000,75000,50000,A,50000
+,,,,,,,B,56250
+,,,,,,,C,62500
+,,,,,,,D,68750
+,,,,,,,E,75000
+L8-B8,L8,B8,Senior Manager / Functional Head,60000,80000,60000,A,60000
+,,,,,,,B,65000
+,,,,,,,C,70000
+,,,,,,,D,75000
+,,,,,,,E,80000
+L9-B9,L9,B9,General Manager / Business Head,75000,120000,75000,A,75000
+,,,,,,,B,86250
+,,,,,,,C,97500
+,,,,,,,D,108750
+,,,,,,,E,120000
+L10-B10,L10,B10,Director / Top Management,120000,,120000,A,120000
+,,,,,,,B,140000
+,,,,,,,C,160000
+,,,,,,,D,180000
+,,,,,,,E,200000

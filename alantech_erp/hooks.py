@@ -78,6 +78,8 @@ web_include_js = ["/assets/alantech_erp/js/alantech_desk.js"]
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 doctype_js = {
     "Employee": "public/js/employee.js",
+    # Sub Bands table: enabled Sub Bands only (ClickUp 14yr2e586v1)
+    "Employee Grade": "public/js/employee_grade.js",
     "Lead": "public/js/lead.js",
     "Opportunity": "public/js/opportunity.js",
     "Quotation": "public/js/quotation.js",
@@ -299,6 +301,8 @@ fixtures = [
 ]
 
 doc_events = {
+    # Level + Band unique across grades, one row per Sub Band, Gross Amount > 0 (ClickUp 14yr2e586v1)
+    "Employee Grade": {"validate": "alantech_erp.setup.employee_grade.validate"},
     # Loan Management flow (HR-F05-x): an HR Manager is also a Loan Manager
     "User": {"validate": "alantech_erp.setup.loan_roles.user_validate"},
     # new Loan Products get the employee loan ledgers for accounts left blank (HR-F05-x)
@@ -709,6 +713,8 @@ after_migrate = [
     "alantech_erp.setup.data_import_permissions.execute",
     # HR Settings > Default Notice Period (Days); Employee > Notice Period tab (ClickUp 14yr2e57r71)
     "alantech_erp.alantech.doctype.employee_notice_period.employee_notice_period.execute",
+    # Employee Grade Level / Band / Sub Bands table; Sub Band master A to E (ClickUp 14yr2e586v1)
+    "alantech_erp.setup.employee_grade.execute",
     # Loan Management flow (HR-F05-x): existing HR Managers get Loan Manager
     "alantech_erp.setup.loan_roles.execute",
     # Loan Management flow (HR-F05-x): employee loan ledgers, Loan Product accounts, Company settings
