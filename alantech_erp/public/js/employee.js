@@ -641,3 +641,47 @@ frappe.ui.form.on("Employee", {
 		);
 	},
 });
+
+// Salary: "Create Salary Structure" without an active Salary Structure Assignment, "View Salary
+// Structure" with one (ClickUp 14yr2e586v5, setup/salary_structure_button.py). Checked again on
+// every refresh, when the form is shown again, and when an assignment of this employee is
+// submitted or cancelled. The popups behind the buttons come with ClickUp 14yr2e586v6 / v8; until
+// then Create opens a new assignment filled from the grade and View opens the active one.
+const ALT_SALARY_BUTTONS = [__("Create Salary Structure"), __("View Salary Structure")];
+const ALT_SALARY_EVENT = "alt_salary_structure_assignment_changed";
+
+function alt_salary_button(frm) {
+	if (frm.is_new()) return;
+	const token = (frm._alt_salary_token = (frm._alt_salary_token || 0) + 1);
+	frappe
+		.xcall("alantech_erp.setup.salary_structure_button.get_salary_structure_button", {
+			employee: frm.doc.name,
+		})
+		.then((state) => {
+			if (token !== frm._alt_salary_token || !state) return; // a newer check is running
+			ALT_SALARY_BUTTONS.forEach((label) => frm.remove_custom_button(label));
+			if (state.action === "view") {
+				frm.add_custom_button(ALT_SALARY_BUTTONS[1], () =>
+					frappe.set_route("Form", "Salary Structure Assignment", state.assignment.name)
+				);
+			} else if (state.action === "create") {
+				frm.add_custom_button(ALT_SALARY_BUTTONS[0], () =>
+					frappe.new_doc("Salary Structure Assignment", state.new_assignment)
+				);
+			}
+		});
+}
+
+frappe.ui.form.on("Employee", {
+	setup(frm) {
+		frappe.realtime.on(ALT_SALARY_EVENT, ({ employee } = {}) => {
+			if (employee && employee === frm.doc?.name) alt_salary_button(frm);
+		});
+		// back on the form after creating the assignment elsewhere
+		// (frappe.container triggers "show" on the form's own page, frm.wrapper)
+		$(frm.wrapper).on("show", () => frm.doc && alt_salary_button(frm));
+	},
+	refresh(frm) {
+		alt_salary_button(frm);
+	},
+});

@@ -25,3 +25,4 @@ alantech_erp.patches.v16.employee_numbers_from_documents
 alantech_erp.patches.v16.employee_aadhaar_spaced
 alantech_erp.patches.v16.employee_notice_periods
 alantech_erp.patches.v16.employee_grades_from_pdf
+alantech_erp.patches.v16.default_salary_structure

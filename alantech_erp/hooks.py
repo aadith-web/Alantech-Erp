@@ -309,6 +309,11 @@ fixtures = [
 doc_events = {
     # Level + Band unique across grades, one row per Sub Band, Gross Amount > 0 (ClickUp 14yr2e586v1)
     "Employee Grade": {"validate": "alantech_erp.setup.employee_grade.validate"},
+    # earnings formulas written from Percentage / Percentage Of (ClickUp 14yr2e586v4)
+    "Salary Structure": {
+        "validate": "alantech_erp.setup.default_salary_structure.set_percentage_formulas",
+        "before_update_after_submit": "alantech_erp.setup.default_salary_structure.set_percentage_formulas",
+    },
     # Loan Management flow (HR-F05-x): an HR Manager is also a Loan Manager
     "User": {"validate": "alantech_erp.setup.loan_roles.user_validate"},
     # new Loan Products get the employee loan ledgers for accounts left blank (HR-F05-x)
@@ -394,6 +399,9 @@ doc_events = {
     # (setup/employee_payroll_fields.py, ClickUp 14yr2e57mhp)
     "Salary Structure Assignment": {
         "before_submit": "alantech_erp.setup.employee_payroll_fields.salary_structure_assignment_before_submit",
+        # Employee form Create / View Salary Structure button follows (ClickUp 14yr2e586v5)
+        "on_submit": "alantech_erp.setup.salary_structure_button.notify_change",
+        "on_cancel": "alantech_erp.setup.salary_structure_button.notify_change",
     },
     "Payroll Entry": {
         "before_submit": "alantech_erp.setup.employee_payroll_fields.payroll_entry_before_submit",
