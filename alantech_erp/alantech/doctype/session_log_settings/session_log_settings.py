@@ -12,16 +12,27 @@ TRIGGER_DAILY = "Daily Scheduler"
 DEFAULT_APPROVER_ROLE = "HR Manager"
 # Employee Checkin: open IN older than this blocks the next punch, when the shift gives no limit
 DEFAULT_MISSING_CHECKOUT_HOURS = 16
+# Only these roles (and Administrator) may switch Auto Checkout on or off
+AUTO_CHECKOUT_ROLES = {"HR Manager", "System Manager"}
 
 
 class SessionLogSettings(Document):
 	def validate(self):
+		self.validate_auto_checkout_permission()
 		if not self.log_creation_trigger:
 			self.log_creation_trigger = TRIGGER_ON_CHECKOUT
 		if not self.approver_role:
 			self.approver_role = DEFAULT_APPROVER_ROLE
 		if not frappe.db.exists("Role", self.approver_role):
 			frappe.throw(_("Role {0} does not exist.").format(frappe.bold(self.approver_role)))
+
+	def validate_auto_checkout_permission(self):
+		"""Employees can never change Auto Checkout, even through an API call."""
+		if not self.has_value_changed("auto_create_missing_checkout"):
+			return
+		if frappe.session.user == "Administrator" or AUTO_CHECKOUT_ROLES & set(frappe.get_roles()):
+			return
+		frappe.throw(_("Only HR Manager or System Manager can change Auto Checkout."), frappe.PermissionError)
 
 
 @frappe.whitelist()
@@ -46,5 +57,5 @@ def get_session_log_settings():
 		auto_submit_attendance=flag("auto_submit_attendance", 1),
 		auto_submit_overtime=flag("auto_submit_overtime", 1),
 		lock_after_processing=flag("lock_after_processing", 1),
-		auto_create_missing_checkout=flag("auto_create_missing_checkout", 0),
+		auto_create_missing_checkout=flag("auto_create_missing_checkout", 1),
 	)

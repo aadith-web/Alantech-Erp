@@ -314,6 +314,7 @@ doc_events = {
         "validate": "alantech_erp.setup.default_salary_structure.set_percentage_formulas",
         "before_update_after_submit": "alantech_erp.setup.default_salary_structure.set_percentage_formulas",
     },
+    "Dashboard Chart": {"validate": "alantech_erp.install.dashboard_chart_validate"},
     # Loan Management flow (HR-F05-x): an HR Manager is also a Loan Manager
     "User": {"validate": "alantech_erp.setup.loan_roles.user_validate"},
     # new Loan Products get the employee loan ledgers for accounts left blank (HR-F05-x)
@@ -420,10 +421,14 @@ doc_events = {
     "Shift Type": {
         "validate": "alantech_erp.setup.shift_ot_fields.validate",
     },
-    "Employee Checkin": {
+      "Employee Checkin": {
         # IN/OUT must alternate; a missed check-out blocks the next punch (setup/checkin_validation.py)
         "validate": "alantech_erp.setup.checkin_validation.validate",
-        "after_insert": "alantech_erp.alantech.doctype.session_log.builder.on_checkin",  # "On Check-out"
+        "after_insert": [
+            "alantech_erp.alantech.doctype.session_log.builder.on_checkin",  # "On Check-out"
+            # in-shift check-out: show the Check-in Reminder popup again (api/checkin_reminder.py)
+            "alantech_erp.api.checkin_reminder.notify_reentry"
+        ],
         # a punch edited later (Log Type set after saving, time / employee corrected) rebuilds too
         "on_update": "alantech_erp.alantech.doctype.session_log.builder.on_checkin_update",
     },
@@ -684,6 +689,7 @@ after_install = [
     ]
 after_migrate = [
     "alantech_erp.install.apply_branding",
+    "alantech_erp.install.fix_dashboard_chart_types",
     "alantech_erp.setup.access.extend_role_profiles",
     "alantech_erp.org_structure.setup_if_ready",
     "alantech_erp.setup.designations.execute",

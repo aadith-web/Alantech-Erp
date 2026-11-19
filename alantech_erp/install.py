@@ -34,3 +34,34 @@ def apply_branding():
 	if changed:
 		frappe.db.commit()
 		frappe.clear_cache()
+def _strip_chart_type(custom_options):
+	import json
+
+	if not custom_options:
+		return custom_options, False
+	try:
+		options = json.loads(custom_options)
+	except (TypeError, ValueError):
+		return custom_options, False
+	if not isinstance(options, dict) or "type" not in options:
+		return custom_options, False
+	options.pop("type")
+	return (json.dumps(options) if options else None), True
+
+
+def dashboard_chart_validate(doc, method=None):
+	doc.custom_options, _ = _strip_chart_type(doc.get("custom_options"))
+
+
+def fix_dashboard_chart_types():
+	changed = False
+	for name, custom_options in frappe.get_all(
+		"Dashboard Chart", filters={"custom_options": ["is", "set"]}, fields=["name", "custom_options"], as_list=True
+	):
+		new_options, did_change = _strip_chart_type(custom_options)
+		if did_change:
+			frappe.db.set_value("Dashboard Chart", name, "custom_options", new_options, update_modified=False)
+			changed = True
+	if changed:
+		frappe.db.commit()
+		frappe.clear_cache()

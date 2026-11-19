@@ -190,6 +190,7 @@ class UnitTestSettingsDefaults(UnitTestCase):
 		self.assertFalse(s.require_log_approval)
 		self.assertTrue(s.hold_missing_checkout and s.auto_submit_attendance and s.auto_submit_overtime)
 		self.assertTrue(s.lock_after_processing)
+		self.assertTrue(s.auto_create_missing_checkout)  # Auto Checkout is ON by default
 
 	def test_stored_values_win(self):
 		s = self.defaults(require_log_approval=1, log_creation_trigger="Daily Scheduler", approver_role="HR User",
@@ -198,3 +199,6 @@ class UnitTestSettingsDefaults(UnitTestCase):
 		self.assertEqual((s.log_creation_trigger, s.approver_role), ("Daily Scheduler", "HR User"))
 		self.assertFalse(s.hold_missing_checkout or s.auto_submit_attendance)
 		self.assertEqual(s.missing_checkout_block_hours, 20)
+
+	def test_auto_checkout_can_be_switched_off(self):
+		self.assertFalse(self.defaults(auto_create_missing_checkout=0).auto_create_missing_checkout)
