@@ -645,8 +645,7 @@ frappe.ui.form.on("Employee", {
 // Salary: "Create Salary Structure" without an active Salary Structure Assignment, "View Salary
 // Structure" with one (ClickUp 14yr2e586v5, setup/salary_structure_button.py). Checked again on
 // every refresh, when the form is shown again, and when an assignment of this employee is
-// submitted or cancelled. The popups behind the buttons come with ClickUp 14yr2e586v6 / v8; until
-// then Create opens a new assignment filled from the grade and View opens the active one.
+// submitted or cancelled. Create and View open the popups below (ClickUp 14yr2e586v6 / v8).
 const ALT_SALARY_BUTTONS = [__("Create Salary Structure"), __("View Salary Structure")];
 const ALT_SALARY_EVENT = "alt_salary_structure_assignment_changed";
 
@@ -661,13 +660,9 @@ function alt_salary_button(frm) {
 			if (token !== frm._alt_salary_token || !state) return; // a newer check is running
 			ALT_SALARY_BUTTONS.forEach((label) => frm.remove_custom_button(label));
 			if (state.action === "view") {
-				frm.add_custom_button(ALT_SALARY_BUTTONS[1], () =>
-					frappe.set_route("Form", "Salary Structure Assignment", state.assignment.name)
-				);
+				frm.add_custom_button(ALT_SALARY_BUTTONS[1], () => alt_view_salary_structure(frm));
 			} else if (state.action === "create") {
-				frm.add_custom_button(ALT_SALARY_BUTTONS[0], () =>
-					frappe.new_doc("Salary Structure Assignment", state.new_assignment)
-				);
+				frm.add_custom_button(ALT_SALARY_BUTTONS[0], () => alt_create_salary_structure(frm));
 			}
 		});
 }
@@ -685,3 +680,236 @@ frappe.ui.form.on("Employee", {
 		alt_salary_button(frm);
 	},
 });
+
+// Create Salary Structure popup (ClickUp 14yr2e586v6, setup/salary_structure_popup.py): Grade (the
+// employee's, or chosen and saved when blank), Sub Band of that grade, Gross Amount from the grade's
+// sub band row, From Date. Creates the Salary Structure Assignment (Base = Gross Amount, the grade's
+// Default Salary Structure), submitted unless "Submit" is unticked.
+function alt_create_salary_structure(frm) {
+	if (frm.is_dirty()) {
+		frappe.msgprint(__("Save the employee first."));
+		return;
+	}
+	const method = "alantech_erp.setup.salary_structure_popup.";
+	let grade_details = { sub_bands: [] };
+
+	const dialog = new frappe.ui.Dialog({
+		title: __("Create Salary Structure"),
+		fields: [
+			{
+				fieldname: "grade",
+				fieldtype: "Link",
+				options: "Employee Grade",
+				label: __("Grade"),
+				reqd: 1,
+				default: frm.doc.grade,
+				read_only: frm.doc.grade ? 1 : 0,
+				description: frm.doc.grade ? "" : __("Saved to the employee."),
+				onchange: () => load_grade(),
+			},
+			{
+				fieldname: "sub_band",
+				fieldtype: "Link",
+				options: "Sub Band",
+				label: __("Sub Band"),
+				reqd: 1,
+				get_query: () => ({
+					filters: { name: ["in", grade_details.sub_bands.map((r) => r.sub_band)] },
+				}),
+				onchange: () => set_gross(),
+			},
+			{ fieldname: "gross_amount", fieldtype: "Currency", label: __("Gross Amount"), read_only: 1 },
+			{ fieldtype: "Column Break" },
+			{ fieldname: "from_date", fieldtype: "Date", label: __("From Date"), reqd: 1, default: frappe.datetime.get_today() },
+			{ fieldname: "salary_structure", fieldtype: "Data", label: __("Salary Structure"), read_only: 1 },
+			{
+				fieldname: "submit",
+				fieldtype: "Check",
+				label: __("Submit"),
+				default: 1,
+				description: __("Untick to keep the assignment as a draft."),
+			},
+		],
+		primary_action_label: __("Create"),
+		primary_action(values) {
+			dialog.disable_primary_action();
+			frappe
+				.xcall(method + "create_salary_structure_assignment", {
+					employee: frm.doc.name,
+					grade: values.grade,
+					sub_band: values.sub_band,
+					from_date: values.from_date,
+					submit: values.submit ? 1 : 0,
+				})
+				.then((r) => {
+					dialog.hide();
+					frappe.show_alert({
+						message: __("Salary Structure Assignment {0} {1}", [
+							`<a href="/app/salary-structure-assignment/${encodeURIComponent(r.name)}">${frappe.utils.escape_html(r.name)}</a>`,
+							r.docstatus === 1 ? __("submitted") : __("saved as draft"),
+						]),
+						indicator: "green",
+					});
+					frm.reload_doc(); // grade may be new; refresh also re-checks the button
+				})
+				.finally(() => dialog.enable_primary_action());
+		},
+	});
+
+	function set_gross() {
+		const sub_band = dialog.get_value("sub_band");
+		const row = grade_details.sub_bands.find((r) => r.sub_band === sub_band);
+		dialog.set_value("gross_amount", row ? row.gross_amount : null);
+	}
+
+	function load_grade() {
+		const grade = dialog.get_value("grade");
+		grade_details = { sub_bands: [] };
+		dialog.set_value("sub_band", null);
+		dialog.set_value("gross_amount", null);
+		dialog.set_value("salary_structure", null);
+		if (!grade) return;
+		frappe.xcall(method + "get_grade_details", { grade }).then((details) => {
+			if (dialog.get_value("grade") !== grade) return; // grade changed meanwhile
+			grade_details = details;
+			dialog.set_value("salary_structure", details.salary_structure || __("None: set it on the grade"));
+		});
+	}
+
+	dialog.show();
+	load_grade();
+}
+
+// View Salary Structure popup (ClickUp 14yr2e586v8, setup/salary_structure_view.py): the active
+// assignment with its Earnings and Deductions (basis and monthly amount from HRMS's salary slip
+// preview). Edit, for the HR Manager only (checked on the server too), makes a new assignment
+// from a later From Date with the chosen Sub Band; the current one stays for the months before.
+function alt_view_salary_structure(frm) {
+	const method = "alantech_erp.setup.salary_structure_view.";
+	frappe.xcall(method + "get_salary_structure_view", { employee: frm.doc.name }).then((view) => {
+		const esc = frappe.utils.escape_html;
+		const money = (value) =>
+			value === null || value === undefined ? "-" : format_currency(value, view.currency);
+		const table = (title, rows, total) => `
+			<h5 class="mt-4 mb-2">${esc(title)}</h5>
+			<table class="table table-bordered table-sm">
+				<thead><tr><th>${__("Component")}</th><th>${__("Formula / Percentage")}</th>
+					<th class="text-right">${__("Amount")}</th></tr></thead>
+				<tbody>${
+					rows.length
+						? rows
+								.map(
+									(r) => `<tr><td>${esc(r.component)}</td><td>${esc(r.basis)}</td>
+									<td class="text-right">${money(r.amount)}</td></tr>`
+								)
+								.join("")
+						: `<tr><td colspan="3" class="text-muted">${__("None")}</td></tr>`
+				}</tbody>
+				<tfoot><tr><th colspan="2">${__("Total")}</th><th class="text-right">${money(total)}</th></tr></tfoot>
+			</table>`;
+		const link = `<a href="/app/salary-structure-assignment/${encodeURIComponent(view.assignment)}">${esc(view.assignment)}</a>`;
+		const summary = [
+			[__("Salary Structure"), esc(view.salary_structure)],
+			[__("Assignment"), link],
+			[__("From Date"), esc(frappe.datetime.str_to_user(view.from_date))],
+			[__("Grade"), esc(view.grade || "-")],
+			[__("Sub Band"), esc(view.sub_band || "-")],
+			[__("Base (Gross)"), money(view.base)],
+		]
+			.map(([label, value]) => `<div class="col-sm-4 mb-2"><div class="text-muted small">${label}</div><div>${value}</div></div>`)
+			.join("");
+
+		const dialog = new frappe.ui.Dialog({
+			title: __("Salary Structure"),
+			size: "large",
+			fields: [{ fieldname: "body", fieldtype: "HTML" }],
+		});
+		dialog.fields_dict.body.$wrapper.html(`
+			<div class="row">${summary}</div>
+			${view.amount_error ? `<div class="alert alert-warning">${__("Amounts could not be worked out")}: ${esc(view.amount_error)}</div>` : ""}
+			${table(__("Earnings"), view.earnings, view.total_earnings)}
+			${table(__("Deductions"), view.deductions, view.total_deductions)}
+			<div class="text-right font-weight-bold">${__("Net Pay")}: ${money(view.net)}</div>
+			<div class="text-muted small mt-2">${__("Monthly amounts for a full month, before deductions for unpaid days.")}</div>`);
+		if (view.can_edit) {
+			dialog.set_primary_action(__("Edit"), () => {
+				dialog.hide();
+				alt_edit_salary_structure(frm, view);
+			});
+		}
+		dialog.show();
+	});
+}
+
+function alt_edit_salary_structure(frm, view) {
+	const method = "alantech_erp.setup.salary_structure_";
+	let sub_bands = [];
+	const today = frappe.datetime.get_today();
+	const dialog = new frappe.ui.Dialog({
+		title: __("Edit Salary Structure"),
+		fields: [
+			{
+				fieldtype: "HTML",
+				options: `<p class="text-muted">${__(
+					"A new assignment starts on the From Date below. The current one ({0}, from {1}) stays for the months before.",
+					[frappe.utils.escape_html(view.assignment), frappe.datetime.str_to_user(view.from_date)]
+				)}</p>`,
+			},
+			{ fieldname: "grade", fieldtype: "Link", options: "Employee Grade", label: __("Grade"), default: frm.doc.grade, read_only: 1 },
+			{
+				fieldname: "sub_band",
+				fieldtype: "Link",
+				options: "Sub Band",
+				label: __("Sub Band"),
+				reqd: 1,
+				default: view.sub_band,
+				get_query: () => ({ filters: { name: ["in", sub_bands.map((r) => r.sub_band)] } }),
+				onchange: () => {
+					const row = sub_bands.find((r) => r.sub_band === dialog.get_value("sub_band"));
+					dialog.set_value("gross_amount", row ? row.gross_amount : null);
+				},
+			},
+			{ fieldname: "gross_amount", fieldtype: "Currency", label: __("Gross Amount"), read_only: 1 },
+			{
+				fieldname: "from_date",
+				fieldtype: "Date",
+				label: __("From Date"),
+				reqd: 1,
+				default: today > view.from_date ? today : null,
+				description: __("After {0}.", [frappe.datetime.str_to_user(view.from_date)]),
+			},
+			{ fieldname: "submit", fieldtype: "Check", label: __("Submit"), default: 1, description: __("Untick to keep the new assignment as a draft.") },
+		],
+		primary_action_label: __("Save"),
+		primary_action(values) {
+			dialog.disable_primary_action();
+			frappe
+				.xcall(method + "view.revise_salary_structure", {
+					employee: frm.doc.name,
+					sub_band: values.sub_band,
+					from_date: values.from_date,
+					submit: values.submit ? 1 : 0,
+				})
+				.then((r) => {
+					dialog.hide();
+					frappe.show_alert({
+						message: __("Salary Structure Assignment {0} {1}", [
+							`<a href="/app/salary-structure-assignment/${encodeURIComponent(r.name)}">${frappe.utils.escape_html(r.name)}</a>`,
+							r.docstatus === 1 ? __("submitted") : __("saved as draft"),
+						]),
+						indicator: "green",
+					});
+					frm.reload_doc();
+				})
+				.finally(() => dialog.enable_primary_action());
+		},
+	});
+	dialog.show();
+	if (frm.doc.grade) {
+		frappe.xcall(method + "popup.get_grade_details", { grade: frm.doc.grade }).then((details) => {
+			sub_bands = details.sub_bands;
+			const row = sub_bands.find((r) => r.sub_band === dialog.get_value("sub_band"));
+			dialog.set_value("gross_amount", row ? row.gross_amount : null);
+		});
+	}
+}

@@ -39,6 +39,8 @@ app_include_css = [
 ]
 # app_include_js = "/assets/alantech_erp/js/alantech_erp.js"
 app_include_js = [
+    # window.csrf_token for frappe-ui uploads in the desk (Employee Profile "Change cover")
+    "/assets/alantech_erp/js/csrf_bridge.js",
     # country code picker of Phone fields opens on saved records too
     "/assets/alantech_erp/js/phone_control.js",
     # Customer quick entry: Tax Type Local -> GSTIN and the address fields are mandatory
@@ -712,6 +714,10 @@ after_migrate = [
     "alantech_erp.setup.attendance_request.execute",
     # HR User prepares Payroll Entries; payroll payable account of type Payable
     "alantech_erp.setup.payroll.execute",
+    # Sub Band on Salary Structure Assignment, set by the Create Salary Structure popup (ClickUp 14yr2e586v6)
+    "alantech_erp.setup.salary_structure_popup.execute",
+    # India Payroll module on the Frappe HR rail (the app ships no Dock mount yet)
+    "alantech_erp.setup.india_payroll.execute",
     "alantech_erp.setup.asset_handover.execute",
     # Employee / Employee Uniform Issue on the Stock Entry made by a uniform issue
     "alantech_erp.setup.uniform_issue.execute",
