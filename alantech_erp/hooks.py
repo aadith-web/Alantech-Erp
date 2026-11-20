@@ -377,6 +377,8 @@ doc_events = {
             "alantech_erp.setup.employee_fields.sync_user_employee_number",
             # changed Aadhaar / PAN -> the employee's Aadhaar / PAN documents (ClickUp 14yr2e57r7k)
             "alantech_erp.alantech.doctype.document.employee_numbers.update_documents",
+            # reactivated employee (status back to Active) with expired documents -> warning
+            "alantech_erp.alantech.doctype.document.expired_on_reactivation.employee_on_update",
             # new employee -> Employee Notice Period (default 30 days); Notice (days) kept in sync (ClickUp 14yr2e57r71)
             "alantech_erp.alantech.doctype.employee_notice_period.employee_notice_period.employee_on_update",
         ],
