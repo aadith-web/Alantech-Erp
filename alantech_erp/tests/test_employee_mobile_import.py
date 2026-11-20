@@ -12,7 +12,11 @@ Run:
 
 import frappe
 
-from alantech_erp.setup.employee_validation import restore_plus_sign, validate_mobile_number
+from alantech_erp.setup.employee_validation import (
+	import_mobile_error,
+	restore_plus_sign,
+	validate_mobile_number,
+)
 
 try:  # v16
 	from frappe.tests import IntegrationTestCase as TestCase
@@ -63,3 +67,33 @@ class TestEmployeeMobileImport(TestCase):
 	def test_form_still_needs_country_code(self):
 		with self.assertRaises(frappe.ValidationError):
 			validate_mobile_number(FakeEmployee(cell_number="919876798789"))
+
+	# https://app.clickup.com/t/14yr2e587b3 - UAE mobile one digit short said "Select the country code"
+	def test_uae_mobile_without_plus_imports(self):
+		frappe.flags.in_import = True
+		for raw in ("971531235678", "971 53 123 5678", "00971531235678", "971531235678.0"):
+			with self.subTest(raw=raw):
+				doc = FakeEmployee(cell_number=raw)
+				validate_mobile_number(doc)
+				self.assertEqual(doc.cell_number, "+971-531235678")
+
+	def test_uae_mobile_one_digit_short_names_the_country(self):
+		frappe.flags.in_import = True
+		with self.assertRaises(frappe.InvalidPhoneNumberError) as raised:
+			validate_mobile_number(FakeEmployee(cell_number="97153123567"))
+		message = str(raised.exception)
+		self.assertNotIn("Select the country code", message)
+		self.assertIn("+97153123567", message)
+		self.assertIn("+971-501234567", message)  # example UAE mobile
+
+	def test_import_mobile_error_only_for_numbers_without_plus(self):
+		self.assertIsNone(import_mobile_error("+97153123567"))  # has "+": check_mobile_number reports it
+		self.assertIsNone(import_mobile_error("971531235678"))  # valid
+		self.assertIsNone(import_mobile_error("abc"))
+		self.assertIsNone(import_mobile_error(""))
+		self.assertIn("+97153123567", import_mobile_error("97153123567"))
+
+	def test_form_message_unchanged_without_plus(self):
+		with self.assertRaises(frappe.InvalidPhoneNumberError) as raised:
+			validate_mobile_number(FakeEmployee(cell_number="97153123567"))
+		self.assertIn("Select the country code", str(raised.exception))

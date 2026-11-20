@@ -39,6 +39,8 @@ app_include_css = [
 ]
 # app_include_js = "/assets/alantech_erp/js/alantech_erp.js"
 app_include_js = [
+    # window.csrf_token for frappe-ui uploads in the desk (Employee Profile "Change cover")
+    "/assets/alantech_erp/js/csrf_bridge.js",
     # country code picker of Phone fields opens on saved records too
     "/assets/alantech_erp/js/phone_control.js",
     # Customer quick entry: Tax Type Local -> GSTIN and the address fields are mandatory
@@ -78,6 +80,8 @@ web_include_js = ["/assets/alantech_erp/js/alantech_desk.js"]
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 doctype_js = {
     "Employee": "public/js/employee.js",
+    # Sub Bands table: enabled Sub Bands only (ClickUp 14yr2e586v1)
+    "Employee Grade": "public/js/employee_grade.js",
     "Lead": "public/js/lead.js",
     "Opportunity": "public/js/opportunity.js",
     "Quotation": "public/js/quotation.js",
@@ -251,6 +255,12 @@ override_doctype_class = {
     "Data Import": "alantech_erp.setup.employee_import.AlantechDataImport",
 }
 
+# Employee import: every error of the file listed together before importing (ClickUp 14yr2e587b3,
+# setup/employee_import_check.py)
+data_import_providers = {
+    "Employee": "alantech_erp.setup.employee_import_check.EmployeeImportProvider",
+}
+
 # Document Events
 # ---------------
 # Hook on document methods and events
@@ -299,6 +309,13 @@ fixtures = [
 ]
 
 doc_events = {
+    # Level + Band unique across grades, one row per Sub Band, Gross Amount > 0 (ClickUp 14yr2e586v1)
+    "Employee Grade": {"validate": "alantech_erp.setup.employee_grade.validate"},
+    # earnings formulas written from Percentage / Percentage Of (ClickUp 14yr2e586v4)
+    "Salary Structure": {
+        "validate": "alantech_erp.setup.default_salary_structure.set_percentage_formulas",
+        "before_update_after_submit": "alantech_erp.setup.default_salary_structure.set_percentage_formulas",
+    },
     "Dashboard Chart": {"validate": "alantech_erp.install.dashboard_chart_validate"},
     # Loan Management flow (HR-F05-x): an HR Manager is also a Loan Manager
     "User": {"validate": "alantech_erp.setup.loan_roles.user_validate"},
@@ -385,6 +402,9 @@ doc_events = {
     # (setup/employee_payroll_fields.py, ClickUp 14yr2e57mhp)
     "Salary Structure Assignment": {
         "before_submit": "alantech_erp.setup.employee_payroll_fields.salary_structure_assignment_before_submit",
+        # Employee form Create / View Salary Structure button follows (ClickUp 14yr2e586v5)
+        "on_submit": "alantech_erp.setup.salary_structure_button.notify_change",
+        "on_cancel": "alantech_erp.setup.salary_structure_button.notify_change",
     },
     "Payroll Entry": {
         "before_submit": "alantech_erp.setup.employee_payroll_fields.payroll_entry_before_submit",
@@ -694,6 +714,10 @@ after_migrate = [
     "alantech_erp.setup.attendance_request.execute",
     # HR User prepares Payroll Entries; payroll payable account of type Payable
     "alantech_erp.setup.payroll.execute",
+    # Sub Band on Salary Structure Assignment, set by the Create Salary Structure popup (ClickUp 14yr2e586v6)
+    "alantech_erp.setup.salary_structure_popup.execute",
+    # India Payroll module on the Frappe HR rail (the app ships no Dock mount yet)
+    "alantech_erp.setup.india_payroll.execute",
     "alantech_erp.setup.asset_handover.execute",
     # Employee / Employee Uniform Issue on the Stock Entry made by a uniform issue
     "alantech_erp.setup.uniform_issue.execute",
@@ -715,6 +739,8 @@ after_migrate = [
     "alantech_erp.setup.data_import_permissions.execute",
     # HR Settings > Default Notice Period (Days); Employee > Notice Period tab (ClickUp 14yr2e57r71)
     "alantech_erp.alantech.doctype.employee_notice_period.employee_notice_period.execute",
+    # Employee Grade Level / Band / Sub Bands table; Sub Band master A to E (ClickUp 14yr2e586v1)
+    "alantech_erp.setup.employee_grade.execute",
     # Loan Management flow (HR-F05-x): existing HR Managers get Loan Manager
     "alantech_erp.setup.loan_roles.execute",
     # Loan Management flow (HR-F05-x): employee loan ledgers, Loan Product accounts, Company settings

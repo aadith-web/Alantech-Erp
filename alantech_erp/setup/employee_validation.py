@@ -148,9 +148,11 @@ def validate_mobile_number(doc, method=None):
     Checked for new employees and changed numbers only (old numbers: patches/v16/employee_mobile_country_code)."""
     if not doc.cell_number or not (doc.is_new() or doc.has_value_changed("cell_number")):
         return
+    error = None
     if frappe.flags.in_import:
         doc.cell_number = restore_plus_sign(doc.cell_number)
-    error = check_mobile_number(doc.cell_number)
+        error = import_mobile_error(doc.cell_number)
+    error = error or check_mobile_number(doc.cell_number)
     if error:
         frappe.throw(error, frappe.InvalidPhoneNumberError, title=_("Invalid Mobile Number"))
     doc.cell_number = format_mobile_number(doc.cell_number)
@@ -174,6 +176,36 @@ def restore_plus_sign(mobile):
         digits = digits[2:]
     candidate = f"+{digits}"
     return candidate if check_mobile_number(candidate) is None else mobile
+
+
+def import_mobile_error(mobile):
+    """Data Import: the error for a number restore_plus_sign could not fix, when its digits start
+    with a country code. 97153123567 (UAE, one digit short) gets "+97153123567 is not a valid
+    United Arab Emirates mobile number ... Example: +971-501234567" instead of "Select the country
+    code", which reads as if the country code were missing. None when there is nothing to add."""
+    import re
+
+    import phonenumbers
+
+    value = re.sub(r"\.0+$", "", str(mobile or "").strip())
+    digits = re.sub(r"[\s\-().]", "", value)
+    if not digits.isdigit() or value.startswith("+"):
+        return None
+    if digits.startswith("00"):
+        digits = digits[2:]
+    try:
+        number = phonenumbers.parse(f"+{digits}")
+    except phonenumbers.NumberParseException:
+        return None
+    region = phonenumbers.region_code_for_country_code(number.country_code)
+    if not region or region == phonenumbers.UNKNOWN_REGION:
+        return None
+    error = check_mobile_number(f"+{digits}")
+    if not error:
+        return None
+    return error + " " + _("If {0} has no country code, add + and the country code before the number.").format(
+        frappe.bold(mobile)
+    )
 
 
 @frappe.whitelist()
@@ -270,6 +302,21 @@ REQUIRED_ON_CREATE = (
 )
 
 
+def missing_required_fields(doc):
+    """Fieldnames of REQUIRED_ON_CREATE that are blank, plus EMAIL_FIELDS (the tuple) when both
+    emails are blank. Reports To is not needed for the top designation."""
+    from alantech_erp.org_structure import TOP_DESIGNATION
+
+    missing = [
+        field
+        for field in REQUIRED_ON_CREATE
+        if not doc.get(field) and not (field == "reports_to" and doc.designation == TOP_DESIGNATION)
+    ]
+    if not any((doc.get(field) or "").strip() for field in EMAIL_FIELDS):
+        missing.append(EMAIL_FIELDS)
+    return missing
+
+
 def validate_required_on_create(doc, method=None):
     """Employee.validate: refuse a new employee without the fields in REQUIRED_ON_CREATE and an email."""
     if not doc.is_new():
@@ -277,16 +324,11 @@ def validate_required_on_create(doc, method=None):
     # tests create bare employees; a test of this rule sets the flag
     if frappe.flags.in_test and not frappe.flags.alt_check_employee_required:
         return
-    from alantech_erp.org_structure import TOP_DESIGNATION
-
     meta = frappe.get_meta("Employee")
     missing = [
-        _(meta.get_label(field))
-        for field in REQUIRED_ON_CREATE
-        if not doc.get(field) and not (field == "reports_to" and doc.designation == TOP_DESIGNATION)
+        _(meta.get_label(field)) if field != EMAIL_FIELDS else _("Company Email or Personal Email")
+        for field in missing_required_fields(doc)
     ]
-    if not any((doc.get(field) or "").strip() for field in EMAIL_FIELDS):
-        missing.append(_("Company Email or Personal Email"))
     if missing:
         frappe.throw(
             _("Enter these to create the employee: {0}").format(", ".join(frappe.bold(m) for m in missing)),
