@@ -12,6 +12,7 @@
   "column_break_1",
   "disabled",
   "number_section",
+  "number_required",
   "number_format",
   "number_pattern",
   "column_break_number",
@@ -62,18 +63,27 @@
    "label": "Number"
   },
   {
+   "default": "1",
+   "fieldname": "number_required",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Show Number",
+   "description": "Documents of this type have a Number field. Untick for documents without a number (e.g. Photograph)."
+  },
+  {
    "fieldname": "number_format",
    "fieldtype": "Select",
    "label": "Number Format",
    "options": "\nAadhaar\nPAN\nIndian Passport\nIndian Driving Licence\nEmirates ID\nCustom Pattern",
-   "description": "Checks the number on documents of this type. Leave empty for no check."
+   "description": "Checks the number on documents of this type. Leave empty for no check.",
+   "depends_on": "eval:doc.number_required"
   },
   {
    "fieldname": "number_pattern",
    "fieldtype": "Data",
    "label": "Number Pattern",
-   "depends_on": "eval:doc.number_format=='Custom Pattern'",
-   "mandatory_depends_on": "eval:doc.number_format=='Custom Pattern'",
+   "depends_on": "eval:doc.number_required && doc.number_format=='Custom Pattern'",
+   "mandatory_depends_on": "eval:doc.number_required && doc.number_format=='Custom Pattern'",
    "description": "Regular expression for the whole number, e.g. [A-Z]{2}[0-9]{6} for two letters and six digits."
   },
   {
@@ -84,14 +94,16 @@
    "fieldname": "number_example",
    "fieldtype": "Data",
    "label": "Number Example",
-   "description": "Shown under the number on the document and in the error message."
+   "description": "Shown under the number on the document and in the error message.",
+   "depends_on": "eval:doc.number_required"
   },
   {
    "default": "0",
    "fieldname": "number_mandatory",
    "fieldtype": "Check",
    "label": "Number Mandatory",
-   "description": "A document of this type cannot be saved without a number."
+   "description": "A document of this type cannot be saved without a number.",
+   "depends_on": "eval:doc.number_required"
   },
   {
    "fieldname": "issue_date_section",
@@ -181,7 +193,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-12 13:58:27.831263",
+ "modified": "2026-11-20 17:07:36.232227",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Document Type Master",

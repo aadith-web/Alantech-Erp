@@ -12,6 +12,7 @@ import re
 
 import frappe
 from frappe import _
+from frappe.utils import cint
 from stdnum import luhn, verhoeff
 
 CUSTOM = "Custom Pattern"
@@ -71,7 +72,7 @@ def get_rules(document_type):
 	return frappe.db.get_value(
 		"Document Type Master",
 		document_type,
-		["number_format", "number_pattern", "number_example", "number_mandatory"],
+		["number_required", "number_format", "number_pattern", "number_example", "number_mandatory"],
 		as_dict=True,
 	) or frappe._dict()
 
@@ -160,8 +161,12 @@ def duplicate_message(document_type, number, duplicate, reference_doctype=None, 
 
 
 def validate_document_number(doc):
-	"""Document.validate: format, mandatory and duplicate checks for card_number."""
+	"""Document.validate: format, mandatory and duplicate checks for card_number. A type without
+	"Show Number" has no Number field: nothing is required (a number saved earlier is kept)."""
 	rules = get_rules(doc.document_type)
+	doc.number_required = cint(rules.get("number_required"))
+	if not doc.number_required:
+		rules.number_mandatory = 0
 	label = _("{0} Number").format(doc.document_type)
 	doc.card_number, error = clean_number(doc.document_type, doc.card_number, rules)
 	doc.number_key = number_key(doc.card_number)
@@ -200,7 +205,8 @@ def check_number(
 		"value": value,
 		"error": error,
 		"example": example_for(rules),
-		"mandatory": rules.get("number_mandatory"),
+		"required": cint(rules.get("number_required")),
+		"mandatory": cint(rules.get("number_required")) and cint(rules.get("number_mandatory")),
 		"rules": live_rules(rules),
 	}
 

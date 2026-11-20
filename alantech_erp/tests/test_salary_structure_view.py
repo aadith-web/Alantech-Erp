@@ -177,3 +177,26 @@ class TestSalaryStructureView(TestCase):
 
 		with self.assertRaises(SalaryStructurePopupError):
 			revise_salary_structure(emp, "E", new_from)  # not after the current From Date
+
+	def test_revise_with_cost_centers(self):
+		"""ClickUp 14yr2e589er: the View shows the split; Edit passes new rows to the new assignment."""
+		parent = frappe.db.get_value("Cost Center", {"company": COMPANY, "is_group": 1}, "name", order_by="lft asc")
+		a, b = (
+			frappe.get_doc(
+				{"doctype": "Cost Center", "cost_center_name": f"{PREFIX} {tag}", "company": COMPANY, "parent_cost_center": parent}
+			).insert(ignore_permissions=True).name
+			for tag in ("A", "B")
+		)
+		emp = self.employee("RevCC")
+		frappe.db.set_value("Employee", emp, "payroll_cost_center", a)
+		self.assign(emp, base=get_grade_details(GRADE)["sub_bands"][2].gross_amount)
+		self.assertEqual(get_salary_structure_view(emp)["cost_centers"], [{"cost_center": a, "percentage": 100}])
+
+		rows = [{"cost_center": a, "percentage": 70}, {"cost_center": b, "percentage": 30}]
+		result = revise_salary_structure(emp, "D", add_months(self.from_date, 1), cost_centers=frappe.as_json(rows))
+		self.assertEqual(get_salary_structure_view(emp)["assignment"], result["name"])
+		self.assertEqual(get_salary_structure_view(emp)["cost_centers"], rows)
+		with self.assertRaises(SalaryStructurePopupError):
+			revise_salary_structure(
+				emp, "E", add_months(self.from_date, 2), cost_centers=[{"cost_center": a, "percentage": 50}]
+			)

@@ -21,6 +21,7 @@ def make_type(name, **values):
 		{
 			"document_type_name": name,
 			"disabled": 0,
+			"number_required": 1,
 			"number_format": None,
 			"number_pattern": None,
 			"number_example": None,
@@ -52,6 +53,13 @@ class IntegrationTestDocumentTypeMaster(IntegrationTestCase):
 		)
 		self.assertEqual(doc.issue_date_mandatory, 0)
 		self.assertEqual(doc.expiry_date_mandatory, 0)
+
+	def test_hidden_number_cannot_be_mandatory(self):
+		"""ClickUp 14yr2e58dq2: Show Number unticked -> no Number Mandatory, no Number Format."""
+		doc = make_type("_Test DTM No Number", number_required=0, number_mandatory=1, number_format="PAN")
+		self.assertEqual((doc.number_mandatory, doc.number_format), (0, None))
+		doc = make_type("_Test DTM No Number", number_required=1, number_mandatory=1, number_format="PAN")
+		self.assertEqual((doc.number_mandatory, doc.number_format), (1, "PAN"))
 
 	def test_shown_date_can_be_mandatory(self):
 		doc = make_type("_Test DTM Mandatory", expiry_required=1, expiry_date_mandatory=1, issue_date_mandatory=1)

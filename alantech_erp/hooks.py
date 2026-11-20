@@ -362,6 +362,8 @@ doc_events = {
             "alantech_erp.setup.employee_nationality.validate_nationality",
             # Nationality India: Aadhaar + PAN mandatory; formats (ClickUp 14yr2e57r7k)
             "alantech_erp.setup.employee_nationality.validate_indian_ids",
+            # UAN, ESIC, IFSC, MICR, PF, bank A/C, IBAN, names: formats (setup/employee_bank_details.py)
+            "alantech_erp.setup.employee_bank_details.validate_bank_details",
             # blank Confirmation Date = Date of Joining + Probation Period (ClickUp 14yr2e57mhp)
             "alantech_erp.setup.employee_payroll_fields.fill_confirmation_date",
         ],

@@ -13,6 +13,10 @@ class DocumentTypeMaster(Document):
 			self.issue_date_mandatory = 0
 		if not self.expiry_required:
 			self.expiry_date_mandatory = 0
+		# same for the Number: a type without a number has no format and cannot require one
+		if not self.number_required:
+			self.number_mandatory = 0
+			self.number_format = None
 
 		if self.number_format == CUSTOM:
 			validate_pattern(self.number_pattern)

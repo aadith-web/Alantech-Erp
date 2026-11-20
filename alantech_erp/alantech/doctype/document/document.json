@@ -16,6 +16,7 @@
   "document_type",
   "card_number",
   "number_key",
+  "number_required",
   "expiry_required",
   "issue_date_required",
   "issue_date_mandatory",
@@ -92,7 +93,8 @@
    "fieldname": "card_number",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Card Number"
+   "label": "Card Number",
+   "depends_on": "eval:doc.number_required"
   },
   {
    "fieldname": "number_key",
@@ -103,6 +105,15 @@
    "no_copy": 1,
    "search_index": 1,
    "description": "Card Number in upper case without spaces, dashes, dots or slashes: the duplicate check compares this (document_number.py)."
+  },
+  {
+   "default": "0",
+   "fetch_from": "document_type.number_required",
+   "fieldname": "number_required",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Number Required",
+   "read_only": 1
   },
   {
    "default": "0",
@@ -249,7 +260,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-06 17:14:37.331325",
+ "modified": "2026-11-20 17:07:36.232227",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Document",
