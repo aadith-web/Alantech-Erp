@@ -1,9 +1,10 @@
-// Check-in reminder popups (HR-F02). Server side: alantech_erp.api.checkin_reminder.
-//  1. Daily reminder: once per browser session per day, only on home / workspace screens.
-//  2. Re-entry prompt: after an in-shift check-out it shows on every page and after every refresh
-//     until the employee checks in again or the shift ends. Pushed at once by a realtime event,
-//     and re-checked from the server on load, on page changes and every REMIND_MS.
-//     "Later" only hides it for REMIND_MS (a refresh shows it again straight away).
+// Check-in / check-out reminder popups (HR-F02). Server side: alantech_erp.api.checkin_reminder.
+// One server call (get_reminder) says which popup is due now:
+//   checkin  - no punch yet today
+//   reentry  - checked out before the shift ends
+//   checkout - the shift is over and the employee is still checked in
+// Every popup comes back on every page, after every refresh, until the punch is applied.
+// "Later" (or X / Esc) only hides it for REMIND_MS; a refresh shows it again straight away.
 // Only ONE popup is ever open: checks are debounced into a single run and a popup of the same
 // kind is never opened twice.
 (() => {
@@ -11,30 +12,19 @@
   window.__alt_checkin_reminder = true;
 
   const API = "alantech_erp.api.checkin_reminder.";
-  const HOME_ROUTES = ["", "desktop", "home", "workspace", "workspaces"];
-  const REMIND_MS = 5 * 60 * 1000; // how long "Later" hides the re-entry popup (until a refresh)
+  const TITLE = "Check-in Reminder";
+  const REMIND_MS = 5 * 60 * 1000; // how long "Later" hides a popup (until a refresh)
 
   let active_dialog = null;
   let active_kind = null;
   let running = false;
   let timer = null;
-  let reentry_hidden_until = 0;
   let realtime_bound = false;
-
-  function is_home() {
-    const route = frappe.get_route() || [];
-    return HOME_ROUTES.includes(String(route[0] || "").toLowerCase());
-  }
-
-  function storage_key() {
-    return `alt_checkin_reminder:${frappe.session.user}:${frappe.datetime.get_today()}`;
-  }
+  const hidden_until = {}; // per kind: set by Later, cleared by a refresh (page reload)
 
   function dialog_open() {
     return !!(active_dialog && active_dialog.display);
   }
-
-  const TITLE = "Check-in Reminder";
 
   // Whatever opened it (this script, a stale cached copy, a realtime event), keep only the newest
   // "Check-in Reminder" dialog open.
@@ -48,7 +38,7 @@
     });
   }
 
-  function show_dialog({ kind, message, label, action, later = true, on_hide }) {
+  function show_dialog({ kind, message, label, action, later = true }) {
     console.debug("[checkin-reminder] show", kind, new Error().stack.split("\n").slice(2, 5).join(" | "));
     if (dialog_open() && active_kind === kind) return; // never two popups of the same kind
 
@@ -67,13 +57,13 @@
       }),
     });
     dlg.$body.html(`<p>${frappe.utils.escape_html(message)}</p>`);
-    if (on_hide) dlg.onhide = on_hide;
+    dlg.onhide = () => (hidden_until[kind] = Date.now() + REMIND_MS); // Later, X or Esc
     dlg.show();
     active_dialog = dlg;
     active_kind = kind;
   }
 
-  function check_in(employee, dlg) {
+  function punch(employee, log_type, done_message, dlg) {
     dlg.disable_primary_action();
     frappe.call({
       method: "frappe.client.insert",
@@ -81,42 +71,43 @@
         doc: {
           doctype: "Employee Checkin",
           employee,
-          log_type: "IN",
+          log_type,
           time: frappe.datetime.now_datetime(),
         },
       },
       callback() {
         dlg.hide();
-        frappe.show_alert({ message: __("Checked in"), indicator: "green" });
+        frappe.show_alert({ message: done_message, indicator: "green" });
       },
       error: () => dlg.enable_primary_action(),
     });
   }
 
-  function show_daily_reminder(d) {
-    if (d.missing_checkout) {
-      show_dialog({
-        kind: "daily",
-        message: __(
-          "Your check-out for {0} is missing. Please request correction of the previous day's check-out before checking in.",
-          [d.missing_checkout]
-        ),
-        label: __("OK"),
-        action: (dlg) => dlg.hide(),
-        later: false,
-      });
-      return;
-    }
+  function correction_dialog(kind, date) {
     show_dialog({
-      kind: "daily",
-      message: __("Hi {0}, you haven't marked your check-in for today ({1}).", [d.employee_name, d.date]),
-      label: __("Check In"),
-      action: (dlg) => check_in(d.employee, dlg),
+      kind,
+      message: __(
+        "Your check-out for {0} is missing. Please request correction of the previous day's check-out before checking in.",
+        [date]
+      ),
+      label: __("OK"),
+      action: (dlg) => dlg.hide(),
+      later: false,
     });
   }
 
-  function show_reentry_prompt(d) {
-    reentry_hidden_until = 0;
+  function show_checkin(d) {
+    if (d.missing_checkout) return correction_dialog("checkin", d.missing_checkout);
+    show_dialog({
+      kind: "checkin",
+      message: __("Hi {0}, you haven't marked your check-in for today ({1}).", [d.employee_name, d.date]),
+      label: __("Check In"),
+      action: (dlg) => punch(d.employee, "IN", __("Checked in"), dlg),
+    });
+  }
+
+  function show_reentry(d) {
+    hidden_until.reentry = 0; // pushed by the server: show it now
     show_dialog({
       kind: "reentry",
       message: __(
@@ -124,27 +115,34 @@
         [d.employee_name, d.shift_end]
       ),
       label: __("Check In"),
-      action: (dlg) => check_in(d.employee, dlg),
-      on_hide: () => (reentry_hidden_until = Date.now() + REMIND_MS), // Later, X or Esc
+      action: (dlg) => punch(d.employee, "IN", __("Checked in"), dlg),
     });
   }
+
+  function show_checkout(d) {
+    if (d.missing_checkout) return correction_dialog("checkout", d.missing_checkout);
+    show_dialog({
+      kind: "checkout",
+      message: __("Hi {0}, your shift ended at {1} and you haven't checked out. Do you want to check out now?", [
+        d.employee_name,
+        d.shift_end,
+      ]),
+      label: __("Check Out"),
+      action: (dlg) => punch(d.employee, "OUT", __("Checked out"), dlg),
+    });
+  }
+
+  const SHOW = { checkin: show_checkin, reentry: show_reentry, checkout: show_checkout };
 
   async function run_checks() {
     if (running || !frappe.session || frappe.session.user === "Guest") return;
     if (dialog_open()) return;
     running = true;
     try {
-      // 1. re-entry (any page): checked out inside the shift
-      if (Date.now() < reentry_hidden_until) return; // dismissed with Later
-      const re = (await frappe.call({ method: API + "get_reentry_status" })).message || {};
-      if (re.show_popup) return show_reentry_prompt(re);
-
-      // 2. daily reminder (home only, once per session per day)
-      if (!is_home() || sessionStorage.getItem(storage_key())) return;
-      const daily = (await frappe.call({ method: API + "get_checkin_status" })).message || {};
-      if (!daily.show_popup) return;
-      sessionStorage.setItem(storage_key(), "1");
-      show_daily_reminder(daily);
+      const d = (await frappe.call({ method: API + "get_reminder" })).message || {};
+      if (!d.show_popup || !SHOW[d.kind]) return;
+      if (Date.now() < (hidden_until[d.kind] || 0)) return; // dismissed with Later
+      SHOW[d.kind](d);
     } finally {
       running = false;
     }
@@ -159,7 +157,7 @@
   function bind_realtime() {
     // the socket does not exist when this file loads: bind once the desk is ready
     if (realtime_bound || !frappe.realtime.socket) return;
-    frappe.realtime.on("checkin_reentry_prompt", show_reentry_prompt);
+    frappe.realtime.on("checkin_reentry_prompt", show_reentry);
     realtime_bound = true;
   }
 

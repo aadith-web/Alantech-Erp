@@ -8,7 +8,12 @@ from unittest.mock import patch
 
 import frappe
 
-from alantech_erp.api.checkin_reminder import get_reentry_status, notify_reentry
+from alantech_erp.api.checkin_reminder import (
+	get_checkout_status,
+	get_reentry_status,
+	get_reminder,
+	notify_reentry,
+)
 
 USER = "vichu45@yopmail.com"
 WINDOW = frappe._dict(start=datetime(2026, 11, 17, 9, 0), end=datetime(2026, 11, 17, 21, 0))
@@ -67,6 +72,14 @@ class TestNotifyReentry(unittest.TestCase):
 class TestGetReentryStatus(unittest.TestCase):
 	"""Page load / refresh: the popup stays on while the last punch is an in-shift OUT."""
 
+	def setUp(self):
+		# swap the session by hand: patch.object(create=True) would delete the real one afterwards
+		self._session = frappe.local.session
+		frappe.local.session = frappe._dict(user=USER)
+
+	def tearDown(self):
+		frappe.local.session = self._session
+
 	def run_case(self, last, now, shift="12 Hour Shift"):
 		emp = frappe._dict(name="HR-EMP-00079", employee_name="Vishal V V")
 		with (
@@ -76,7 +89,6 @@ class TestGetReentryStatus(unittest.TestCase):
 			patch(BUILDER, return_value=datetime(2026, 11, 17).date()),
 			patch(GET_SHIFT, return_value=shift),
 			patch(GET_WINDOW, return_value=WINDOW),
-			patch.object(frappe.local, "session", frappe._dict(user=USER), create=True),
 		):
 			return get_reentry_status()
 
@@ -101,3 +113,68 @@ class TestGetReentryStatus(unittest.TestCase):
 
 	def test_no_punches_does_not_show(self):
 		self.assertEqual(self.run_case(None, now=datetime(2026, 11, 17, 16, 0))["show_popup"], 0)
+
+
+
+class TestCheckoutAndReminder(unittest.TestCase):
+	"""Check-out popup (shift over, still checked in) and which popup get_reminder picks."""
+
+	def setUp(self):
+		self._session = frappe.local.session
+		frappe.local.session = frappe._dict(user=USER)
+
+	def tearDown(self):
+		frappe.local.session = self._session
+
+	def run_case(self, fn, last, now, roles=("Employee",), no_log_today=True):
+		emp = frappe._dict(name="HR-EMP-00079", employee_name="Vishal V V")
+		with (
+			patch("alantech_erp.api.checkin_reminder._employee", return_value=emp),
+			patch("frappe.get_all", return_value=[last] if last else []),
+			patch("frappe.db.exists", return_value=not no_log_today),
+			patch("frappe.get_roles", return_value=list(roles)),
+			patch("alantech_erp.api.checkin_reminder.now_datetime", return_value=now),
+			patch("alantech_erp.api.checkin_reminder.missing_checkout_limit", return_value=(16, datetime(2026, 11, 17).date())),
+			patch(BUILDER, return_value=datetime(2026, 11, 17).date()),
+			patch(GET_SHIFT, return_value="12 Hour Shift"),
+			patch(GET_WINDOW, return_value=WINDOW),
+		):
+			return fn()
+
+	def punch(self, log_type, time):
+		return frappe._dict(time=time, log_type=log_type)
+
+	def test_asks_for_checkout_after_shift_end(self):
+		r = self.run_case(get_checkout_status, self.punch("IN", "2026-11-17 09:05:00"), datetime(2026, 11, 17, 21, 30))
+		self.assertEqual(r["show_popup"], 1)
+		self.assertIn("09:00", r["shift_end"])
+		self.assertFalse(r["missing_checkout"])
+
+	def test_no_checkout_popup_while_shift_runs(self):
+		r = self.run_case(get_checkout_status, self.punch("IN", "2026-11-17 09:05:00"), datetime(2026, 11, 17, 18, 0))
+		self.assertEqual(r["show_popup"], 0)
+
+	def test_no_checkout_popup_after_checkout(self):
+		r = self.run_case(get_checkout_status, self.punch("OUT", "2026-11-17 21:10:00"), datetime(2026, 11, 17, 21, 30))
+		self.assertEqual(r["show_popup"], 0)
+
+	def test_overdue_checkout_must_be_corrected(self):
+		r = self.run_case(get_checkout_status, self.punch("IN", "2026-11-17 09:05:00"), datetime(2026, 11, 18, 9, 0))
+		self.assertEqual(r["show_popup"], 1)
+		self.assertTrue(r["missing_checkout"])
+
+	def test_reminder_picks_reentry_after_early_checkout(self):
+		r = self.run_case(get_reminder, self.punch("OUT", "2026-11-17 15:37:08"), datetime(2026, 11, 17, 16, 0), no_log_today=False)
+		self.assertEqual(r["kind"], "reentry")
+
+	def test_reminder_picks_checkout_after_shift_end(self):
+		r = self.run_case(get_reminder, self.punch("IN", "2026-11-17 09:05:00"), datetime(2026, 11, 17, 21, 30), no_log_today=False)
+		self.assertEqual(r["kind"], "checkout")
+
+	def test_reminder_picks_checkin_when_no_punch_today(self):
+		r = self.run_case(get_reminder, None, datetime(2026, 11, 17, 10, 0))
+		self.assertEqual(r["kind"], "checkin")
+
+	def test_reminder_never_asks_checkin_while_checked_in(self):
+		r = self.run_case(get_reminder, self.punch("IN", "2026-11-17 09:05:00"), datetime(2026, 11, 17, 12, 0))
+		self.assertEqual(r["show_popup"], 0)
