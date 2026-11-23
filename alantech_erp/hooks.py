@@ -320,6 +320,7 @@ fixtures = [
     ]]]},
     {"dt": "Department", "filters": [["name", "!=", "All Departments"]]},
     {"dt": "Custom Field", "filters": [["name", "in", ["Employee Promotion-branch","Employee Promotion-location"]]]},
+    {"dt": "Client Script", "filters": [["name", "=", "Notification List Subject Format"]]},
     {"dt": "Document Type Master"}
 ]
 
