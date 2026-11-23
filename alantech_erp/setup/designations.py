@@ -26,8 +26,8 @@ def execute():
         frappe.db.set_value("Designation", desig, {
             "alt_reports_to": reports_to if frappe.db.exists("Designation", reports_to) else None,
             "alt_default_department": frappe.db.get_value(
-                "Department", {"department_name": dept, "company": company}, "name"),
-            "alt_role_profile": profile if frappe.db.exists("Role Profile", profile) else None,
+                "Department", {"department_name": dept, "company": company}, "name") if dept else None,
+            "alt_role_profile": profile if profile and frappe.db.exists("Role Profile", profile) else None,
         }, update_modified=False)
 
     frappe.db.commit()

@@ -302,7 +302,17 @@ fixtures = [
     {"dt": "Workflow State"},
     {"dt": "Workflow Action Master"},
     {"dt": "Role", "filters": [["name", "in", ["Proposal Engineer", "Design Engineer", "Quotation Level 2 Approver"]]]},
-    {"dt": "Designation"},
+    # org chart posts only (AIS-MS-TP-01): ERPNext's sample designations are deleted
+    # (patches/v16/remove_sample_designations.py) and must not come back with the fixtures
+    {"dt": "Designation", "filters": [["name", "not in", [
+        "Accountant", "Administrative Assistant", "Administrative Officer", "Analyst", "Associate",
+        "Business Analyst", "Business Development Manager", "Chief Executive Officer",
+        "Chief Financial Officer", "Chief Operating Officer", "Chief Technology Officer", "Consultant",
+        "Customer Service Representative", "Designer", "Engineer", "Executive Assistant",
+        "Head of Marketing and Sales", "Manager", "Marketing Specialist", "President", "Product Manager",
+        "Project Manager", "Researcher", "Sales Representative", "Secretary", "Software Developer",
+        "Vice President",
+    ]]]},
     {"dt": "Department", "filters": [["name", "!=", "All Departments"]]},
     {"dt": "Document Type Master"}
     

@@ -28,3 +28,5 @@ alantech_erp.patches.v16.employee_grades_from_pdf
 alantech_erp.patches.v16.default_salary_structure
 alantech_erp.patches.v16.document_number_required
 alantech_erp.patches.v16.reset_employee_document_type_permissions
+alantech_erp.patches.v16.remove_sample_designations
+alantech_erp.patches.v16.move_off_sample_designations

@@ -392,10 +392,10 @@ frappe.ui.form.on("Employee", {
 	},
 	designation(frm) {
 		alt_employee_required.toggle(frm);
-		alt_employee_required.fill_from_designation(frm);
+		alt_employee_required.fill_from_designation(frm, true);
 	},
 	company(frm) {
-		alt_employee_required.fill_from_designation(frm);
+		alt_employee_required.fill_from_designation(frm, false);
 	},
 	company_email(frm) {
 		alt_employee_required.toggle_email(frm);
@@ -448,16 +448,41 @@ const alt_employee_required = {
 		frappe.ui.form.check_mandatory.__alt_employee_email = true;
 	},
 
-	// same defaults the server fills on save (org_structure.apply_designation_defaults)
-	fill_from_designation(frm) {
+	// Department and Reports To from the designation (org_structure.designation_defaults, the same
+	// ones the server fills on save). On a Designation change (ClickUp 14yr2e58fq1) they follow the
+	// new designation, also when already filled and on saved employees: Reports To is the new
+	// designation's manager (none for the Managing Director). A value the form itself filled from
+	// the previous designation is cleared when the new one has no rule; one typed by hand is kept
+	// then. On a Company change only empty fields are filled.
+	fill_from_designation(frm, designation_changed) {
 		const { designation, company } = frm.doc;
-		if (!frm.is_new() || !designation || (frm.doc.department && frm.doc.reports_to)) return;
+		if (!designation) return;
+		if (!designation_changed && (!frm.is_new() || (frm.doc.department && frm.doc.reports_to))) return;
+		const auto = (frm._alt_auto_from_designation ||= {});
 		frappe
-			.xcall("alantech_erp.org_structure.designation_defaults", { designation, company })
+			.xcall("alantech_erp.org_structure.designation_defaults", {
+				designation,
+				company,
+				employee: frm.is_new() ? null : frm.doc.name,
+			})
 			.then((r) => {
-				if (frm.doc.designation !== designation) return;
-				if (!frm.doc.department && r.department) frm.set_value("department", r.department);
-				if (!frm.doc.reports_to && r.reports_to) frm.set_value("reports_to", r.reports_to);
+				if (frm.doc.designation !== designation) return; // changed again meanwhile
+				// `always`: a new rule replaces even a value typed by hand (Reports To, per the
+				// task); otherwise only an empty field or one this form filled is replaced.
+				const apply = (field, value, always) => {
+					const current = frm.doc[field] || null;
+					const ours = Boolean(current) && current === auto[field];
+					let next = current;
+					if (value && (!current || ours || (designation_changed && always))) next = value;
+					else if (!value && designation_changed && ours) next = null;
+					if (next === current) return;
+					auto[field] = next;
+					frm.set_value(field, next);
+				};
+				apply("department", r.department, false);
+				apply("reports_to", r.is_top ? null : r.reports_to, true);
+				// promoted to Managing Director: reports to no one, also when typed by hand
+				if (designation_changed && r.is_top && frm.doc.reports_to) frm.set_value("reports_to", null);
 			});
 	},
 };
