@@ -70,7 +70,8 @@ const alt_employee_docs = {
 		const documents = frappe.db
 			.get_list("Document", {
 				filters: { reference_doctype: "Employee", reference_name: frm.doc.name },
-				fields: ["name", "document_type", "card_number", "issue_date", "expiry_date", "approval_status", "submitted_by"],
+				fields: ["name", "document_type", "card_number", "issue_date", "expiry_date", "approval_status", "submitted_by",
+					"modified"],
 				order_by: "modified desc",
 				limit: 200,
 			})
@@ -88,15 +89,29 @@ const alt_employee_docs = {
 			})
 			.catch(() => []);
 
-		Promise.all([documents, mandatory])
-			.then(([rows, required]) => {
+		// expiring soon / expired (ClickUp 14yr2e58g46, document_expiry_warning.py)
+		const warnings = frappe
+			.xcall("alantech_erp.alantech.doctype.document.document_expiry_warning.get_expiry_warnings", {
+				reference_doctype: "Employee",
+				reference_name: frm.doc.name,
+			})
+			.catch(() => []);
+
+		Promise.all([documents, mandatory, warnings])
+			.then(([rows, required, warned]) => {
 				required = required || [];
+				const by_name = {};
+				(warned || []).forEach((w) => (by_name[w.name] = w));
+				rows.forEach((r) => (r.expiry_warning = by_name[r.name] || null));
 				$toolbar.find(".alt-doc-count").html(alt_employee_docs.summary(rows, required));
 				if (!rows.length && !required.length) {
 					$list.html(`<p class="text-muted">${__("No documents uploaded yet.")}</p>`);
 					return;
 				}
-				$list.html(alt_employee_docs.table(alt_employee_docs.combine(rows, required)));
+				$list.html(
+					alt_employee_docs.expiry_banner(warned || []) +
+					alt_employee_docs.table(alt_employee_docs.combine(rows, required))
+				);
 				$list.find("[data-doc]").on("click", (e) => {
 					e.preventDefault();
 					frappe.set_route("Form", "Document", $(e.currentTarget).attr("data-doc"));
@@ -117,6 +132,18 @@ const alt_employee_docs = {
 				});
 			})
 			.catch(() => $list.html(`<p class="text-muted">${__("Could not load documents.")}</p>`));
+	},
+
+	expiry_banner(warned) {
+		if (!warned.length) return "";
+		const esc = frappe.utils.escape_html;
+		const expired = warned.some((w) => w.status === "expired");
+		const items = warned
+			.map((w) => `<li><a href="#" data-doc="${esc(w.name)}">${esc(w.message)}</a></li>`)
+			.join("");
+		return `<div class="form-message ${expired ? "red" : "yellow"}"
+			style="margin-bottom: var(--margin-sm); border-radius: var(--border-radius);">
+			<ul style="margin:0; padding-left:18px;">${items}</ul></div>`;
 	},
 
 	summary(rows, required) {
@@ -155,6 +182,11 @@ const alt_employee_docs = {
 		const esc = frappe.utils.escape_html;
 		const today = frappe.datetime.get_today();
 		const can_upload = frappe.model.can_create("Document");
+		// Edit: opens the document's form (same rules there: an employee's edit goes back for approval)
+		const edit_btn = (name) =>
+			frappe.model.can_write("Document")
+				? `<button class="btn btn-default btn-xs" data-doc="${esc(name)}" style="margin-right:4px;">${__("Edit")}</button>`
+				: "";
 		const upload_btn = (type) =>
 			can_upload
 				? `<button class="btn btn-primary btn-xs" data-upload="${esc(type)}">${__("Upload")}</button>`
@@ -167,14 +199,15 @@ const alt_employee_docs = {
 				if (r.missing) {
 					return `<tr>
 						<td>${type}</td><td></td><td></td><td></td><td></td>
-						<td><span class="indicator-pill red">${__("Missing")}</span></td>
+						<td><span class="indicator-pill red" style="white-space:nowrap;">${__("Missing")}</span></td>
+						<td></td>
 						<td><span class="text-muted">${__("No file")}</span></td>
 						<td style="white-space:nowrap;">${upload_btn(r.document_type)}</td>
 					</tr>`;
 				}
 				const colour = alt_employee_docs.STATUS_COLOURS[r.approval_status] || "gray";
 				const status = r.approval_status
-					? `<span class="indicator-pill ${colour}">${__(r.approval_status)}</span>`
+					? `<span class="indicator-pill ${colour}" style="white-space:nowrap;">${__(r.approval_status)}</span>`
 					: "";
 				let expiry = r.expiry_date ? frappe.datetime.str_to_user(r.expiry_date) : "";
 				if (r.expiry_date) {
@@ -194,12 +227,14 @@ const alt_employee_docs = {
 					<td>${r.issue_date ? frappe.datetime.str_to_user(r.issue_date) : ""}</td>
 					<td>${expiry}</td>
 					<td>${status}</td>
+					<td title="${r.modified ? esc(frappe.datetime.str_to_user(r.modified)) : ""}">${
+						r.modified ? frappe.datetime.str_to_user(r.modified, false, true) : ""}</td>
 					<td>${r.files.length
 						? `<button class="btn btn-default btn-xs" data-files="${esc(r.name)}">${r.files.length > 1 ? __("View ({0})", [r.files.length]) : __("View")
 						}</button>`
 						: `<span class="text-muted">${__("No file")}</span>`
 					}</td>
-					<td style="white-space:nowrap;">${review}${r.reupload ? upload_btn(r.document_type) : ""}</td>
+					<td style="white-space:nowrap;">${edit_btn(r.name)}${review}${r.reupload ? upload_btn(r.document_type) : ""}</td>
 				</tr>`;
 			})
 			.join("");
@@ -207,7 +242,7 @@ const alt_employee_docs = {
 			<thead><tr>
 				<th>${__("Document Type")}</th><th>${__("Document")}</th><th>${__("Number")}</th>
 				<th>${__("Issue Date")}</th><th>${__("Expiry Date")}</th><th>${__("Status")}</th>
-				<th>${__("File")}</th><th>${__("Action")}</th>
+				<th>${__("Last Updated")}</th><th>${__("File")}</th><th>${__("Action")}</th>
 			</tr></thead>
 			<tbody>${body}</tbody>
 		</table>
