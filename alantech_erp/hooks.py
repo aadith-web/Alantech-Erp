@@ -413,6 +413,9 @@ doc_events = {
     # Employee Mandatory Fields part 2: no payroll for an employee missing payroll fields
     # (setup/employee_payroll_fields.py, ClickUp 14yr2e57mhp)
     "Salary Structure Assignment": {
+        # Income Tax Slab in force on the From Date, when empty (ClickUp 14yr2e589ev). before_validate:
+        # HRMS's validate refuses an empty slab when the structure has a tax component.
+        "before_validate": "alantech_erp.setup.income_tax_slab.set_income_tax_slab",
         "before_submit": "alantech_erp.setup.employee_payroll_fields.salary_structure_assignment_before_submit",
         # Employee form Create / View Salary Structure button follows (ClickUp 14yr2e586v5)
         "on_submit": "alantech_erp.setup.salary_structure_button.notify_change",
