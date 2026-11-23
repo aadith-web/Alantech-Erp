@@ -304,8 +304,8 @@ fixtures = [
     {"dt": "Role", "filters": [["name", "in", ["Proposal Engineer", "Design Engineer", "Quotation Level 2 Approver"]]]},
     {"dt": "Designation"},
     {"dt": "Department", "filters": [["name", "!=", "All Departments"]]},
+    {"dt": "Custom Field", "filters": [["name", "in", ["Employee Promotion-branch"]]]},
     {"dt": "Document Type Master"}
-    
 ]
 
 doc_events = {
