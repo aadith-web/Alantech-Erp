@@ -26,7 +26,7 @@ from frappe.utils import add_months, flt, get_first_day, getdate, today
 
 from alantech_erp.setup.default_salary_structure import PERCENT, PERCENT_OF
 from alantech_erp.setup.salary_structure_button import get_active_assignment
-from alantech_erp.setup.salary_structure_popup import SUB_BAND, SalaryStructurePopupError
+from alantech_erp.setup.salary_structure_popup import SUB_BAND, SalaryStructurePopupError, get_grade_details
 
 EDIT_ROLE = "HR Manager"
 
@@ -71,6 +71,10 @@ def get_salary_structure_view(employee):
 		"from_date": assignment.from_date,
 		"grade": assignment.get("grade"),
 		"sub_band": assignment.get(SUB_BAND),
+		# India Payroll's field; the Edit popup starts from it (ClickUp 14yr2e58ft2)
+		"employment_state": assignment.get("employment_state"),
+		# filled on save by setup/income_tax_slab.py (ClickUp 14yr2e589ev)
+		"income_tax_slab": assignment.income_tax_slab,
 		"base": assignment.base,
 		"cost_centers": [
 			{"cost_center": r.cost_center, "percentage": r.percentage} for r in assignment.payroll_cost_centers
@@ -135,11 +139,26 @@ def preview_amounts(assignment):
 	}, None
 
 
+# Edit modes (ClickUp 14yr2e586vb sign-off point): HR chooses per edit
+NEW_ASSIGNMENT, AMEND = "new", "amend"
+
+
 @frappe.whitelist()
-def revise_salary_structure(employee, sub_band, from_date, submit=1, cost_centers=None):
-	"""Edit (HR Manager): a new assignment from a later From Date with `sub_band` of the employee's
-	grade. Returns what create_salary_structure_assignment returns."""
-	from alantech_erp.setup.salary_structure_popup import create_salary_structure_assignment
+def revise_salary_structure(
+	employee, sub_band, from_date=None, submit=1, cost_centers=None, employment_state=None, mode=NEW_ASSIGNMENT
+):
+	"""Edit (HR Manager only). `mode`:
+	- "new" (default): a new assignment from a later From Date with `sub_band` of the employee's
+	  grade; the current one stays for the months before (salary history kept).
+	- "amend": correct the current assignment: it is cancelled and an amended copy (same From Date,
+	  amended_from = it) is made with the new sub band, gross, state and cost centers. Refused once a
+	  submitted salary slip covers its period, so payroll history never changes.
+	Returns what create_salary_structure_assignment returns."""
+	from alantech_erp.setup.salary_structure_popup import (
+		DOCTYPE,
+		EMPLOYMENT_STATE,
+		create_salary_structure_assignment,
+	)
 
 	if not can_edit():
 		frappe.throw(
@@ -150,6 +169,20 @@ def revise_salary_structure(employee, sub_band, from_date, submit=1, cost_center
 	active = get_active_assignment(employee)
 	if not active:
 		frappe.throw(_("There is no active assignment to edit."), SalaryStructurePopupError)
+
+	# Employment State (ClickUp 14yr2e58ft2): the one chosen in the Edit popup; none sent (API): the
+	# current assignment's, the employee still works there (empty -> Kerala in
+	# create_salary_structure_assignment, which also checks it against the list)
+	state = (employment_state or "").strip() or (
+		frappe.db.get_value(DOCTYPE, active.name, EMPLOYMENT_STATE)
+		if frappe.get_meta(DOCTYPE).has_field(EMPLOYMENT_STATE)
+		else None
+	)
+	if mode == AMEND:
+		return amend_assignment(active.name, sub_band, submit, cost_centers, state)
+	if mode != NEW_ASSIGNMENT:
+		frappe.throw(_("Unknown edit mode {0}.").format(frappe.bold(mode)), SalaryStructurePopupError)
+
 	if not from_date or getdate(from_date) <= getdate(active.from_date):
 		frappe.throw(
 			_("The new From Date must be after {0}, the From Date of the current assignment {1}.").format(
@@ -160,5 +193,60 @@ def revise_salary_structure(employee, sub_band, from_date, submit=1, cost_center
 		)
 	grade = frappe.db.get_value("Employee", employee, "grade")
 	return create_salary_structure_assignment(
-		employee, grade, sub_band, from_date, submit=submit, cost_centers=cost_centers
+		employee, grade, sub_band, from_date, submit=submit, cost_centers=cost_centers, employment_state=state
 	)
+
+
+def amend_assignment(name, sub_band, submit, cost_centers, state):
+	"""Cancel assignment `name` and make its amended copy with the new sub band (same From Date).
+	One request: if anything fails, the cancel is rolled back too."""
+	from frappe.utils import cint
+
+	from alantech_erp.setup.salary_structure_popup import (
+		EMPLOYMENT_STATE,
+		clean_cost_centers,
+		clean_employment_state,
+		fail,
+	)
+
+	current = frappe.get_doc("Salary Structure Assignment", name)
+	frappe.has_permission("Salary Structure Assignment", "cancel", doc=current, throw=True)
+	slips = frappe.get_all(
+		"Salary Slip",
+		filters={"employee": current.employee, "docstatus": 1, "end_date": (">=", current.from_date)},
+		pluck="name",
+		order_by="start_date",
+		limit=3,
+	)
+	if slips:
+		fail(
+			_(
+				"Assignment {0} cannot be corrected: submitted salary slips already use it ({1}). Choose "
+				"\"New assignment from a new From Date\" instead, so the paid months stay as they are."
+			).format(frappe.bold(current.name), ", ".join(slips))
+		)
+
+	grade = frappe.db.get_value("Employee", current.employee, "grade") or current.get("grade")
+	details = get_grade_details(grade) if grade else {"sub_bands": []}
+	gross = next((flt(r.gross_amount) for r in details["sub_bands"] if r.sub_band == sub_band), None)
+	if not sub_band:
+		fail(_("Select a Sub Band."))
+	if gross is None or gross <= 0:
+		fail(_("Sub Band {0} is not on Grade {1}.").format(frappe.bold(sub_band), frappe.bold(grade or "-")))
+	cost_centers = clean_cost_centers(cost_centers, current.company)
+	state = clean_employment_state(state)
+
+	current.cancel()
+	amended = frappe.copy_doc(current)
+	amended.docstatus = 0  # copy_doc keeps the cancelled status
+	amended.amended_from = current.name
+	amended.base = gross
+	amended.set(SUB_BAND, sub_band)
+	if state:
+		amended.set(EMPLOYMENT_STATE, state)
+	if cost_centers:
+		amended.set("payroll_cost_centers", cost_centers)
+	amended.insert()
+	if cint(submit):
+		amended.submit()
+	return {"name": amended.name, "docstatus": amended.docstatus, "base": gross, "amended_from": current.name}

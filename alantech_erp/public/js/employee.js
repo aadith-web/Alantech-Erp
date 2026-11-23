@@ -747,7 +747,16 @@ function alt_create_salary_structure(frm) {
 			},
 			{ fieldname: "gross_amount", fieldtype: "Currency", label: __("Gross Amount"), read_only: 1 },
 			{ fieldtype: "Column Break" },
-			{ fieldname: "from_date", fieldtype: "Date", label: __("From Date"), reqd: 1, default: frappe.datetime.get_today() },
+			{
+				fieldname: "from_date",
+				fieldtype: "Date",
+				label: __("From Date"),
+				reqd: 1,
+				default: frappe.datetime.get_today(),
+				onchange: () => alt_show_income_tax_slab(dialog, frm.doc.company),
+			},
+			alt_employment_state_field(),
+			alt_income_tax_slab_field(),
 			{ fieldname: "salary_structure", fieldtype: "Data", label: __("Salary Structure"), read_only: 1 },
 			{
 				fieldname: "submit",
@@ -774,6 +783,7 @@ function alt_create_salary_structure(frm) {
 					grade: values.grade,
 					sub_band: values.sub_band,
 					from_date: values.from_date,
+					employment_state: values.employment_state,
 					submit: values.submit ? 1 : 0,
 				})
 				.then((r) => {
@@ -808,12 +818,78 @@ function alt_create_salary_structure(frm) {
 			if (dialog.get_value("grade") !== grade) return; // grade changed meanwhile
 			grade_details = details;
 			dialog.set_value("salary_structure", details.salary_structure || __("None: set it on the grade"));
+			// ClickUp 14yr2e586vb: an empty Sub Band list says why (e.g. Grade1 has no Sub Bands rows)
+			dialog.set_df_property(
+				"sub_band",
+				"description",
+				details.sub_bands.length
+					? ""
+					: `<span class="text-danger">${__("Grade {0} has no sub bands. Add them on the grade first.", [frappe.utils.escape_html(grade)])}</span>`
+			);
 		});
 	}
 
 	dialog.show();
 	load_grade();
 	alt_watch_cost_centers(dialog);
+	alt_load_employment_states(dialog);
+	alt_show_income_tax_slab(dialog, frm.doc.company);
+}
+
+// Employment State of the Create / Edit Salary Structure popups (ClickUp 14yr2e58ft2): saved in
+// India Payroll's Employment State of the assignment (Professional Tax). Indian states and union
+// territories from the server; Kerala, or the current assignment's state when editing.
+function alt_employment_state_field(current) {
+	return {
+		fieldname: "employment_state",
+		fieldtype: "Select",
+		label: __("Employment State"),
+		options: [current || "Kerala"],
+		default: current || "Kerala",
+		reqd: 1,
+		description: __("The state the employee works in (Professional Tax)."),
+	};
+}
+
+// Income Tax Slab of the Create / Edit popups (ClickUp 14yr2e589ev): read-only, the slab the
+// assignment gets on save for the From Date (setup/income_tax_slab.py, same rule).
+function alt_income_tax_slab_field() {
+	return {
+		fieldname: "income_tax_slab",
+		fieldtype: "Data",
+		label: __("Income Tax Slab"),
+		read_only: 1,
+		description: __("In force on the From Date; filled on save."),
+	};
+}
+
+function alt_show_income_tax_slab(dialog, company) {
+	const from_date = dialog.get_value("from_date");
+	if (!from_date) {
+		dialog.set_value("income_tax_slab", "");
+		return;
+	}
+	frappe
+		.xcall("alantech_erp.setup.income_tax_slab.get_slab_for_popup", { from_date, company })
+		.then((slab) => {
+			if (dialog.get_value("from_date") !== from_date) return; // changed meanwhile
+			dialog.set_value("income_tax_slab", slab || __("None in force on this date"));
+		});
+}
+
+function alt_load_employment_states(dialog, current) {
+	frappe
+		.xcall("alantech_erp.setup.salary_structure_popup.get_employment_states")
+		.then(({ states, default: fallback }) => {
+			if (!states.length) {
+				// India Payroll not installed: no Employment State to save
+				dialog.set_df_property("employment_state", "reqd", 0);
+				dialog.set_df_property("employment_state", "hidden", 1);
+				return;
+			}
+			dialog.set_df_property("employment_state", "options", states);
+			dialog.set_value("employment_state", states.includes(current) ? current : fallback);
+		});
 }
 
 // Cost Centers table of the Create / Edit Salary Structure popups (ClickUp 14yr2e589er): Cost Center
@@ -926,6 +1002,8 @@ function alt_view_salary_structure(frm) {
 			[__("Grade"), esc(view.grade || "-")],
 			[__("Sub Band"), esc(view.sub_band || "-")],
 			[__("Base (Gross)"), money(view.base)],
+			[__("Income Tax Slab"), esc(view.income_tax_slab || "-")],
+			[__("Employment State"), esc(view.employment_state || "-")],
 			[
 				__("Cost Centers"),
 				(view.cost_centers || []).map((r) => `${esc(r.cost_center)} (${cint(r.percentage)}%)`).join("<br>") || "-",
@@ -959,17 +1037,27 @@ function alt_view_salary_structure(frm) {
 function alt_edit_salary_structure(frm, view) {
 	const method = "alantech_erp.setup.salary_structure_";
 	let sub_bands = [];
+	let ready = false;
 	const today = frappe.datetime.get_today();
 	const dialog = new frappe.ui.Dialog({
 		title: __("Edit Salary Structure"),
 		fields: [
+			// how to edit (ClickUp 14yr2e586vb sign-off point): a new assignment keeps the salary
+			// history; correcting cancels and amends the current one, refused on the server once a
+			// submitted salary slip uses it
 			{
-				fieldtype: "HTML",
-				options: `<p class="text-muted">${__(
-					"A new assignment starts on the From Date below. The current one ({0}, from {1}) stays for the months before.",
-					[frappe.utils.escape_html(view.assignment), frappe.datetime.str_to_user(view.from_date)]
-				)}</p>`,
+				fieldname: "edit_mode",
+				fieldtype: "Select",
+				label: __("How"),
+				options: [
+					{ value: "new", label: __("New assignment from a new From Date") },
+					{ value: "amend", label: __("Correct the current assignment (cancel and amend)") },
+				],
+				default: "new",
+				reqd: 1,
+				onchange: () => ready && set_mode(), // not while the dialog is being built
 			},
+			{ fieldname: "mode_note", fieldtype: "HTML" },
 			{ fieldname: "grade", fieldtype: "Link", options: "Employee Grade", label: __("Grade"), default: frm.doc.grade, read_only: 1 },
 			{
 				fieldname: "sub_band",
@@ -992,7 +1080,13 @@ function alt_edit_salary_structure(frm, view) {
 				reqd: 1,
 				default: today > view.from_date ? today : null,
 				description: __("After {0}.", [frappe.datetime.str_to_user(view.from_date)]),
+				depends_on: "eval:doc.edit_mode==='new'",
+				mandatory_depends_on: "eval:doc.edit_mode==='new'",
+				onchange: () => alt_show_income_tax_slab(dialog, frm.doc.company),
 			},
+			// the current assignment's state; changed when the employee moves to another state
+			alt_employment_state_field(view.employment_state),
+			alt_income_tax_slab_field(),
 			{ fieldname: "submit", fieldtype: "Check", label: __("Submit"), default: 1, description: __("Untick to keep the new assignment as a draft.") },
 			// the current assignment's split, else the employee's Payroll Cost Center
 			...alt_cost_center_fields(
@@ -1015,16 +1109,19 @@ function alt_edit_salary_structure(frm, view) {
 					cost_centers,
 					employee: frm.doc.name,
 					sub_band: values.sub_band,
-					from_date: values.from_date,
+					from_date: values.edit_mode === "amend" ? null : values.from_date,
+					employment_state: values.employment_state,
 					submit: values.submit ? 1 : 0,
+					mode: values.edit_mode,
 				})
 				.then((r) => {
 					dialog.hide();
+					const link = `<a href="/app/salary-structure-assignment/${encodeURIComponent(r.name)}">${frappe.utils.escape_html(r.name)}</a>`;
+					const status = r.docstatus === 1 ? __("submitted") : __("saved as draft");
 					frappe.show_alert({
-						message: __("Salary Structure Assignment {0} {1}", [
-							`<a href="/app/salary-structure-assignment/${encodeURIComponent(r.name)}">${frappe.utils.escape_html(r.name)}</a>`,
-							r.docstatus === 1 ? __("submitted") : __("saved as draft"),
-						]),
+						message: r.amended_from
+							? __("Salary Structure Assignment {0} {1}; {2} cancelled", [link, status, frappe.utils.escape_html(r.amended_from)])
+							: __("Salary Structure Assignment {0} {1}", [link, status]),
 						indicator: "green",
 					});
 					frm.reload_doc();
@@ -1032,8 +1129,33 @@ function alt_edit_salary_structure(frm, view) {
 				.finally(() => dialog.enable_primary_action());
 		},
 	});
+	// the note and the From Date follow the chosen way; correcting keeps the current From Date
+	function set_mode() {
+		const amend = dialog.get_value("edit_mode") === "amend";
+		const current = frappe.utils.escape_html(view.assignment);
+		const since = frappe.datetime.str_to_user(view.from_date);
+		dialog.fields_dict.mode_note.$wrapper.html(
+			`<p class="text-muted">${
+				amend
+					? __(
+							"The current assignment ({0}, from {1}) is cancelled and replaced by a corrected copy from the same date. Only possible while no submitted salary slip uses it.",
+							[current, since]
+					  )
+					: __("A new assignment starts on the From Date below. The current one ({0}, from {1}) stays for the months before.", [
+							current,
+							since,
+					  ])
+			}</p>`
+		);
+		dialog.set_value("from_date", amend ? view.from_date : today > view.from_date ? today : null);
+		alt_show_income_tax_slab(dialog, frm.doc.company);
+	}
+
 	dialog.show();
+	ready = true;
+	set_mode();
 	alt_watch_cost_centers(dialog);
+	alt_load_employment_states(dialog, view.employment_state);
 	if (frm.doc.grade) {
 		frappe.xcall(method + "popup.get_grade_details", { grade: frm.doc.grade }).then((details) => {
 			sub_bands = details.sub_bands;
