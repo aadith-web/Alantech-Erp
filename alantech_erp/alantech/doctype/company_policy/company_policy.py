@@ -127,6 +127,11 @@ def get_permission_query_conditions(user=None):
     if not emp:
         return "1=0"
 
+    return applicability_condition(emp)
+
+
+def applicability_condition(emp):
+    """SQL condition: the policies this employee (dict with department, designation, branch) may read."""
     parent = "t.parent = `tabCompany Policy`.name"
     any_rows = (
         f"(exists (select 1 from `tabCompany Policy Department` t where {parent}) "
@@ -142,6 +147,28 @@ def get_permission_query_conditions(user=None):
         f"and {_child_clause('Company Policy Department', 'department', emp.department)} "
         f"and {_child_clause('Company Policy Designation', 'designation', emp.designation)} "
         f"and {_child_clause('Company Policy Branch', 'branch', emp.branch)})))"
+    )
+
+
+@frappe.whitelist()
+def get_applicable_policies(employee):
+    """Employee profile, Company Policy section: the policies that apply to this employee.
+
+    Applicability is worked out for the employee shown (HR looking at someone else's profile sees
+    that employee's policies, not all of them). Returns title, code, version and the attached file.
+    """
+    frappe.has_permission("Employee", "read", doc=employee, throw=True)
+    emp = frappe.db.get_value(
+        "Employee", employee, ["department", "designation", "branch"], as_dict=True
+    )
+    if not emp:
+        return []
+    return frappe.db.sql(
+        "select name, policy_title, policy_code, version, effective_date, policy_file "
+        "from `tabCompany Policy` "
+        f"where {applicability_condition(emp)} "
+        "order by policy_title",
+        as_dict=True,
     )
 
 
