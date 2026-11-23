@@ -108,7 +108,7 @@ const ALT_DOC_STATUS = { PENDING: "Pending Approval", APPROVED: "Approved", REJE
 // Server-set fields, ignored by the "has anything changed?" check
 const ALT_DOC_SYSTEM_FIELDS = new Set([
 	"reference_title", "employee", "expiry_required", "expiry_date_mandatory",
-	"issue_date_required", "issue_date_mandatory",
+	"issue_date_required", "issue_date_mandatory", "number_required",
 	"approval_status", "submitted_by", "reviewed_by", "reviewed_on", "rejection_reason",
 ]);
 

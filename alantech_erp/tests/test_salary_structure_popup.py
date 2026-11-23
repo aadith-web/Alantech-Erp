@@ -12,6 +12,9 @@ Covered:
 - Refused: no grade / sub band, sub band not on the grade, grade without Default Salary Structure,
   an assignment (draft too) with the same From Date; a failed submit saves nothing, not the grade.
 - A user without create rights on assignments is refused.
+- Cost Centers table (ClickUp 14yr2e589er): rows copied to the assignment's Cost Centers; refused
+  unless the total is 100%, or with a cost center of another company, a group, a duplicate, 0%;
+  an empty table keeps HRMS's default (Payroll Cost Center at 100%).
 
 Run:
     bench --site alantech.localhost run-tests --module alantech_erp.tests.test_salary_structure_popup
@@ -28,6 +31,7 @@ from alantech_erp.setup.salary_structure_button import get_salary_structure_butt
 from alantech_erp.setup.salary_structure_popup import (
 	SUB_BAND,
 	SalaryStructurePopupError,
+	clean_cost_centers,
 	create_salary_structure_assignment,
 	get_grade_details,
 )
@@ -66,10 +70,67 @@ class TestSalaryStructurePopup(TestCase):
 			}
 		).insert(ignore_permissions=True)
 
-	def create(self, employee, sub_band="C", grade=GRADE, from_date=None, submit=1):
+	def create(self, employee, sub_band="C", grade=GRADE, from_date=None, submit=1, cost_centers=None):
 		return create_salary_structure_assignment(
-			employee, grade, sub_band, from_date or self.from_date, submit=submit
+			employee, grade, sub_band, from_date or self.from_date, submit=submit, cost_centers=cost_centers
 		)
+
+	def cost_center(self, name, company=COMPANY, is_group=0):
+		parent = frappe.db.get_value(
+			"Cost Center", {"company": company, "is_group": 1}, "name", order_by="lft asc"
+		)
+		return frappe.get_doc(
+			{
+				"doctype": "Cost Center",
+				"cost_center_name": f"{PREFIX} {name}",
+				"company": company,
+				"parent_cost_center": parent,
+				"is_group": is_group,
+			}
+		).insert(ignore_permissions=True).name
+
+	def test_cost_centers_split(self):
+		a, b = self.cost_center("A"), self.cost_center("B")
+		emp = self.employee("CC")
+		rows = [{"cost_center": a, "percentage": 60}, {"cost_center": b, "percentage": 40}]
+		result = self.create(emp.name, submit=0, cost_centers=frappe.as_json(rows))
+		assignment = frappe.get_doc("Salary Structure Assignment", result["name"])
+		self.assertEqual(
+			[(r.cost_center, r.percentage) for r in assignment.payroll_cost_centers], [(a, 60), (b, 40)]
+		)
+
+	def test_cost_centers_refused(self):
+		a, b = self.cost_center("A"), self.cost_center("B")
+		group = self.cost_center("G", is_group=1)
+		other_company = frappe.db.get_value(
+			"Cost Center", {"company": ["!=", COMPANY], "is_group": 0}, "name"
+		)
+		cases = {
+			"total below 100": [{"cost_center": a, "percentage": 60}, {"cost_center": b, "percentage": 30}],
+			"total above 100": [{"cost_center": a, "percentage": 60}, {"cost_center": b, "percentage": 50}],
+			"duplicate": [{"cost_center": a, "percentage": 50}, {"cost_center": a, "percentage": 50}],
+			"zero": [{"cost_center": a, "percentage": 100}, {"cost_center": b, "percentage": 0}],
+			"no cost center": [{"cost_center": "", "percentage": 100}],
+			"group": [{"cost_center": group, "percentage": 100}],
+		}
+		if other_company:
+			cases["other company"] = [{"cost_center": other_company, "percentage": 100}]
+		for case, rows in cases.items():
+			with self.subTest(case=case), self.assertRaises(SalaryStructurePopupError):
+				clean_cost_centers(rows, COMPANY)
+		# nothing created when refused
+		emp = self.employee("CCX")
+		with self.assertRaises(SalaryStructurePopupError):
+			self.create(emp.name, submit=0, cost_centers=cases["total below 100"])
+		self.assertFalse(frappe.db.exists("Salary Structure Assignment", {"employee": emp.name}))
+
+	def test_cost_centers_empty_keeps_default(self):
+		a = self.cost_center("A")
+		emp = self.employee("CCD")
+		emp.db_set("payroll_cost_center", a)
+		result = self.create(emp.name, submit=0, cost_centers="[]")
+		assignment = frappe.get_doc("Salary Structure Assignment", result["name"])
+		self.assertEqual([(r.cost_center, r.percentage) for r in assignment.payroll_cost_centers], [(a, 100)])
 
 	def test_grade_details(self):
 		details = get_grade_details(GRADE)

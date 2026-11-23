@@ -685,6 +685,8 @@ frappe.ui.form.on("Employee", {
 // employee's, or chosen and saved when blank), Sub Band of that grade, Gross Amount from the grade's
 // sub band row, From Date. Creates the Salary Structure Assignment (Base = Gross Amount, the grade's
 // Default Salary Structure), submitted unless "Submit" is unticked.
+// Cost Centers table (ClickUp 14yr2e589er): the salary cost split across cost centers, total 100%,
+// copied to the assignment's Cost Centers (payroll_cost_centers), which payroll splits the cost by.
 function alt_create_salary_structure(frm) {
 	if (frm.is_dirty()) {
 		frappe.msgprint(__("Save the employee first."));
@@ -729,12 +731,20 @@ function alt_create_salary_structure(frm) {
 				default: 1,
 				description: __("Untick to keep the assignment as a draft."),
 			},
+			...alt_cost_center_fields(
+				frm,
+				frm.doc.payroll_cost_center ? [{ cost_center: frm.doc.payroll_cost_center, percentage: 100 }] : [],
+				() => dialog
+			),
 		],
 		primary_action_label: __("Create"),
 		primary_action(values) {
+			const cost_centers = alt_cost_center_rows(dialog);
+			if (!alt_cost_centers_ok(cost_centers)) return;
 			dialog.disable_primary_action();
 			frappe
 				.xcall(method + "create_salary_structure_assignment", {
+					cost_centers,
 					employee: frm.doc.name,
 					grade: values.grade,
 					sub_band: values.sub_band,
@@ -778,6 +788,82 @@ function alt_create_salary_structure(frm) {
 
 	dialog.show();
 	load_grade();
+	alt_watch_cost_centers(dialog);
+}
+
+// Cost Centers table of the Create / Edit Salary Structure popups (ClickUp 14yr2e589er): Cost Center
+// + Allocation % (whole numbers, like HRMS's Employee Cost Center), total shown under it and 100%
+// required; the server checks again (salary_structure_popup.clean_cost_centers).
+function alt_cost_center_fields(frm, rows, get_dialog) {
+	return [
+		{
+			fieldtype: "Section Break",
+			label: __("Cost Centers"),
+			description: __("Use this table to allocate the employee's salary across multiple cost centers."),
+		},
+		{
+			fieldname: "cost_centers",
+			fieldtype: "Table",
+			label: __("Cost Centers"),
+			in_place_edit: true,
+			data: rows.map((r) => ({ cost_center: r.cost_center, percentage: r.percentage })),
+			get_data: () => get_dialog().fields_dict.cost_centers.df.data,
+			fields: [
+				{
+					fieldname: "cost_center",
+					fieldtype: "Link",
+					options: "Cost Center",
+					label: __("Cost Center"),
+					in_list_view: 1,
+					reqd: 1,
+					get_query: () => ({ filters: { company: frm.doc.company, is_group: 0, disabled: 0 } }),
+				},
+				{
+					fieldname: "percentage",
+					fieldtype: "Int",
+					label: __("Allocation %"),
+					in_list_view: 1,
+					reqd: 1,
+					onchange: () => alt_show_cost_center_total(get_dialog()),
+				},
+			],
+		},
+		{ fieldname: "allocation_total", fieldtype: "HTML" },
+	];
+}
+
+// rows with a cost center or a percentage
+function alt_cost_center_rows(dialog) {
+	return (dialog.fields_dict.cost_centers.df.data || [])
+		.filter((r) => r.cost_center || r.percentage)
+		.map((r) => ({ cost_center: r.cost_center || null, percentage: cint(r.percentage) }));
+}
+
+function alt_cost_centers_ok(rows) {
+	const total = rows.reduce((sum, r) => sum + r.percentage, 0);
+	if (rows.length && total !== 100) {
+		frappe.msgprint(__("Total allocation across cost centers must be 100%. It is {0}%.", [total]));
+		return false;
+	}
+	return true;
+}
+
+function alt_show_cost_center_total(dialog) {
+	const total = alt_cost_center_rows(dialog).reduce((sum, r) => sum + r.percentage, 0);
+	const ok = total === 100;
+	dialog.fields_dict.allocation_total.$wrapper.html(
+		`<div class="${ok ? "text-muted" : "text-danger"} small">${__("Total allocation: {0}%", [total])}${
+			ok ? "" : " " + __("(must be 100%)")
+		}</div>`
+	);
+}
+
+function alt_watch_cost_centers(dialog) {
+	alt_show_cost_center_total(dialog);
+	// rows added / removed / edited in the grid: keep the total current
+	dialog.fields_dict.cost_centers.grid.wrapper.on("change click", () =>
+		setTimeout(() => alt_show_cost_center_total(dialog), 0)
+	);
 }
 
 // View Salary Structure popup (ClickUp 14yr2e586v8, setup/salary_structure_view.py): the active
@@ -815,6 +901,10 @@ function alt_view_salary_structure(frm) {
 			[__("Grade"), esc(view.grade || "-")],
 			[__("Sub Band"), esc(view.sub_band || "-")],
 			[__("Base (Gross)"), money(view.base)],
+			[
+				__("Cost Centers"),
+				(view.cost_centers || []).map((r) => `${esc(r.cost_center)} (${cint(r.percentage)}%)`).join("<br>") || "-",
+			],
 		]
 			.map(([label, value]) => `<div class="col-sm-4 mb-2"><div class="text-muted small">${label}</div><div>${value}</div></div>`)
 			.join("");
@@ -879,12 +969,25 @@ function alt_edit_salary_structure(frm, view) {
 				description: __("After {0}.", [frappe.datetime.str_to_user(view.from_date)]),
 			},
 			{ fieldname: "submit", fieldtype: "Check", label: __("Submit"), default: 1, description: __("Untick to keep the new assignment as a draft.") },
+			// the current assignment's split, else the employee's Payroll Cost Center
+			...alt_cost_center_fields(
+				frm,
+				view.cost_centers && view.cost_centers.length
+					? view.cost_centers
+					: frm.doc.payroll_cost_center
+					? [{ cost_center: frm.doc.payroll_cost_center, percentage: 100 }]
+					: [],
+				() => dialog
+			),
 		],
 		primary_action_label: __("Save"),
 		primary_action(values) {
+			const cost_centers = alt_cost_center_rows(dialog);
+			if (!alt_cost_centers_ok(cost_centers)) return;
 			dialog.disable_primary_action();
 			frappe
 				.xcall(method + "view.revise_salary_structure", {
+					cost_centers,
 					employee: frm.doc.name,
 					sub_band: values.sub_band,
 					from_date: values.from_date,
@@ -905,6 +1008,7 @@ function alt_edit_salary_structure(frm, view) {
 		},
 	});
 	dialog.show();
+	alt_watch_cost_centers(dialog);
 	if (frm.doc.grade) {
 		frappe.xcall(method + "popup.get_grade_details", { grade: frm.doc.grade }).then((details) => {
 			sub_bands = details.sub_bands;
@@ -913,3 +1017,39 @@ function alt_edit_salary_structure(frm, view) {
 		});
 	}
 }
+
+// Bank / statutory numbers (UAN, ESIC IP, IFSC, MICR, PF, Bank A/C, IBAN, names): checked as soon
+// as a value is entered, shown in red under the field; the save is refused by
+// employee_bank_details.validate_bank_details with the same messages.
+const ALT_BANK_FIELDS = [
+	"uan_number", "pf_name", "esic_card_no", "ifsc_code", "alt_ifsc_code", "micr_code",
+	"provident_fund_account", "bank_ac_no", "alt_bank_account_holder", "bank_name",
+	"alt_bank_branch", "iban",
+];
+
+function alt_check_bank_field(frm, fieldname) {
+	const field = frm.fields_dict[fieldname];
+	if (!field) return;
+	if (field.alt_description === undefined) field.alt_description = field.df.description || "";
+	const value = frm.doc[fieldname] || "";
+	const show = (error) => {
+		field.df.invalid = !!error;
+		field.set_invalid();
+		field.set_description(
+			error ? `<span class="text-danger">${__(field.df.label)} ${error}</span>` : field.alt_description
+		);
+	};
+	if (!value) return show(null);
+	frappe
+		.xcall("alantech_erp.setup.employee_bank_details.check_bank_field", { fieldname, value })
+		.then((r) => {
+			if ((frm.doc[fieldname] || "") !== value) return; // changed again meanwhile
+			if (r.value && r.value !== value) frm.set_value(fieldname, r.value); // upper-cased / spaces removed
+			show(r.error);
+		});
+}
+
+frappe.ui.form.on(
+	"Employee",
+	Object.fromEntries(ALT_BANK_FIELDS.map((f) => [f, (frm) => alt_check_bank_field(frm, f)]))
+);

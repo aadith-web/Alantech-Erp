@@ -16,6 +16,8 @@ ClickUp: https://app.clickup.com/t/14yr2e586v8 (parent 14yr2e586v0). Button: Cli
   later From Date with the chosen Sub Band (Gross Amount from the grade), the same way as the
   Create popup (setup/salary_structure_popup.py). From that date it is the active assignment; the
   old one stays for the months before.
+- Cost Centers (ClickUp 14yr2e589er): the View shows the assignment's split; Edit starts from it and
+  passes the rows on like the Create popup (salary_structure_popup.clean_cost_centers).
 """
 
 import frappe
@@ -70,6 +72,9 @@ def get_salary_structure_view(employee):
 		"grade": assignment.get("grade"),
 		"sub_band": assignment.get(SUB_BAND),
 		"base": assignment.base,
+		"cost_centers": [
+			{"cost_center": r.cost_center, "percentage": r.percentage} for r in assignment.payroll_cost_centers
+		],
 		"currency": assignment.currency,
 		"earnings": earnings,
 		"deductions": deductions,
@@ -131,7 +136,7 @@ def preview_amounts(assignment):
 
 
 @frappe.whitelist()
-def revise_salary_structure(employee, sub_band, from_date, submit=1):
+def revise_salary_structure(employee, sub_band, from_date, submit=1, cost_centers=None):
 	"""Edit (HR Manager): a new assignment from a later From Date with `sub_band` of the employee's
 	grade. Returns what create_salary_structure_assignment returns."""
 	from alantech_erp.setup.salary_structure_popup import create_salary_structure_assignment
@@ -154,4 +159,6 @@ def revise_salary_structure(employee, sub_band, from_date, submit=1):
 			title=_("Cannot Edit Salary Structure"),
 		)
 	grade = frappe.db.get_value("Employee", employee, "grade")
-	return create_salary_structure_assignment(employee, grade, sub_band, from_date, submit=submit)
+	return create_salary_structure_assignment(
+		employee, grade, sub_band, from_date, submit=submit, cost_centers=cost_centers
+	)

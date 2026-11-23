@@ -368,6 +368,22 @@ class IntegrationTestDocument(IntegrationTestCase):
 		doc = self.make_doc(save=False, document_type=PLAIN)
 		self.assert_refused(doc, "Number is mandatory", frappe.MandatoryError)
 
+	def test_number_optional_by_type(self):
+		"""ClickUp 14yr2e58dq2: the Number is required only for types with Number Mandatory, and a
+		type without Show Number has no Number field (form) and never requires one."""
+		from alantech_erp.alantech.doctype.document.document_number import check_number
+
+		doc = self.make_doc()  # Passport: Number shown, not mandatory
+		self.assertFalse(doc.card_number)
+		self.assertEqual(doc.number_required, 1)
+		self.assertEqual((check_number(PASSPORT)["required"], check_number(PASSPORT)["mandatory"]), (1, 0))
+		self.assertEqual(check_number(PLAIN)["mandatory"], 1)
+
+		frappe.db.set_value("Document Type Master", PLAIN, {"number_required": 0, "number_mandatory": 1})
+		self.assertEqual((check_number(PLAIN)["required"], check_number(PLAIN)["mandatory"]), (0, 0))
+		doc = self.make_doc(document_type=PLAIN)
+		self.assertEqual(doc.number_required, 0)
+
 	# --- approval status on save ----------------------------------------
 	def test_hr_upload_approved(self):
 		doc = self.make_doc(user=self.hr_manager2)
