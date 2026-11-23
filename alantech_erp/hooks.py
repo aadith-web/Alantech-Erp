@@ -558,8 +558,8 @@ doc_events = {
 
 scheduler_events = {
     "cron": {
-        # midnight: add missing check-outs for the previous day (setting-gated)
-        "0 0 * * *": [
+        # hourly (incl. 12:00 AM): add missing check-outs once the shift has ended, night shifts too (setting-gated)
+        "0 * * * *": [
             "alantech_erp.setup.auto_checkout.auto_create_missing_checkout",
         ],
     },
