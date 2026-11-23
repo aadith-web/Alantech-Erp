@@ -289,6 +289,7 @@ fixtures = [
           "Event-custom_section_break_fxv5g",
           "Employee-custom_ref_no",
           "Employee-custom_job_description",
+          "Employee-custom_employee_location",
           "Company-custom_hr_signatory_name",
           "Company-custom_hr_email",
           "Company-custom_hr_office_address",
