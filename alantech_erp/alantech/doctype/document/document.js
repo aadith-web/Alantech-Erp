@@ -345,6 +345,55 @@ const alt_doc = {
 			frm.set_intro(__("Rejected: {0}", [frappe.utils.escape_html(frm.doc.rejection_reason || "")]) +
 				"<br>" + __("Correct the details and save to resubmit for approval."), "red");
 		}
+		alt_doc.show_expiry_warning(frm);
+	},
+
+	// Expiring soon / expired (ClickUp 14yr2e58g46): worked out on the server (Document.onload,
+	// document_expiry_warning.py), so the wording ("Your ..." for the employee) and the window match
+	// the Bell / Email alerts. Its own message block, which the number check never clears.
+	show_expiry_warning(frm) {
+		const warning = !frm.is_new() && frm.doc.__onload && frm.doc.__onload.expiry_warning;
+		if (!warning) return;
+		const can_update = !!(frm.perm[0] && frm.perm[0].write);
+		const $block = frm.layout.show_message(
+			`<div class="flex justify-between align-center">
+				<span><b>${frappe.utils.escape_html(warning.message)}</b></span>
+				${can_update ? `<button class="btn btn-xs btn-default alt-doc-update">${__("Update Document")}</button>` : ""}
+			</div>`,
+			warning.status === "expired" ? "red" : "yellow",
+			true
+		);
+		$block && $block.find(".alt-doc-update").on("click", () => alt_doc.start_update(frm));
+		if (can_update) alt_doc.prompt_expired(frm, warning);
+	},
+
+	// Update: the new Expiry Date and the renewed file go on this document (it is alerted again
+	// for the new date; an employee's update goes to the HR Manager for approval)
+	start_update(frm) {
+		frm.scroll_to_field("expiry_date");
+		frappe.show_alert({
+			message: __("Enter the new Expiry Date and attach the renewed document, then Save."),
+			indicator: "blue",
+		}, 6);
+	},
+
+	// Expired: asked once per document per browser session to update it
+	prompt_expired(frm, warning) {
+		if (warning.status !== "expired") return;
+		const key = `alt_doc_expired_prompt:${frm.doc.name}`;
+		try {
+			if (sessionStorage.getItem(key)) return;
+			sessionStorage.setItem(key, "1");
+		} catch (e) {
+			// storage blocked: prompt every time
+		}
+		frappe.confirm(
+			`${frappe.utils.escape_html(warning.message)}.<br>${__("Update the document now?")}`,
+			() => alt_doc.start_update(frm),
+			null,
+			__("Update Now"),
+			__("Later")
+		);
 	},
 
 	add_review_buttons(frm) {

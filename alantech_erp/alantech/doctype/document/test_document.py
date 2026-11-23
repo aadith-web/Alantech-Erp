@@ -485,12 +485,21 @@ class IntegrationTestDocument(IntegrationTestCase):
 		self.assertIn(self.hr_manager2, recipients)
 		self.assertNotIn(self.emp_user, recipients)
 
-	def test_hr_managers_own_upload_needs_approval(self):
+	def test_hr_managers_own_upload_approved(self):
+		"""An HR Manager's own document is approved by default; nobody is asked to approve it."""
 		doc = self.make_doc(employee=self.hr_emp, user=self.hr_manager)
-		self.assertEqual(doc.approval_status, PENDING)
-		# the uploader is not notified about their own document
-		self.assertFalse(self.notifications(doc, self.hr_manager))
-		self.assertTrue(self.notifications(doc, self.hr_manager2))
+		self.assertEqual((doc.approval_status, doc.reviewed_by), (APPROVED, self.hr_manager))
+		self.assertFalse([n for n in self.notifications(doc) if "needs approval" in n.subject])
+		doc.place_of_issue = "Kochi"
+		doc.save()  # their own edit stays approved
+		self.assertEqual(doc.approval_status, APPROVED)
+
+	def test_hr_managers_old_pending_document_approved_on_save(self):
+		doc = self.make_doc(employee=self.hr_emp, user=self.hr_manager)
+		frappe.db.set_value("Document", doc.name, {"approval_status": PENDING, "reviewed_by": None})
+		doc = self.fresh(doc, self.hr_manager)
+		doc.save()  # no changes
+		self.assertEqual(frappe.db.get_value("Document", doc.name, "approval_status"), APPROVED)
 
 	def test_approval_fields_not_accepted_from_the_browser(self):
 		doc = self.make_doc(
@@ -643,6 +652,7 @@ class IntegrationTestDocument(IntegrationTestCase):
 
 	def test_hr_manager_cannot_review_own_document(self):
 		doc = self.make_doc(employee=self.hr_emp, user=self.hr_manager)
+		frappe.db.set_value("Document", doc.name, "approval_status", PENDING)  # e.g. left from before
 		with self.assertRaises(frappe.PermissionError):
 			frappe.get_doc("Document", doc.name).approve()
 		with self.assertRaises(frappe.PermissionError):
@@ -819,11 +829,13 @@ class IntegrationTestDocument(IntegrationTestCase):
 		doc = self.expiring(12, user=self.emp_user)  # Pending Approval
 		send_expiry_alerts()
 		self.assertFalse(self.notifications(doc, self.emp_user))
-		self.fresh(doc, self.hr_manager2).approve()
+		self.fresh(doc, self.hr_manager2).approve()  # alerted at approval (ClickUp 14yr2e57yr0)
 		frappe.set_user("Administrator")
-		frappe.db.delete("Notification Log", {"document_name": doc.name})  # drop the approval note
-		send_expiry_alerts()
-		self.assertIn("expires in 12 days", self.notifications(doc, self.emp_user)[0].subject)
+		subjects = [n.subject for n in self.notifications(doc, self.emp_user)]
+		self.assertEqual(sum("expires in 12 days" in s for s in subjects), 1)
+		send_expiry_alerts()  # the daily run does not repeat it
+		subjects = [n.subject for n in self.notifications(doc, self.emp_user)]
+		self.assertEqual(sum("expires in 12 days" in s for s in subjects), 1)
 
 	def test_no_expiry_alert_for_pending_or_left(self):
 		pending = self.expiring(30, user=self.emp_user)
@@ -914,3 +926,68 @@ class IntegrationTestDocument(IntegrationTestCase):
 		self.expiring(5, employee=self.other_emp)
 		days = [row.days_left for row in expiry_report({"document_type": PASSPORT})[1]]
 		self.assertEqual(days, sorted(days))
+
+	# --- ClickUp 14yr2e57yr0: bell on every employee update; expiry alert at once ---
+	def test_employee_update_while_pending_notifies_hr(self):
+		"""Upload, HR Manager reads it, the employee updates the still-pending document: a new
+		"updated, needs approval" bell (and email) for HR; repeated updates while unread: once."""
+		doc = self.make_doc(user=self.emp_user)
+		frappe.db.set_value("Notification Log", {"for_user": self.hr_manager2, "document_name": doc.name}, "read", 1)
+		doc = self.fresh(doc, self.emp_user)
+		doc.place_of_issue = "Kochi"
+		doc.save()
+		self.assertEqual(doc.approval_status, PENDING)
+		updated = [n for n in self.needs_approval(doc, self.hr_manager2) if "updated" in n.subject]
+		self.assertEqual(len(updated), 1)
+		self.assertEqual(updated[0].subject, f"{doc.name} updated, needs approval: {PASSPORT} for {doc.reference_title}")
+		self.assertFalse([n for n in self.notifications(doc, self.emp_user) if "needs approval" in n.subject])
+
+		doc = self.fresh(doc, self.emp_user)
+		doc.place_of_issue = "Kollam"
+		doc.save()  # still unread: not repeated
+		self.assertEqual(len([n for n in self.needs_approval(doc, self.hr_manager2) if "updated" in n.subject]), 1)
+
+	def test_update_notification_reaches_the_bell(self):
+		"""The bell list and unread count of the HR Manager include the update notification."""
+		from alantech_erp.setup.notifications import get_notification_logs, unread_count
+
+		doc = self.make_doc(user=self.emp_user)
+		doc = self.fresh(doc, self.emp_user)
+		doc.remarks = "new scan"
+		doc.save()
+		frappe.set_user(self.hr_manager2)
+		logs = [log for log in get_notification_logs(limit=20)["notification_logs"] if log.document_name == doc.name]
+		self.assertEqual(len(logs), 2)
+		self.assertIn("updated, needs approval", logs[0].subject)  # newest first
+		self.assertEqual((logs[0].read, logs[0].from_user), (0, self.emp_user))
+		self.assertGreaterEqual(unread_count(), 2)
+
+	def test_expiry_alert_sent_when_saved_inside_window(self):
+		"""HR adds a document expiring in 20 days (window 30): alerted at once, Bell for the
+		employee and the HR Managers; the daily run does not repeat it."""
+		doc = self.make_doc(expiry_date=add_days(today(), 20))  # as Administrator: approved
+		self.assertEqual(doc.approval_status, APPROVED)
+		own = [n.subject for n in self.notifications(doc, self.emp_user)]
+		self.assertEqual(own, [f"Your {PASSPORT} expires in 20 days"])
+		self.assertIn(f"{PASSPORT} for {doc.reference_title} expires in 20 days",
+			[n.subject for n in self.notifications(doc, self.hr_manager2)])
+		self.assertEqual(str(frappe.db.get_value("Document", doc.name, "expiry_alert_sent_for")), str(doc.expiry_date))
+		send_expiry_alerts()
+		self.assertEqual(len(self.notifications(doc, self.emp_user)), 1)
+		doc.reload()
+		doc.remarks = "checked"
+		doc.save()  # saved again: not repeated
+		self.assertEqual(len(self.notifications(doc, self.emp_user)), 1)
+
+	def test_no_alert_on_save_outside_window_or_pending(self):
+		outside = self.make_doc(expiry_date=add_days(today(), 31))
+		pending = self.make_doc(user=self.emp_user, employee=self.emp, expiry_date=add_days(today(), 5))
+		frappe.set_user("Administrator")
+		self.assertFalse([n for n in self.notifications(outside) if "expires" in n.subject])
+		self.assertFalse([n for n in self.notifications(pending) if "expires" in n.subject])
+
+	def test_expiry_day_alert_sent_once_when_saved_that_day(self):
+		doc = self.make_doc(expiry_date=today())
+		send_expiry_alerts()
+		subjects = [n.subject for n in self.notifications(doc, self.emp_user)]
+		self.assertEqual(subjects, [f"Your {PASSPORT} expires today"])

@@ -12,6 +12,7 @@ APPROVER_ROLE = "HR Manager"
 UNRESTRICTED_ROLES = {"System Manager", "HR Manager", "HR User"}
 INACTIVE_EMPLOYEE_STATUSES = ("Inactive", "Left")
 PENDING, APPROVED, REJECTED = "Pending Approval", "Approved", "Rejected"
+UPDATED = "updated"  # flags.notify_hr: the employee changed a document already waiting for approval
 
 # Set only by the server, never accepted from the browser
 APPROVAL_FIELDS = ("approval_status", "submitted_by", "reviewed_by", "reviewed_on", "rejection_reason")
@@ -23,6 +24,11 @@ CONTENT_FIELDS = ("reference_doctype", "reference_name", "document_type", "card_
 class Document(Document):
 	def onload(self):
 		self.set_onload("file_restrictions", file_restrictions())  # upload dialog (document.js)
+		# expiring soon / expired warning (ClickUp 14yr2e58g46, document_expiry_warning.py)
+		if not self.is_new():
+			from alantech_erp.alantech.doctype.document.document_expiry_warning import warning_for
+
+			self.set_onload("expiry_warning", warning_for(self))
 
 	def validate(self):
 		self.set_reference_details()
@@ -45,8 +51,8 @@ class Document(Document):
 		if self.flags.timeline_note:
 			self.add_comment("Info", self.flags.timeline_note)   # shows in Activity Log
 		if self.flags.notify_hr:
-			self.flags.notify_hr = False  # once per change, even if this object is saved again
-			notify_hr_managers(self)
+			updated, self.flags.notify_hr = self.flags.notify_hr == UPDATED, False  # once per change
+			notify_hr_managers(self, updated=updated)
 		if self.flags.review_outcome:
 			outcome, self.flags.review_outcome = self.flags.review_outcome, None
 			reviewer = get_fullname(frappe.session.user)
@@ -55,6 +61,8 @@ class Document(Document):
 			else:
 				self.add_comment("Info", _("Rejected by {0}. Reason: {1}").format(reviewer, self.rejection_reason))
 			notify_employee(self, outcome)
+		# ClickUp 14yr2e57yr0: inside the alert window -> alerted now, not only on the next daily run
+		alert_if_expiring(self)
 
 	# --- reference -------------------------------------------------------
 	def set_reference_details(self):
@@ -143,19 +151,26 @@ class Document(Document):
 			self.set(f, before.get(f) if before else None)
 
 	def set_approval_status(self):
-		if not self.content_changed():
-			return
 		user = frappe.session.user
+		is_hr_manager = APPROVER_ROLE in frappe.get_roles(user)
+		# an HR Manager's own document left Pending Approval (before HR Manager uploads were approved
+		# by default) is approved on their next save, also without changes
+		own_pending = is_hr_manager and self.approval_status == PENDING and self.is_linked_user(user)
+		if not self.content_changed() and not own_pending:
+			return
 		is_new = self.is_new()
 		previous = None if is_new else self.approval_status
 
-		if self.is_linked_user(user):
-			# The employee's own upload/edit: needs approval (even if they are an HR Manager)
+		if self.is_linked_user(user) and not is_hr_manager:
+			# The employee's own upload/edit: needs approval. An HR Manager's own upload is approved
+			# by default, like any HR Manager upload (agreed with HR, replaces "own document needs a
+			# second HR Manager").
 			self.approval_status = PENDING
 			self.submitted_by = user
 			self.reviewed_by = None
 			self.reviewed_on = None
-			self.flags.notify_hr = previous != PENDING
+			# ClickUp 14yr2e57yr0: an edit while still Pending Approval tells HR too ("updated")
+			self.flags.notify_hr = UPDATED if previous == PENDING else True
 			if is_new:
 				self.flags.timeline_note = _("Uploaded by the employee. Waiting for HR Manager approval.")
 			elif previous == REJECTED:
@@ -163,7 +178,7 @@ class Document(Document):
 			elif previous == APPROVED:
 				self.flags.timeline_note = _("Edited by the employee after approval. Sent back for approval.")
 		else:
-			# HR or any user not linked to this employee: auto-approved
+			# HR Manager (also their own document), HR or any user not linked to this employee: approved
 			self.approval_status = APPROVED
 			self.reviewed_by = user
 			self.reviewed_on = now_datetime()
@@ -319,11 +334,19 @@ def send_email(email, subject, message, doc):
 		frappe.db.set_value("Email Queue", queue.name, "owner", "Administrator", update_modified=False)
 
 
-def notify_hr_managers(doc):
+def notify_hr_managers(doc, updated=False):
+	"""Bell + email to the HR Managers. `updated`: the employee changed a document that was already
+	waiting for approval (ClickUp 14yr2e57yr0), so the HR Manager reviews the latest version."""
 	recipients = [u for u in get_hr_managers() if u != frappe.session.user]
-	subject = _("{0} needs approval: {1} for {2}").format(doc.name, doc.document_type, doc.reference_title)
-	message = _("{0} uploaded or changed a {1} document for {2}. Please review and approve or reject it.").format(
-		get_fullname(frappe.session.user), doc.document_type, doc.reference_title)
+	if updated:
+		subject = _("{0} updated, needs approval: {1} for {2}").format(doc.name, doc.document_type, doc.reference_title)
+		message = _("{0} updated the {1} document for {2} that is waiting for approval. Please review the latest "
+			"version and approve or reject it.").format(get_fullname(frappe.session.user), doc.document_type,
+			doc.reference_title)
+	else:
+		subject = _("{0} needs approval: {1} for {2}").format(doc.name, doc.document_type, doc.reference_title)
+		message = _("{0} uploaded or changed a {1} document for {2}. Please review and approve or reject it.").format(
+			get_fullname(frappe.session.user), doc.document_type, doc.reference_title)
 	# an HR Manager who has not opened the earlier request yet is not told again
 	send_notification(recipients, subject, message, doc, skip_unread_duplicates=True)
 
@@ -398,13 +421,15 @@ def send_expiry_alerts():
 	  already started, is alerted on the next run instead of only on its expiry day.
 	  expiry_alert_sent_for remembers the Expiry Date alerted, so a renewed document (new date) is
 	  alerted again in its next window.
-	- On the expiry day: "expires today".
+	- On the expiry day: "expires today" (once: not again when the document was saved that day).
+	- Saving or approving a document already inside its window alerts it at once (alert_if_expiring,
+	  ClickUp 14yr2e57yr0); this run then skips it as alerted.
 	"""
 	run_date = getdate(today())
 	types = frappe.get_all("Document Type Master", filters={"disabled": 0}, fields=["name", "alert_days_before"])
 	hr_managers = get_hr_managers()
 	for doc_type in types:
-		days = cint(doc_type.alert_days_before) or 30
+		days = cint(doc_type.alert_days_before) or DEFAULT_ALERT_DAYS
 		for row in frappe.get_all(
 			DOCTYPE,
 			filters={
@@ -416,7 +441,7 @@ def send_expiry_alerts():
 		):
 			expiry = getdate(row.expiry_date)
 			alerted = row.expiry_alert_sent_for and getdate(row.expiry_alert_sent_for) == expiry
-			if expiry != run_date and alerted:
+			if alerted and (expiry != run_date or expiry_day_alert_sent(row.name, run_date)):
 				continue
 			doc = frappe.get_doc(DOCTYPE, row.name)
 			if is_inactive_employee(doc.employee):
@@ -424,6 +449,39 @@ def send_expiry_alerts():
 			send_expiry_alert(doc, (expiry - run_date).days, hr_managers)
 			if not alerted:
 				doc.db_set("expiry_alert_sent_for", expiry, update_modified=False)
+
+
+DEFAULT_ALERT_DAYS = 30
+
+
+def expiry_day_alert_sent(name, run_date):
+	"""The "expires today" alert already went out today (the document was saved on its expiry day)."""
+	return frappe.db.exists("Notification Log", {
+		"document_type": DOCTYPE, "document_name": name, "subject": ["like", "%expires today%"],
+		"creation": [">=", run_date],
+	})
+
+
+def alert_if_expiring(doc):
+	"""On save (ClickUp 14yr2e57yr0): an Approved document of an active employee whose Expiry Date
+	is inside its type's alert window (Days Before Expiry to Alert, default 30) and was not alerted
+	for that date yet is alerted at once, Bell + Email to the employee and the HR Managers, the same
+	alert the daily run sends. Without this, a document added or approved inside the window waited
+	for the next daily run (the run of the day may already have passed)."""
+	if doc.approval_status != APPROVED or not doc.expiry_date:
+		return
+	expiry = getdate(doc.expiry_date)
+	if doc.expiry_alert_sent_for and getdate(doc.expiry_alert_sent_for) == expiry:
+		return
+	doc_type = frappe.db.get_value("Document Type Master", doc.document_type, ["disabled", "alert_days_before"],
+		as_dict=True)
+	if not doc_type or doc_type.disabled or is_inactive_employee(doc.employee):
+		return
+	days_left = (expiry - getdate(today())).days
+	if not 0 <= days_left <= (cint(doc_type.alert_days_before) or DEFAULT_ALERT_DAYS):
+		return
+	send_expiry_alert(doc, days_left, get_hr_managers())
+	doc.db_set("expiry_alert_sent_for", expiry, update_modified=False)
 
 
 def send_expiry_alert(doc, days_left, hr_managers):
