@@ -246,6 +246,8 @@ def asset_query(doctype, txt, searchfield, start, page_len, filters):
 	else:
 		conditions["custodian"] = ["is", "not set"]
 		conditions["status"] = ["not in", (*CLOSED_ASSET_STATUSES, "Out of Order")]
+	# escape LIKE wildcards so a literal % or _ typed by the user matches itself
+	txt = (txt or "").replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 	txt = f"%{txt}%"
 	return frappe.get_all(
 		"Asset", filters=conditions,

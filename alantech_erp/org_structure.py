@@ -288,38 +288,80 @@ def _create_designations(dept_names):
 # Employee hooks
 # ---------------------------------------------------------------------------
 def apply_designation_defaults(doc, method=None):
-    """Employee.validate: fill department and reports_to from the designation when empty."""
+    """Employee.validate: Department and Reports To from the designation (Designation's Default
+    Department and Reports To post, the organisation chart AIS-MS-TP-01).
+
+    - Empty: filled from the designation.
+    - Designation changed (ClickUp 14yr2e58fq1): they follow the new designation, unless they
+      were changed by hand in the same save. A promotion to Managing Director clears Reports To.
+      A designation without a Reports To post leaves Reports To as it was.
+    """
     if not doc.designation:
         return
-    parent_desig, dept = frappe.db.get_value(
-        "Designation", doc.designation, ["alt_reports_to", "alt_default_department"]
-    ) or (None, None)
+    dept, reports_to = designation_department(doc.designation, doc.company), designation_reports_to(doc)
 
-    if not doc.department and dept and frappe.db.get_value("Department", dept, "company") == doc.company:
+    # a plain dict (tests, the form's call) is a new employee
+    from frappe.model.document import Document
+
+    before = doc.get_doc_before_save() if isinstance(doc, Document) and not doc.is_new() else None
+    designation_changed = bool(before) and before.designation != doc.designation
+
+    def untouched(field):
+        return designation_changed and before.get(field) == doc.get(field)
+
+    if dept and (not doc.department or untouched("department")):
         doc.department = dept
 
-    if not doc.reports_to and parent_desig:
-        from alantech_erp.setup.reports_to import manager_holders
+    if not doc.reports_to:
+        if reports_to:
+            doc.reports_to = reports_to
+    elif untouched("reports_to"):
+        if doc.designation == TOP_DESIGNATION:
+            doc.reports_to = None
+        elif reports_to:
+            doc.reports_to = reports_to
 
-        # only a holder who is a manager (setup/reports_to.py, ClickUp 14yr2e57t0m)
-        managers = manager_holders(_active_holders(parent_desig, doc))
-        if not managers:  # parent post vacant (or no manager in it): the Managing Director
-            managers = manager_holders(_active_holders(TOP_DESIGNATION, doc))
-        if managers:  # several (e.g. two Production Managers): the first created one
-            doc.reports_to = managers[0]
+
+def designation_department(designation, company):
+    """The designation's Default Department, if it belongs to `company`."""
+    dept = frappe.db.get_value("Designation", designation, "alt_default_department")
+    if dept and frappe.db.get_value("Department", dept, "company") == company:
+        return dept
+    return None
+
+
+def designation_reports_to(doc):
+    """The manager an employee with `doc.designation` reports to: a holder of the designation's
+    Reports To post who is a manager; the Managing Director when that post is vacant; None when the
+    designation has no Reports To post (or is the top post)."""
+    parent_desig = frappe.db.get_value("Designation", doc.designation, "alt_reports_to")
+    if not parent_desig:
+        return None
+    from alantech_erp.setup.reports_to import manager_holders
+
+    # only a holder who is a manager (setup/reports_to.py, ClickUp 14yr2e57t0m)
+    managers = manager_holders(_active_holders(parent_desig, doc))
+    if not managers:  # parent post vacant (or no manager in it): the Managing Director
+        managers = manager_holders(_active_holders(TOP_DESIGNATION, doc))
+    # several (e.g. two Production Managers): the first created one
+    return managers[0] if managers else None
 
 
 TOP_DESIGNATION = "Managing Director"
 
 
 @frappe.whitelist()
-def designation_defaults(designation: str, company: str | None = None) -> dict:
-    """Employee form: the Department and Reports To that apply_designation_defaults fills on save,
-    so they are shown (and the mandatory check passes) as soon as the designation is picked."""
-    frappe.has_permission("Employee", "create", throw=True)
-    doc = frappe._dict(designation=designation, company=company, name="", department=None, reports_to=None)
-    apply_designation_defaults(doc)
-    return {"department": doc.department, "reports_to": doc.reports_to}
+def designation_defaults(designation: str, company: str | None = None, employee: str | None = None) -> dict:
+    """Employee form: the Department and Reports To of `designation` (the ones
+    apply_designation_defaults fills on save), shown as soon as the designation is picked or
+    changed. `employee` is left out of the Reports To candidates (no one reports to themselves)."""
+    frappe.has_permission("Employee", "read", throw=True)
+    doc = frappe._dict(designation=designation, company=company, name=employee or "")
+    return {
+        "department": designation_department(designation, company),
+        "reports_to": None if designation == TOP_DESIGNATION else designation_reports_to(doc),
+        "is_top": designation == TOP_DESIGNATION,
+    }
 
 
 def fill_vacant_post(doc, method=None):

@@ -49,6 +49,10 @@ app_include_js = [
     "/assets/alantech_erp/js/checkin_reminder.js",
     # bell: a notification viewed is marked read, count kept right (ClickUp 14yr2e57yr3)
     "/assets/alantech_erp/js/notification_read.js",
+    # Employee profile: Company Policy section after Assets (applicable policies, opens the file)
+    "/assets/alantech_erp/js/employee_company_policy_list.js",
+    # "Assign asset" on Employee profile opens Employee Asset Handover (Issue) instead of Asset Movement
+    "/assets/alantech_erp/js/asset_assign_override.js",
     # Activity menu + Activities panel on Lead, Customer and Deal (CRM C10, sales/activity.py)
     "/assets/alantech_erp/js/sales_activity.js",
     # Lending forms: employee name under the Applicant box (loan_rules/loan.get_applicant_name)
@@ -303,7 +307,17 @@ fixtures = [
     {"dt": "Workflow State"},
     {"dt": "Workflow Action Master"},
     {"dt": "Role", "filters": [["name", "in", ["Proposal Engineer", "Design Engineer", "Quotation Level 2 Approver"]]]},
-    {"dt": "Designation"},
+    # org chart posts only (AIS-MS-TP-01): ERPNext's sample designations are deleted
+    # (patches/v16/remove_sample_designations.py) and must not come back with the fixtures
+    {"dt": "Designation", "filters": [["name", "not in", [
+        "Accountant", "Administrative Assistant", "Administrative Officer", "Analyst", "Associate",
+        "Business Analyst", "Business Development Manager", "Chief Executive Officer",
+        "Chief Financial Officer", "Chief Operating Officer", "Chief Technology Officer", "Consultant",
+        "Customer Service Representative", "Designer", "Engineer", "Executive Assistant",
+        "Head of Marketing and Sales", "Manager", "Marketing Specialist", "President", "Product Manager",
+        "Project Manager", "Researcher", "Sales Representative", "Secretary", "Software Developer",
+        "Vice President",
+    ]]]},
     {"dt": "Department", "filters": [["name", "!=", "All Departments"]]},
     {"dt": "Custom Field", "filters": [["name", "in", ["Employee Promotion-branch","Employee Promotion-location"]]]},
     {"dt": "Document Type Master"}
@@ -406,6 +420,9 @@ doc_events = {
     # Employee Mandatory Fields part 2: no payroll for an employee missing payroll fields
     # (setup/employee_payroll_fields.py, ClickUp 14yr2e57mhp)
     "Salary Structure Assignment": {
+        # Income Tax Slab in force on the From Date, when empty (ClickUp 14yr2e589ev). before_validate:
+        # HRMS's validate refuses an empty slab when the structure has a tax component.
+        "before_validate": "alantech_erp.setup.income_tax_slab.set_income_tax_slab",
         "before_submit": "alantech_erp.setup.employee_payroll_fields.salary_structure_assignment_before_submit",
         # Employee form Create / View Salary Structure button follows (ClickUp 14yr2e586v5)
         "on_submit": "alantech_erp.setup.salary_structure_button.notify_change",
@@ -595,6 +612,9 @@ override_whitelisted_methods = {
 	# Employee form "Create Assignments": no Salary Structure permission error for employees
 	# (setup/employee_assignments.py)
 	"hrms.overrides.employee_master.get_assignable_masters": "alantech_erp.setup.employee_assignments.get_assignable_masters",
+	# Employee profile > Documents shows the Document Type Master "Mandatory at Joining" documents too
+	# (setup/employee_profile_documents.py wraps HRMS get_profile)
+	"hrms.hr.page.employee_profile.employee_profile.get_profile": "alantech_erp.setup.employee_profile_documents.get_profile",
 }
 #
 # each overriding function accepts a `data` argument;
