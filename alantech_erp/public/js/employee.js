@@ -1259,3 +1259,82 @@ frappe.ui.form.on(
 	"Employee",
 	Object.fromEntries(ALT_BANK_FIELDS.map((f) => [f, (frm) => alt_check_bank_field(frm, f)]))
 );
+
+// Employment dates (setup/employee_dates.py checks the same on save): Offer Date on or before Date of
+// Joining; Confirmation Date after it; with a Probation Period (Months), Confirmation Date = Date of
+// Joining + those months, filled and kept in step (read-only then).
+frappe.ui.form.on("Employee", {
+	refresh(frm) {
+		alt_employment_dates.apply(frm);
+	},
+	date_of_joining(frm) {
+		alt_employment_dates.apply(frm, true);
+		alt_employment_dates.check(frm, "date_of_joining");
+	},
+	alt_probation_period(frm) {
+		alt_employment_dates.apply(frm, true);
+	},
+	scheduled_confirmation_date(frm) {
+		alt_employment_dates.check(frm, "scheduled_confirmation_date");
+	},
+	final_confirmation_date(frm) {
+		alt_employment_dates.check(frm, "final_confirmation_date");
+	},
+});
+
+const alt_employment_dates = {
+	expected(frm) {
+		const months = cint(frm.doc.alt_probation_period);
+		return frm.doc.date_of_joining && months > 0
+			? moment(frm.doc.date_of_joining).add(months, "months").format("YYYY-MM-DD") // same as Python add_months
+			: null;
+	},
+
+	// date pickers limited by the Date of Joining; Confirmation Date from the probation
+	apply(frm, fill) {
+		const joining = frm.doc.date_of_joining;
+		const picker = (fieldname, options) => {
+			const field = frm.fields_dict[fieldname];
+			if (field && field.datepicker) field.datepicker.update(options);
+		};
+		picker("scheduled_confirmation_date", { maxDate: joining ? frappe.datetime.str_to_obj(joining) : null });
+		picker("final_confirmation_date", {
+			minDate: joining ? moment(joining).add(1, "days").toDate() : null,
+		});
+		const expected = alt_employment_dates.expected(frm);
+		frm.set_df_property("final_confirmation_date", "read_only", expected ? 1 : 0);
+		frm.set_df_property(
+			"final_confirmation_date",
+			"description",
+			expected
+				? __("Date of Joining + Probation Period ({0} month(s)). Clear the Probation Period to enter another date.", [cint(frm.doc.alt_probation_period)])
+				: ""
+		);
+		if (fill && expected && frm.doc.final_confirmation_date !== expected) {
+			frm.set_value("final_confirmation_date", expected);
+		}
+	},
+
+	// a date that breaks the order: message at once, value cleared (the server refuses it anyway)
+	check(frm, changed) {
+		const { date_of_joining: joining, scheduled_confirmation_date: offer, final_confirmation_date: confirmation } = frm.doc;
+		if (!joining) return;
+		const user = (d) => frappe.datetime.str_to_user(d);
+		if (offer && frappe.datetime.get_day_diff(offer, joining) > 0) {
+			frappe.msgprint({
+				title: __("Check the Employment Dates"),
+				indicator: "orange",
+				message: __("Offer Date ({0}) cannot be after the Date of Joining ({1}).", [user(offer), user(joining)]),
+			});
+			if (changed === "scheduled_confirmation_date") frm.set_value("scheduled_confirmation_date", null);
+		}
+		if (confirmation && frappe.datetime.get_day_diff(confirmation, joining) <= 0) {
+			frappe.msgprint({
+				title: __("Check the Employment Dates"),
+				indicator: "orange",
+				message: __("Confirmation Date ({0}) must be after the Date of Joining ({1}).", [user(confirmation), user(joining)]),
+			});
+			if (changed === "final_confirmation_date") frm.set_value("final_confirmation_date", null);
+		}
+	},
+};

@@ -325,7 +325,11 @@ doc_events = {
     # Loan Management flow (HR-F05-x): an HR Manager is also a Loan Manager
     "User": {"validate": "alantech_erp.setup.loan_roles.user_validate"},
     # new Loan Products get the employee loan ledgers for accounts left blank (HR-F05-x)
-    "Loan Product": {"before_insert": "alantech_erp.setup.loan_accounts.loan_product_before_insert"},
+    # new Loan Products get a generated Product Code, LP-0001 ... (setup/loan_product_code.py)
+    "Loan Product": {"before_insert": [
+        "alantech_erp.setup.loan_product_code.set_product_code",
+        "alantech_erp.setup.loan_accounts.loan_product_before_insert",
+    ]},
     # a Loan is made only from an Approved Loan Application (HR-F05-x)
     "Loan": {"validate": "alantech_erp.loan_rules.loan.validate"},
     # Employee Loan Rules: match the Loan Rule, run the checks, block / warn / override (LR-03, LR-05)
@@ -370,8 +374,9 @@ doc_events = {
             "alantech_erp.setup.employee_nationality.validate_indian_ids",
             # UAN, ESIC, IFSC, MICR, PF, bank A/C, IBAN, names: formats (setup/employee_bank_details.py)
             "alantech_erp.setup.employee_bank_details.validate_bank_details",
-            # blank Confirmation Date = Date of Joining + Probation Period (ClickUp 14yr2e57mhp)
-            "alantech_erp.setup.employee_payroll_fields.fill_confirmation_date",
+            # Offer Date <= Date of Joining < Confirmation Date = Joining + Probation Period
+            # (setup/employee_dates.py; also fills a blank Confirmation Date, ClickUp 14yr2e57mhp)
+            "alantech_erp.setup.employee_dates.validate_employment_dates",
         ],
         "on_update": [
             "alantech_erp.org_structure.sync_user_role_profile",
@@ -767,6 +772,8 @@ after_migrate = [
     "alantech_erp.setup.loan_roles.execute",
     # Loan Management flow (HR-F05-x): employee loan ledgers, Loan Product accounts, Company settings
     "alantech_erp.setup.loan_accounts.execute",
+    # Loan Product: Product Code generated (LP-0001 ...), read-only on the form
+    "alantech_erp.setup.loan_product_code.execute",
     # demo / UAT sites only (site_config "alantech_demo_data": 1): keep last
     "alantech_erp.demo.data.after_migrate",
 ]
