@@ -369,7 +369,9 @@ frappe.ui.form.on("Employee", {
 			})
 			.then(({ message: assets = [] }) => {
 				if (!assets.length) return;
-				const names = assets.map((a) => frappe.utils.escape_html(a.asset_name || a.asset)).join(", ");
+				const names = assets
+					.map((a) => frappe.utils.escape_html(a.asset_name || a.asset) + ((a.qty || 1) > 1 ? ` × ${a.qty}` : ""))
+					.join(", ");
 				frm.dashboard.set_headline_alert(
 					__("Assets not returned ({0}): {1}", [assets.length, names]),
 					"orange"
