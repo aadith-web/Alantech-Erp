@@ -12,16 +12,14 @@ from alantech_erp.alantech.doctype.session_log_settings.session_log_settings imp
 DT = "Employee Checkin"
 SAVEPOINT = "auto_checkout"
 NOTE = "Auto checkout by scheduler"
+LOOKBACK_DAYS = 31
 
 
 def auto_create_missing_checkout():
 	if not get_session_log_settings().auto_create_missing_checkout:
 		return
 	now = now_datetime()
-	since = add_days(today(), -2)  # yesterday + day before, so night shifts that were still running are caught
-	employees = frappe.get_all(
-		DT, filters={"time": [">=", f"{since} 00:00:00"]}, pluck="employee", distinct=True
-	)
+	employees = get_employees_with_open_checkin(now)
 	for employee in employees:
 		frappe.db.savepoint(SAVEPOINT)
 		try:
@@ -30,6 +28,29 @@ def auto_create_missing_checkout():
 		except Exception:
 			frappe.db.rollback(save_point=SAVEPOINT)
 			frappe.log_error(title=f"Auto checkout for {employee} failed", reference_doctype=DT)
+
+
+def get_employees_with_open_checkin(now):
+	"""Employees whose latest IN/OUT log is an IN, looking back LOOKBACK_DAYS.
+
+	Not limited to the last 2 days: if the scheduler was off or a run failed, the open IN is still
+	picked up by the next run instead of being left for HR.
+	"""
+	since = add_days(getdate(now), -LOOKBACK_DAYS)
+	return frappe.db.sql_list(
+		"""
+		SELECT DISTINCT ec.employee
+		FROM `tabEmployee Checkin` ec
+		JOIN (
+			SELECT employee, MAX(time) AS last_time
+			FROM `tabEmployee Checkin`
+			WHERE log_type IN ('IN', 'OUT')
+			GROUP BY employee
+		) last ON last.employee = ec.employee AND last.last_time = ec.time
+		WHERE ec.log_type = 'IN' AND ec.time >= %s
+		""",
+		(f"{since} 00:00:00",),
+	)
 
 
 def create_checkout(employee, now):
@@ -46,13 +67,12 @@ def create_checkout(employee, now):
 	in_time = get_datetime(rows[0].time)
 	day = shift_day(employee, in_time)
 	shift = get_shift(frappe._dict(employee=employee, log_date=day, shift=None))
-	if not shift:
-		frappe.log_error(title=f"Auto checkout skipped: no shift for {employee}",
-			message=f"Open IN at {in_time}", reference_doctype=DT)
-		return
-
 	window = get_shift_window(day, shift)
-	out_time = get_checkout_time(in_time, window, get_approved_leave(employee, day), day)
+	leave = get_approved_leave(employee, day)
+	if not shift:
+		frappe.logger("auto_checkout").info(f"skipped {employee}: no shift assigned")
+		return
+	out_time = get_checkout_time(in_time, window, leave, day)
 	if out_time is None or out_time <= in_time:
 		return  # full-day leave, or IN after the checkout time: HR corrects
 	if now < out_time:

@@ -1,0 +1,13 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Client Script",
+  "dt": "Notification",
+  "enabled": 1,
+  "modified": "2026-11-23 15:32:48.550635",
+  "module": null,
+  "name": "Notification List Subject Format",
+  "script": "frappe.listview_settings[\"Notification\"] = {\r\n  formatters: {\r\n    subject(value) {\r\n      if (!value) return \"\";\r\n      return frappe.utils.escape_html(\r\n        value\r\n          .replace(/\\{\\{\\s*_\\(\\s*(['\"])(.*?)\\1\\s*\\)[^}]*\\}\\}/g, \"$2\")\r\n          .replace(/\\{\\{\\s*([^}]*?)\\s*\\}\\}/g, (m, e) => \"<\" + e.split(\".\").pop().trim() + \">\")\r\n          .replace(/\\{%.*?%\\}/g, \"\")\r\n          .replace(/\\{\\d*\\}/g, \"…\")\r\n          .replace(/\\s+/g, \" \")\r\n          .trim()\r\n      );\r\n    },\r\n  },\r\n};",
+  "view": "List"
+ }
+]
