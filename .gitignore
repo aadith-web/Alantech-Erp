@@ -55,3 +55,6 @@ jspm_packages/
 .aider*
 
 .claude/
+
+# Redis dumps must never be served from public/
+*.rdb

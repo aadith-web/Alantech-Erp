@@ -38,27 +38,14 @@ app_include_css = [
         "/assets/alantech_erp/js/alantech_documents.js",
 ]
 # app_include_js = "/assets/alantech_erp/js/alantech_erp.js"
+# All desk scripts are concatenated into one file to cut HTTP requests.
+# Source files live in public/js; regenerate with scripts/build_desk_bundle.sh after editing them.
+# Order inside the bundle matches the original list:
+#   csrf_bridge (window.csrf_token), employee_profile_upload, phone_control, customer_quick_entry,
+#   checkin_reminder (HR-F02), notification_read (ClickUp 14yr2e57yr3), employee_company_policy_list,
+#   asset_assign_override, sales_activity (CRM C10), loan_applicant_name
 app_include_js = [
-    # window.csrf_token for frappe-ui uploads in the desk (Employee Profile "Change cover")
-    "/assets/alantech_erp/js/csrf_bridge.js",
-    # profile Documents: Upload / Replace open a new Document for this employee
-    "/assets/alantech_erp/js/employee_profile_upload.js",
-    # country code picker of Phone fields opens on saved records too
-    "/assets/alantech_erp/js/phone_control.js",
-    # Customer quick entry: Tax Type Local -> GSTIN and the address fields are mandatory
-    "/assets/alantech_erp/js/customer_quick_entry.js",
-    # Home page check-in reminder popup (HR-F02)
-    "/assets/alantech_erp/js/checkin_reminder.js",
-    # bell: a notification viewed is marked read, count kept right (ClickUp 14yr2e57yr3)
-    "/assets/alantech_erp/js/notification_read.js",
-    # Employee profile: Company Policy section after Assets (applicable policies, opens the file)
-    "/assets/alantech_erp/js/employee_company_policy_list.js",
-    # "Assign asset" on Employee profile opens Employee Asset Handover (Issue) instead of Asset Movement
-    "/assets/alantech_erp/js/asset_assign_override.js",
-    # Activity menu + Activities panel on Lead, Customer and Deal (CRM C10, sales/activity.py)
-    "/assets/alantech_erp/js/sales_activity.js",
-    # Lending forms: employee name under the Applicant box (loan_rules/loan.get_applicant_name)
-    "/assets/alantech_erp/js/loan_applicant_name.js",
+    "/assets/alantech_erp/js/alantech_desk_bundle.js",
 ]
 
 # include js, css files in header of web template
