@@ -300,7 +300,7 @@ def validate_minimum_age(doc, method=None):
 # (org_structure.apply_designation_defaults, which runs before this). Same list in employee.js.
 REQUIRED_ON_CREATE = (
     "first_name", "gender", "date_of_birth", "date_of_joining", "company", "status",
-    "department", "designation", "branch", "reports_to", "employment_type", "cell_number",
+    "department", "designation", "branch", "employment_type", "cell_number",
     "default_shift", "grade",
 )
 
