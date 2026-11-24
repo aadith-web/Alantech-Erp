@@ -85,3 +85,50 @@
 	frappe.router?.on?.("change", on_route);
 	$(on_route);
 })();
+
+// Login page: a blocked employee (Inactive / Left, right password) sees "Please contact Administrator."
+// instead of Frappe's "invalid credentials" (api/auth.get_login_error_message). Runs only after a failed
+// login; any other failure keeps Frappe's message.
+(() => {
+	if (!location.pathname.startsWith("/login") || !window.jQuery) return;
+
+	let checking = false;
+
+	function show_message(msg) {
+		const root = document.querySelector(".page-card") || document.body;
+		const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+		let node;
+		while ((node = walker.nextNode())) {
+			if (/^\s*invalid\b/i.test(node.nodeValue)) {
+				node.nodeValue = msg;
+				return;
+			}
+		}
+		if (window.login && typeof window.login.set_status === "function") {
+			window.login.set_status(msg, "red");
+		}
+	}
+
+	window.jQuery(document).ajaxComplete((event, xhr, settings) => {
+		if (checking || xhr.status !== 401 || typeof settings.data !== "string") return;
+		const params = new URLSearchParams(settings.data);
+		if (params.get("cmd") !== "login" && !String(settings.url).includes("/api/method/login")) return;
+		const usr = params.get("usr");
+		const pwd = params.get("pwd");
+		if (!usr || !pwd) return;
+
+		checking = true;
+		frappe.call({
+			method: "alantech_erp.api.auth.get_login_error_message",
+			type: "POST",
+			args: { usr, pwd },
+			freeze: false,
+			silent: true,
+			callback: (r) => {
+				if (r && r.message) show_message(r.message);
+			},
+			error: () => { },
+			always: () => { checking = false; },
+		});
+	});
+})();

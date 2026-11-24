@@ -293,6 +293,7 @@ fixtures = [
           "Event-custom_section_break_fxv5g",
           "Employee-custom_ref_no",
           "Employee-custom_job_description",
+          "Employee-custom_employee_location",
           "Company-custom_hr_signatory_name",
           "Company-custom_hr_email",
           "Company-custom_hr_office_address",
@@ -318,8 +319,9 @@ fixtures = [
         "Vice President",
     ]]]},
     {"dt": "Department", "filters": [["name", "!=", "All Departments"]]},
+    {"dt": "Custom Field", "filters": [["name", "in", ["Employee Promotion-branch","Employee Promotion-location"]]]},
+    {"dt": "Client Script", "filters": [["name", "=", "Notification List Subject Format"]]},
     {"dt": "Document Type Master"}
-    
 ]
 
 doc_events = {
@@ -393,6 +395,8 @@ doc_events = {
             "alantech_erp.setup.employee_fields.sync_user_employee_number",
             # changed Aadhaar / PAN -> the employee's Aadhaar / PAN documents (ClickUp 14yr2e57r7k)
             "alantech_erp.alantech.doctype.document.employee_numbers.update_documents",
+            # reactivated employee (status back to Active) with expired documents -> warning
+            "alantech_erp.alantech.doctype.document.expired_on_reactivation.employee_on_update",
             # new employee -> Employee Notice Period (default 30 days); Notice (days) kept in sync (ClickUp 14yr2e57r71)
             "alantech_erp.alantech.doctype.employee_notice_period.employee_notice_period.employee_on_update",
         ],
@@ -573,8 +577,8 @@ doc_events = {
 
 scheduler_events = {
     "cron": {
-        # midnight: add missing check-outs for the previous day (setting-gated)
-        "0 0 * * *": [
+        # hourly (incl. 12:00 AM): add missing check-outs once the shift has ended, night shifts too (setting-gated)
+        "0 * * * *": [
             "alantech_erp.setup.auto_checkout.auto_create_missing_checkout",
         ],
     },
