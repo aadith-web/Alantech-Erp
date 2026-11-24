@@ -47,6 +47,8 @@ INDIA = "India"
 AADHAAR_FIELD = "alt_aadhaar_number"
 PAN_FIELD = "pan_number"
 INDIA_CONDITION = f"eval:doc.{FIELD} == '{INDIA}'"
+# Aadhaar / PAN are mandatory for an Indian employee, but not on first creation (see validate_indian_ids)
+INDIA_ON_EDIT = f"eval:doc.{FIELD} == '{INDIA}' && !doc.__islocal"
 
 CUSTOM_FIELDS = {
     "Employee": [
@@ -64,7 +66,7 @@ CUSTOM_FIELDS = {
             "label": "Aadhaar Number",
             "fieldtype": "Data",
             "insert_after": FIELD,
-            "mandatory_depends_on": INDIA_CONDITION,
+            "mandatory_depends_on": INDIA_ON_EDIT,
             "description": "12 digits. Mandatory when Nationality is India.",
         },
     ],
@@ -77,7 +79,7 @@ def execute():
     for field in (FIELD, AADHAAR_FIELD, PAN_FIELD):
         make_property_setter("Employee", field, "in_import_template", 1, "Check", validate_fields_for_doctype=False)
     make_property_setter(
-        "Employee", PAN_FIELD, "mandatory_depends_on", INDIA_CONDITION, "Code", validate_fields_for_doctype=False
+        "Employee", PAN_FIELD, "mandatory_depends_on", INDIA_ON_EDIT, "Code", validate_fields_for_doctype=False
     )
 
 
@@ -151,7 +153,7 @@ def validate_indian_ids(doc, method=None):
 
     if frappe.flags.in_test and not frappe.flags.alt_check_employee_required:
         return
-    if doc.get(FIELD) != INDIA:
+    if doc.get(FIELD) != INDIA or doc.flags.ignore_mandatory:  # ignore_mandatory: first creation only
         return
     if not any(changed(f) for f in (FIELD, AADHAAR_FIELD, PAN_FIELD)):
         return

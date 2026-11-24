@@ -3,6 +3,9 @@
 import frappe
 from frappe import _
 
+def ignore_mandatory_on_create(doc, method=None):
+    if doc.is_new():
+        doc.flags.ignore_mandatory = True
 
 def validate_unique_employee(doc, method=None):
     """Employee.validate: block a second employee with the same Employee Number, in any company.
@@ -302,6 +305,10 @@ REQUIRED_ON_CREATE = (
 )
 
 
+# still required on first creation; the rest of REQUIRED_ON_CREATE is not (see validate_required_on_create)
+ALWAYS_ON_CREATE = ("first_name", "gender")
+
+
 def missing_required_fields(doc):
     """Fieldnames of REQUIRED_ON_CREATE that are blank, plus EMAIL_FIELDS (the tuple) when both
     emails are blank. Reports To is not needed for the top designation."""
@@ -319,19 +326,17 @@ def missing_required_fields(doc):
 
 def validate_required_on_create(doc, method=None):
     """Employee.validate: refuse a new employee without the fields in REQUIRED_ON_CREATE and an email."""
-    if not doc.is_new():
-        return
     # tests create bare employees; a test of this rule sets the flag
     if frappe.flags.in_test and not frappe.flags.alt_check_employee_required:
         return
     meta = frappe.get_meta("Employee")
     missing = [
         _(meta.get_label(field)) if field != EMAIL_FIELDS else _("Company Email or Personal Email")
-        for field in missing_required_fields(doc)
+        for field in missing_required_fields(doc) if not doc.is_new() or field in ALWAYS_ON_CREATE
     ]
     if missing:
         frappe.throw(
-            _("Enter these to create the employee: {0}").format(", ".join(frappe.bold(m) for m in missing)),
+            _("Enter these to save the employee: {0}").format(", ".join(frappe.bold(m) for m in missing)),
             frappe.MandatoryError,
             title=_("Missing Fields"),
         )
