@@ -41,6 +41,8 @@ app_include_css = [
 app_include_js = [
     # window.csrf_token for frappe-ui uploads in the desk (Employee Profile "Change cover")
     "/assets/alantech_erp/js/csrf_bridge.js",
+    # profile Documents: Upload / Replace open a new Document for this employee
+    "/assets/alantech_erp/js/employee_profile_upload.js",
     # country code picker of Phone fields opens on saved records too
     "/assets/alantech_erp/js/phone_control.js",
     # Customer quick entry: Tax Type Local -> GSTIN and the address fields are mandatory
@@ -353,6 +355,7 @@ doc_events = {
         "before_cancel": "alantech_erp.alantech.doctype.employee_uniform_issue.employee_uniform_issue.stock_entry_before_cancel",
     },
     "Employee": {
+        "before_validate": "alantech_erp.setup.employee_validation.ignore_mandatory_on_create",
         "before_insert": [
             # blank Employee Number (form or Data Import) -> next E### number
             "alantech_erp.setup.employee_validation.set_employee_number",
@@ -616,6 +619,12 @@ override_whitelisted_methods = {
 	# Employee profile > Documents shows the Document Type Master "Mandatory at Joining" documents too
 	# (setup/employee_profile_documents.py wraps HRMS get_profile)
 	"hrms.hr.page.employee_profile.employee_profile.get_profile": "alantech_erp.setup.employee_profile_documents.get_profile",
+	# Documents "Ask for it again" on a mandatory type: creates its Employee Document Type first
+	# Documents actions answer with the list the page refreshes from, so they keep the mandatory rows too
+	"hrms.hr.page.employee_profile.employee_profile.request_document": "alantech_erp.setup.employee_profile_documents.request_document",
+	"hrms.hr.page.employee_profile.employee_profile.upload_document": "alantech_erp.setup.employee_profile_documents.upload_document",
+	"hrms.hr.page.employee_profile.employee_profile.review_document": "alantech_erp.setup.employee_profile_documents.review_document",
+	"hrms.hr.page.employee_profile.employee_profile.remove_document": "alantech_erp.setup.employee_profile_documents.remove_document",
 }
 #
 # each overriding function accepts a `data` argument;
