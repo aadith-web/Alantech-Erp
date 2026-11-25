@@ -411,7 +411,7 @@ const alt_employee_docs = {
 // Department and Reports To are filled from the designation as soon as it is picked.
 const ALT_EMPLOYEE_REQUIRED = [
 	"first_name", "gender", "date_of_birth", "date_of_joining", "company", "status",
-	"department", "designation", "branch", "reports_to", "employment_type", "cell_number",
+	"department", "designation", "branch", "employment_type", "cell_number",
 	"default_shift", "grade",
 ];
 const ALT_TOP_DESIGNATION = "Managing Director"; // reports to no one (org_structure.TOP_DESIGNATION)

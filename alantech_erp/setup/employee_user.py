@@ -18,14 +18,25 @@ from frappe.utils import cint, validate_email_address
 from typing import cast
 
 from alantech_erp.setup import approvers
-from alantech_erp.setup.access import FULL_ACCESS_DESIGNATIONS, FULL_ACCESS_ROLES
+from alantech_erp.setup.access import (
+	FULL_ACCESS_DESIGNATIONS,
+	FULL_ACCESS_ROLES,
+	_remove_employee_restriction,
+	has_full_access,
+)
 
 # who may use Employee > Create User
 CREATOR_ROLES = {"System Manager", "HR Manager"}
 
+# An employee with none of these has no place in the organisation yet: their user sees only their
+# own record (Employee user permission) and has the Employee role. Adding one lifts it on edit.
+POSITION_FIELDS = ("designation", "department", "reports_to")
+
 
 @frappe.whitelist()
-def create_user(employee: str, email: str | None = None, create_user_permission: int = 0) -> str:
+def create_user(
+	employee: str, email: str | None = None, create_user_permission: int = 0, just_inserted: bool = False
+) -> str:
 	if not CREATOR_ROLES & set(frappe.get_roles()):
 		frappe.throw(_("Only HR Managers can create users for employees."), frappe.PermissionError)
 
@@ -65,10 +76,17 @@ def create_user(employee: str, email: str | None = None, create_user_permission:
 	user.insert(ignore_permissions=True)  # the one real difference from ERPNext
 
 	# first decision by designation (MD / HR Manager / HR Executive are never restricted)
-	restrict = bool(cint(create_user_permission)) and emp.get("designation") not in FULL_ACCESS_DESIGNATIONS
+	# no designation, department or reports-to: restricted whatever the checkbox says
+	restrict = (bool(cint(create_user_permission)) or not has_position(emp)) and (
+		emp.get("designation") not in FULL_ACCESS_DESIGNATIONS
+	)
 
 	emp.set("user_id", user.name)
 	emp.set("create_user_permission", 1 if restrict else 0)
+	if just_inserted:
+		# saved right after the insert, which already passed the first-creation rules; without this
+		# the save counts as an update and asks for every required field (validate_required_on_create)
+		emp.flags.ignore_mandatory = True
 	emp.save()  # also applies the designation's role profile (org_structure.sync_user_role_profile)
 	# user_id was already written by db_set above, so the save did not see it change
 	approvers.user_changed(emp, None)
@@ -96,6 +114,50 @@ def split_name(full_name):
 	if len(names) == 2:
 		return names[0], "", names[1]
 	return names[0], "", ""
+
+
+def has_position(doc):
+	return any(doc.get(field) for field in POSITION_FIELDS)
+
+
+def sync_user_access(doc, method=None):
+	"""Employee.on_update: when Designation, Department or Reports To changes on a saved employee,
+	the linked user's role profile follows the designation, and the 'own record only' restriction
+	follows whether the employee has a position (none: restricted; some: lifted)."""
+	before = doc.get_doc_before_save()
+	if not before or not doc.user_id or doc.user_id in ("Administrator", "Guest"):
+		return
+	if not any(before.get(field) != doc.get(field) for field in POSITION_FIELDS):
+		return
+
+	profile = frappe.db.get_value("Designation", doc.designation, "alt_role_profile") if doc.designation else None
+	if profile:
+		_replace_role_profile(frappe.get_doc("User", doc.user_id), profile)
+
+	if has_full_access(doc.designation, doc.user_id):
+		return  # full-access designations are never restricted (access.employee_on_update)
+	if has_position(doc):
+		_remove_employee_restriction(doc.user_id)
+		doc.db_set("create_user_permission", 0, update_modified=False)
+	else:
+		add_user_permission("Employee", doc.name, doc.user_id, ignore_permissions=True)
+		add_user_permission("Company", doc.get("company"), doc.user_id, ignore_permissions=True)
+		doc.db_set("create_user_permission", 1, update_modified=False)
+
+
+def _replace_role_profile(user, profile):
+	"""Set the designation's role profile on the user, replacing the one it had."""
+	if user.meta.has_field("role_profiles"):  # newer Frappe: several profiles per user
+		current = [row.role_profile for row in user.get("role_profiles") or []]
+		if current == [profile]:
+			return
+		user.set("role_profiles", [])
+		user.append("role_profiles", {"role_profile": profile})
+	else:
+		if user.get("role_profile_name") == profile:
+			return
+		user.role_profile_name = profile
+	user.save(ignore_permissions=True)
 
 
 def has_full_access_role(user):
@@ -140,7 +202,7 @@ def employee_after_insert(doc, method=None):
 	if not doc.flags.pop("alt_create_user", None):
 		return
 	start = len(frappe.local.message_log)
-	if auto_create_user(doc):
+	if auto_create_user(doc, just_inserted=True):
 		doc.db_set("create_user_automatically", 1, update_modified=False)
 		doc.reload()
 		if frappe.flags.in_import:
@@ -214,7 +276,7 @@ def pop_import_notes(data_import: str) -> list[dict]:
 	return notes
 
 
-def auto_create_user(doc):
+def auto_create_user(doc, just_inserted=False):
 	"""Create and link the user, or say why not. Never fails the employee save or import row:
 	everything create_user would refuse is checked first."""
 	email = employee_email(doc)
@@ -230,13 +292,20 @@ def auto_create_user(doc):
 		else:  # a user without an employee (e.g. made before the employee): link it
 			doc.db_set("user_id", email)
 			doc.reload()
+			if just_inserted:
+				doc.flags.ignore_mandatory = True  # first creation rules already passed on insert
 			doc.save(ignore_permissions=True)  # role profile, approvers, user permissions
 			approvers.user_changed(doc, None)
 			return True
 	if reason:
 		user_not_created(doc, reason)
 		return False
-	create_user(doc.name, email=email, create_user_permission=doc.get("create_user_permission"))
+	create_user(
+		doc.name,
+		email=email,
+		create_user_permission=doc.get("create_user_permission"),
+		just_inserted=just_inserted,
+	)
 	return True
 
 
