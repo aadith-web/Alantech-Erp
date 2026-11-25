@@ -74,8 +74,8 @@ class IntegrationTestAssetHandoverQuantity(IntegrationTestCase):
 			"transaction_type": transaction_type,
 			"transaction_date": now_datetime(),
 			"employee": employee,
-			"location": frappe.db.get_value("Asset", self.grouped.name, "location") if transaction_type == "Receipt" else None,
-			"items": [{"asset": asset, "qty": qty} for asset, qty in rows],
+			"items": [{"asset": asset, "qty": qty, "return_location": frappe.db.get_value("Asset", asset, "location")
+				if transaction_type == "Receipt" else None} for asset, qty in rows],
 		}).insert()
 		if submit:
 			doc.submit()

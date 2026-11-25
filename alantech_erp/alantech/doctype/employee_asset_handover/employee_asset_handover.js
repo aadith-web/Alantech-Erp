@@ -7,7 +7,7 @@ frappe.ui.form.on("Employee Asset Handover", {
 		frm.ignore_doctypes_on_cancel_all = ["Asset Movement", "Asset Repair"];
 
 		frm.set_query("employee", () => ({ filters: { status: ["!=", "Inactive"] } }));
-		frm.set_query("location", () => ({
+		frm.set_query("return_location", "items", () => ({
 			query: "alantech_erp.alantech.doctype.employee_asset_handover.employee_asset_handover.location_query",
 		}));
 		frm.set_query("asset", "items", () => ({
@@ -72,6 +72,7 @@ frappe.ui.form.on("Employee Asset Handover", {
 				assets.forEach((a) =>
 					frm.add_child("items", {
 						asset: a.asset, asset_name: a.asset_name, current_location: a.location,
+						return_location: a.location,
 						qty: a.qty || 1, available_qty: a.qty || 1,
 					})
 				);
@@ -87,7 +88,7 @@ frappe.ui.form.on("Employee Asset Handover", {
 });
 
 // Assets table columns that only apply to some handovers are shown only then, so the table never
-// shows empty columns that cannot be edited: Condition and Issue / Damage Details on a Receipt with
+// shows empty columns that cannot be edited: Return To Location on a Receipt; Condition and Issue / Damage Details on a Receipt with
 // "Inspect Assets on Return" ticked (Issue / Damage Details is filled for Damaged rows); Asset Repair
 // once one was created (on submit of a Receipt with a Damaged asset).
 function alt_handover_columns(frm) {
@@ -95,7 +96,8 @@ function alt_handover_columns(frm) {
 	if (!grid) return;
 	const inspect = frm.doc.transaction_type === "Receipt" && !!frm.doc.inspection_required;
 	const repairs = (frm.doc.items || []).some((r) => r.asset_repair);
-	const wanted = { condition: inspect, issue_description: inspect, asset_repair: repairs };
+	const receipt = frm.doc.transaction_type === "Receipt";
+	const wanted = { return_location: receipt, condition: inspect, issue_description: inspect, asset_repair: repairs };
 	const field = (name) => grid.docfields.find((d) => d.fieldname === name);
 	const changed = Object.entries(wanted).filter(([name, show]) => !!field(name) && !field(name).hidden !== show);
 	if (!changed.length) return;
@@ -113,7 +115,7 @@ frappe.ui.form.on("Employee Asset Handover Item", {
 	asset(frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
 		if (!row.asset) {
-			["asset_name", "current_location", "available_qty"].forEach((f) => frappe.model.set_value(cdt, cdn, f, null));
+			["asset_name", "current_location", "return_location", "available_qty"].forEach((f) => frappe.model.set_value(cdt, cdn, f, null));
 			return;
 		}
 		frappe
@@ -127,6 +129,8 @@ frappe.ui.form.on("Employee Asset Handover Item", {
 				frappe.model.set_value(cdt, cdn, {
 					asset_name: d.asset_name,
 					current_location: d.current_location,
+					// Receipt: back to where the asset is recorded, changeable per row (ClickUp 14yr2e58hwg)
+					return_location: frm.doc.transaction_type === "Receipt" ? d.current_location : null,
 					available_qty: d.available_qty,
 					// Receipt: everything the employee holds; Issue: 1 to start with
 					qty: frm.doc.transaction_type === "Receipt" ? d.available_qty || 1 : 1,

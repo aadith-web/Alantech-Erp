@@ -1041,7 +1041,6 @@ def _asset_handovers(company):
 				"employee_name": emp_info.employee_name,
 				"department": emp_info.department,
 				"company": company,
-				"location": location if ttype == "Receipt" else None,
 				"inspection_required": 1 if inspected else 0,
 				"inspected_by": hr_manager if inspected else None,
 				"inspection_date": on if inspected else None,
@@ -1050,7 +1049,7 @@ def _asset_handovers(company):
 			}
 		)
 		for asset_key, condition in rows.items():
-			row = {"asset": assets[asset_key]}
+			row = {"asset": assets[asset_key], "return_location": location if ttype == "Receipt" else None}
 			if inspected and condition:
 				row["condition"] = "Good" if condition == "Good" else "Damaged"
 				if condition != "Good":

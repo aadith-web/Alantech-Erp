@@ -3,7 +3,7 @@
  "allow_import": 1,
  "autoname": "naming_series:",
  "creation": "2026-10-30 12:30:00.000000",
- "modified": "2026-10-30 12:30:00.000000",
+ "modified": "2026-11-25 09:57:37.424943",
  "doctype": "DocType",
  "document_type": "Document",
  "engine": "InnoDB",
@@ -23,7 +23,6 @@
   "department",
   "company",
   "relieving_date",
-  "location",
   "assets_section",
   "get_assets_held",
   "items",
@@ -122,15 +121,6 @@
    "fetch_from": "employee.relieving_date",
    "read_only": 1,
    "depends_on": "eval:doc.relieving_date"
-  },
-  {
-   "fieldname": "location",
-   "fieldtype": "Link",
-   "label": "Return To Location",
-   "options": "Location",
-   "depends_on": "eval:doc.transaction_type=='Receipt'",
-   "mandatory_depends_on": "eval:doc.transaction_type=='Receipt'",
-   "description": "Store, office or site where the returned assets are kept."
   },
   {
    "fieldname": "assets_section",

@@ -1,7 +1,7 @@
 {
  "actions": [],
  "creation": "2026-10-30 12:30:00.000000",
- "modified": "2026-11-24 12:00:00.000000",
+ "modified": "2026-11-25 09:57:37.424943",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -16,6 +16,7 @@
   "available_qty",
   "qty",
   "current_location",
+  "return_location",
   "column_break_item",
   "condition",
   "issue_description",
@@ -68,6 +69,17 @@
    "read_only": 1,
    "in_list_view": 1,
    "columns": 2
+  },
+  {
+   "fieldname": "return_location",
+   "fieldtype": "Link",
+   "label": "Return To Location",
+   "options": "Location",
+   "in_list_view": 1,
+   "columns": 2,
+   "depends_on": "eval:parent.transaction_type=='Receipt'",
+   "mandatory_depends_on": "eval:parent.transaction_type=='Receipt'",
+   "description": "Store, office or site where this asset is kept after the return. Filled with the Current Location; change it if needed."
   },
   {
    "fieldname": "column_break_item",

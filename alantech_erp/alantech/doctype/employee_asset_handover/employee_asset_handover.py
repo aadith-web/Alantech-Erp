@@ -16,6 +16,12 @@ Available Qty.
 - Issue: Quantity up to the Available Qty; Receipt: up to what the employee holds.
 - The employee's assets (Receipt, Employee form, exit alerts, Employee Asset Holdings) include the
   grouped holdings with their quantity.
+
+Return To Location per asset (ClickUp 14yr2e58hwg): on a Receipt each row has its own Return To
+Location (filled with the asset's Current Location when the asset is picked, editable), so assets of
+one receipt can go to different locations; required for every row of a Receipt, cleared on an Issue.
+The Asset Movement moves each single asset to its row's location. Replaces the form-level field
+(patches/v16/handover_return_location_per_row.py copied it to the rows of existing receipts).
 """
 
 import frappe
@@ -64,8 +70,9 @@ class EmployeeAssetHandover(Document):
 
 	def clear_fields_for_type(self):
 		if self.transaction_type == ISSUE:
-			self.location = None
 			self.inspection_required = 0
+			for row in self.items:
+				row.return_location = None
 		if not self.inspection_required:
 			self.inspected_by = self.inspection_date = self.inspection_remarks = None
 			for row in self.items:
@@ -75,8 +82,6 @@ class EmployeeAssetHandover(Document):
 	def validate_items(self):
 		if not self.items:
 			frappe.throw(_("Add at least one asset."))
-		if self.transaction_type == RECEIPT and not self.location:
-			frappe.throw(_("Return To Location is required to receive assets."))
 
 		seen = set()
 		for row in self.items:
@@ -93,6 +98,9 @@ class EmployeeAssetHandover(Document):
 			row.asset_name = asset.asset_name
 			row.current_location = asset.location
 			label = f"{row.asset} ({asset.asset_name})"
+			if self.transaction_type == RECEIPT and not row.return_location:
+				frappe.throw(_("Row {0}: select the Return To Location for asset {1}.").format(row.idx, label),
+					title=_("Return To Location Missing"))
 
 			if asset.docstatus != 1:
 				frappe.throw(_("Row {0}: Asset {1} is not submitted yet.").format(row.idx, label))
@@ -186,7 +194,7 @@ class EmployeeAssetHandover(Document):
 				item["to_employee"] = self.employee
 			else:
 				item["from_employee"] = self.employee
-				item["target_location"] = self.location
+				item["target_location"] = row.return_location
 			movement.append("assets", item)
 
 		# HR may not have rights on Asset Movement; the handover itself is the permission check

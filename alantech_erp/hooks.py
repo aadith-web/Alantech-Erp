@@ -72,6 +72,8 @@ web_include_js = ["/assets/alantech_erp/js/alantech_desk.js"]
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 doctype_js = {
+    # Opening Stock of an Existing Asset (ClickUp 14yr2e58hv1)
+    "Asset": "public/js/asset.js",
     "Employee": "public/js/employee.js",
     # Sub Bands table: enabled Sub Bands only (ClickUp 14yr2e586v1)
     "Employee Grade": "public/js/employee_grade.js",
@@ -314,6 +316,11 @@ fixtures = [
 ]
 
 doc_events = {
+    # Existing Asset with an Opening Stock: one asset per unit, the rest in the background (14yr2e58hv1)
+    "Asset": {
+        "validate": "alantech_erp.setup.asset_opening_stock.validate",
+        "on_submit": "alantech_erp.setup.asset_opening_stock.on_submit",
+    },
     # Level + Band unique across grades, one row per Sub Band, Gross Amount > 0 (ClickUp 14yr2e586v1)
     "Employee Grade": {"validate": "alantech_erp.setup.employee_grade.validate"},
     # earnings formulas written from Percentage / Percentage Of (ClickUp 14yr2e586v4)
@@ -746,6 +753,8 @@ after_migrate = [
     # India Payroll module on the Frappe HR rail (the app ships no Dock mount yet)
     "alantech_erp.setup.india_payroll.execute",
     "alantech_erp.setup.asset_handover.execute",
+    # Asset > Opening Stock / Opening Stock Of (ClickUp 14yr2e58hv1)
+    "alantech_erp.setup.asset_opening_stock.execute",
     # Employee / Employee Uniform Issue on the Stock Entry made by a uniform issue
     "alantech_erp.setup.uniform_issue.execute",
     # Quotation approval workflow (Sales Manager, Level 2 above the Selling Settings limit)
