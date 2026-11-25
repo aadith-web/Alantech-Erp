@@ -387,6 +387,8 @@ doc_events = {
         ],
         "on_update": [
             "alantech_erp.org_structure.sync_user_role_profile",
+            # Department / Reports To / Designation changed: user's role profile and own-record restriction
+            "alantech_erp.setup.employee_user.sync_user_access",
             "alantech_erp.setup.access.employee_on_update",
             "alantech_erp.setup.approvers.employee_on_update",
             "alantech_erp.org_structure.fill_vacant_post",
