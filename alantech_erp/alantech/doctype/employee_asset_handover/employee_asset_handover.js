@@ -25,10 +25,12 @@ frappe.ui.form.on("Employee Asset Handover", {
 		if (frm.is_new() && frm.doc.transaction_type === "Receipt" && frm.doc.employee && !(frm.doc.items || []).some((r) => r.asset)) {
 			frm.trigger("get_assets_held");
 		}
+		alt_first_asset_row(frm);
 	},
 
 	refresh(frm) {
 		alt_handover_columns(frm);
+		alt_total_assets(frm);
 		if (frm.doc.docstatus === 1 && frm.doc.asset_movement) {
 			frm.add_custom_button(__("Asset Movement"), () => frappe.set_route("Form", "Asset Movement", frm.doc.asset_movement), __("View"));
 		}
@@ -41,14 +43,31 @@ frappe.ui.form.on("Employee Asset Handover", {
 		alt_handover_columns(frm);
 		// the asset list depends on the type, so start over
 		frm.clear_table("items");
+		alt_first_asset_row(frm);
 		frm.refresh_field("items");
 		if (frm.doc.transaction_type === "Receipt" && frm.doc.employee) frm.trigger("get_assets_held");
 	},
 
 	employee(frm) {
 		frm.clear_table("items");
+		alt_first_asset_row(frm);
 		frm.refresh_field("items");
 		if (frm.doc.transaction_type === "Receipt" && frm.doc.employee) frm.trigger("get_assets_held");
+	},
+
+	items_remove(frm) {
+		alt_total_assets(frm);
+	},
+
+	validate(frm) {
+		// drop rows left without an asset (e.g. the first empty row) before the mandatory check;
+		// with no asset at all the server says "Add at least one asset in the Assets table."
+		const empty = (frm.doc.items || []).filter((r) => !r.asset);
+		if (!empty.length) return;
+		empty.forEach((r) => frappe.model.clear_doc(r.doctype, r.name));
+		frm.doc.items = (frm.doc.items || []).filter((r) => r.asset);
+		frm.doc.items.forEach((r, i) => (r.idx = i + 1));
+		frm.refresh_field("items");
 	},
 
 	inspection_required(frm) {
@@ -77,6 +96,7 @@ frappe.ui.form.on("Employee Asset Handover", {
 					})
 				);
 				frm.refresh_field("items");
+				alt_total_assets(frm);
 				frappe.show_alert({
 					message: assets.length
 						? __("{0} asset(s) held by {1}", [assets.length, frm.doc.employee_name || frm.doc.employee])
@@ -88,16 +108,16 @@ frappe.ui.form.on("Employee Asset Handover", {
 });
 
 // Assets table columns that only apply to some handovers are shown only then, so the table never
-// shows empty columns that cannot be edited: Return To Location on a Receipt; Condition and Issue / Damage Details on a Receipt with
-// "Inspect Assets on Return" ticked (Issue / Damage Details is filled for Damaged rows); Asset Repair
-// once one was created (on submit of a Receipt with a Damaged asset).
+// shows empty columns that cannot be edited: Return To Location on a Receipt; Damage Details while a
+// row is Damaged (Condition, Good / Damaged, is always shown: ClickUp 14yr2e58jx0); Asset Repair once
+// one was created (on submit of a Receipt with a Damaged asset).
 function alt_handover_columns(frm) {
 	const grid = frm.fields_dict.items && frm.fields_dict.items.grid;
 	if (!grid) return;
-	const inspect = frm.doc.transaction_type === "Receipt" && !!frm.doc.inspection_required;
 	const repairs = (frm.doc.items || []).some((r) => r.asset_repair);
 	const receipt = frm.doc.transaction_type === "Receipt";
-	const wanted = { return_location: receipt, condition: inspect, issue_description: inspect, asset_repair: repairs };
+	const damaged = (frm.doc.items || []).some((r) => r.condition === "Damaged");
+	const wanted = { return_location: receipt, issue_description: damaged, asset_repair: repairs };
 	const field = (name) => grid.docfields.find((d) => d.fieldname === name);
 	const changed = Object.entries(wanted).filter(([name, show]) => !!field(name) && !field(name).hidden !== show);
 	if (!changed.length) return;
@@ -108,6 +128,21 @@ function alt_handover_columns(frm) {
 	grid.reset_grid();
 }
 
+// A new Issue starts with one empty asset row to fill, instead of an empty "No rows" table
+// (ClickUp 14yr2e58jwx). A Receipt is filled by Get Assets Held.
+function alt_first_asset_row(frm) {
+	if (!frm.is_new() || frm.doc.transaction_type !== "Issue" || (frm.doc.items || []).length) return;
+	frm.add_child("items");
+	frm.refresh_field("items");
+}
+
+// Total Assets = number of assets in the table, kept up to date while editing (ClickUp 14yr2e58jwz)
+function alt_total_assets(frm) {
+	if (frm.doc.docstatus !== 0) return;
+	const total = (frm.doc.items || []).filter((r) => r.asset).length;
+	if (cint(frm.doc.total_assets) !== total) frm.set_value("total_assets", total);
+}
+
 const ALT_HANDOVER = "alantech_erp.alantech.doctype.employee_asset_handover.employee_asset_handover";
 
 frappe.ui.form.on("Employee Asset Handover Item", {
@@ -116,6 +151,7 @@ frappe.ui.form.on("Employee Asset Handover Item", {
 		const row = locals[cdt][cdn];
 		if (!row.asset) {
 			["asset_name", "current_location", "return_location", "available_qty"].forEach((f) => frappe.model.set_value(cdt, cdn, f, null));
+			alt_total_assets(frm);
 			return;
 		}
 		frappe
@@ -156,6 +192,9 @@ frappe.ui.form.on("Employee Asset Handover Item", {
 	},
 
 	condition(frm, cdt, cdn) {
-		if (locals[cdt][cdn].condition !== "Damaged") frappe.model.set_value(cdt, cdn, "issue_description", "");
+		const row = locals[cdt][cdn];
+		if (row.condition !== "Damaged") frappe.model.set_value(cdt, cdn, "issue_description", "");
+		alt_handover_columns(frm); // Damage Details column only while a row is Damaged
+		if (row.condition === "Damaged") frm.fields_dict.items.grid.grid_rows_by_docname[cdn]?.show_form();
 	},
 });

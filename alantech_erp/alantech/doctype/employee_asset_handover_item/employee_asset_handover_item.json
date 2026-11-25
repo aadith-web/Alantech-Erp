@@ -1,7 +1,7 @@
 {
  "actions": [],
  "creation": "2026-10-30 12:30:00.000000",
- "modified": "2026-11-25 09:57:37.424943",
+ "modified": "2026-11-25 13:00:54.109410",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -15,10 +15,10 @@
   "asset_name",
   "available_qty",
   "qty",
+  "condition",
   "current_location",
   "return_location",
   "column_break_item",
-  "condition",
   "issue_description",
   "asset_repair"
  ],
@@ -30,7 +30,7 @@
    "options": "Asset",
    "reqd": 1,
    "in_list_view": 1,
-   "columns": 2
+   "columns": 3
   },
   {
    "fieldname": "asset_name",
@@ -47,7 +47,7 @@
    "read_only": 1,
    "no_copy": 1,
    "in_list_view": 1,
-   "columns": 1,
+   "columns": 2,
    "description": "Issue: quantity of the asset not issued to anyone. Receipt: quantity the employee holds."
   },
   {
@@ -60,6 +60,17 @@
    "in_list_view": 1,
    "columns": 1,
    "description": "Quantity issued or received. Cannot be more than the Available Qty."
+  },
+  {
+   "fieldname": "condition",
+   "fieldtype": "Select",
+   "label": "Condition",
+   "options": "Good\nDamaged",
+   "in_list_view": 1,
+   "columns": 2,
+   "default": "Good",
+   "reqd": 1,
+   "description": "Issue: condition when handed to the employee. Receipt: condition when returned; Damaged creates an Asset Repair on submit."
   },
   {
    "fieldname": "current_location",
@@ -86,20 +97,11 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "condition",
-   "fieldtype": "Select",
-   "label": "Condition",
-   "options": "\nGood\nDamaged",
-   "in_list_view": 1,
-   "columns": 1,
-   "depends_on": "eval:parent.transaction_type=='Receipt' && parent.inspection_required"
-  },
-  {
    "fieldname": "issue_description",
    "fieldtype": "Small Text",
-   "label": "Issue / Damage Details",
+   "label": "Damage Details",
    "in_list_view": 1,
-   "columns": 1,
+   "columns": 2,
    "depends_on": "eval:doc.condition=='Damaged'",
    "mandatory_depends_on": "eval:doc.condition=='Damaged'"
   },
@@ -111,7 +113,7 @@
    "read_only": 1,
    "no_copy": 1,
    "in_list_view": 1,
-   "columns": 1,
+   "columns": 2,
    "description": "Created automatically on submit of a Receipt for an asset marked Damaged."
   }
  ],

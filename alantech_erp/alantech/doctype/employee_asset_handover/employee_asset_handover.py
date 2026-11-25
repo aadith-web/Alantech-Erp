@@ -22,6 +22,19 @@ Location (filled with the asset's Current Location when the asset is picked, edi
 one receipt can go to different locations; required for every row of a Receipt, cleared on an Issue.
 The Asset Movement moves each single asset to its row's location. Replaces the form-level field
 (patches/v16/handover_return_location_per_row.py copied it to the rows of existing receipts).
+
+Condition per asset (ClickUp 14yr2e58jx0): every row of every handover has a Condition, Good or
+Damaged (default Good), not only a Receipt with "Inspect Assets on Return" ticked. Damaged needs the
+Damage Details. Issue: the condition the asset was handed over in (recorded only). Receipt: a Damaged
+asset gets an Asset Repair (Pending) on submit, with or without the inspection tick; the tick only adds
+Inspected By / Date / Remarks.
+
+Total Assets (ClickUp 14yr2e58jwz): the number of assets (rows with an asset), kept on the form and
+shown as a column in the list (patches/v16/handover_total_assets_count.py filled it on existing handovers).
+
+Assets table on a new form (ClickUp 14yr2e58jwx): not marked mandatory (an empty mandatory table has a
+red border that looks like an error); a new Issue starts with one empty row to fill; saving without
+an asset is refused on the server: "Add at least one asset in the Assets table."
 """
 
 import frappe
@@ -30,8 +43,13 @@ from frappe.model.document import Document
 from frappe.utils import cint, get_datetime, get_link_to_form, nowdate
 
 ISSUE, RECEIPT = "Issue", "Receipt"
+GOOD, DAMAGED = "Good", "Damaged"
 CLOSED_ASSET_STATUSES = ("Sold", "Scrapped")
 HANDOVER_ROLES = {"System Manager", "HR Manager", "HR User"}
+
+
+def total_assets(rows):
+	return sum(1 for r in rows or [] if r.get("asset"))
 
 
 class EmployeeAssetHandover(Document):
@@ -40,6 +58,7 @@ class EmployeeAssetHandover(Document):
 		self.clear_fields_for_type()
 		self.validate_items()
 		self.validate_inspection()
+		self.total_assets = total_assets(self.items)
 
 	def on_submit(self):
 		self.make_asset_movement()
@@ -75,13 +94,18 @@ class EmployeeAssetHandover(Document):
 				row.return_location = None
 		if not self.inspection_required:
 			self.inspected_by = self.inspection_date = self.inspection_remarks = None
-			for row in self.items:
-				row.condition = None
+		for row in self.items:
+			row.condition = row.condition or GOOD
+			if row.condition != DAMAGED:
 				row.issue_description = None
 
 	def validate_items(self):
+		# an empty row left over (e.g. the first row a new Issue starts with) is dropped
+		self.set("items", [r for r in self.items if r.asset])
+		for idx, row in enumerate(self.items, 1):
+			row.idx = idx
 		if not self.items:
-			frappe.throw(_("Add at least one asset."))
+			frappe.throw(_("Add at least one asset in the Assets table."), title=_("No Assets"))
 
 		seen = set()
 		for row in self.items:
@@ -164,15 +188,15 @@ class EmployeeAssetHandover(Document):
 				row.idx, label, frappe.format(last, "Datetime")))
 
 	def validate_inspection(self):
-		if self.transaction_type != RECEIPT or not self.inspection_required:
-			return
-		self.inspected_by = self.inspected_by or frappe.session.user
-		self.inspection_date = self.inspection_date or nowdate()
 		for row in self.items:
-			if not row.condition:
+			if row.condition not in (GOOD, DAMAGED):
 				frappe.throw(_("Row {0}: select the Condition of asset {1} (Good or Damaged).").format(row.idx, row.asset))
-			if row.condition == "Damaged" and not (row.issue_description or "").strip():
-				frappe.throw(_("Row {0}: describe the damage of asset {1}.").format(row.idx, row.asset))
+			if row.condition == DAMAGED and not (row.issue_description or "").strip():
+				frappe.throw(_("Row {0}: describe the damage of asset {1} in Damage Details.").format(row.idx, row.asset),
+					title=_("Damage Details Missing"))
+		if self.transaction_type == RECEIPT and self.inspection_required:
+			self.inspected_by = self.inspected_by or frappe.session.user
+			self.inspection_date = self.inspection_date or nowdate()
 
 	# --- submit ----------------------------------------------------------
 	def make_asset_movement(self):
@@ -206,7 +230,7 @@ class EmployeeAssetHandover(Document):
 	def make_asset_repairs(self):
 		created = []
 		for row in self.items:
-			if row.condition != "Damaged":
+			if row.condition != DAMAGED:
 				continue
 			repair = frappe.new_doc("Asset Repair")
 			repair.update({
