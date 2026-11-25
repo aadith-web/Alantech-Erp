@@ -13,6 +13,7 @@
   "version",
   "effective_date",
   "summary",
+  "last_updated",
   "policy_document_section",
   "policy_file",
   "publication_section",
@@ -121,12 +122,21 @@
    "fieldtype": "Table",
    "label": "Applicable Branches",
    "options": "Company Policy Branch"
+  },
+  {
+   "fieldname": "last_updated",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Last Updated",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
+ "link_display_mode": "Search",
  "links": [],
- "modified": "2026-11-03 11:49:40.039311",
+ "modified": "2026-11-25 11:09:43.957378",
  "modified_by": "Administrator",
  "module": "AlanTech",
  "name": "Company Policy",
