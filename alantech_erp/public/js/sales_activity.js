@@ -198,16 +198,15 @@ frappe.provide("alantech.activity");
 				pending && a.status === "Open" && ["Call", "Meeting", "Task"].includes(a.activity_type)
 					? `<a class="alt-act-complete small" data-name="${esc(a.name)}">${__("Complete")}</a>`
 					: pending
-					? `<a class="alt-act-followup small" data-name="${esc(a.name)}">${__("Follow up")}</a>`
-					: "";
+						? `<a class="alt-act-followup small" data-name="${esc(a.name)}">${__("Follow up")}</a>`
+						: "";
 			const other = a.reference_doctype !== frm.doctype ? ` <span class="badge badge-light">${__("from Lead")}</span>` : "";
 			return `<div class="alt-act-row" style="display:flex;gap:8px;align-items:baseline;padding:4px 0;border-bottom:1px solid var(--border-color)">
 				<span>${ICONS[a.activity_type] || "•"}</span>
 				<div style="flex:1;min-width:0">
 					<a href="/app/sales-activity/${encodeURIComponent(a.name)}">${esc(a.subject)}</a>${other}
-					<div class="small text-muted">${__(a.activity_type)} · ${esc(frappe.user.full_name(a.activity_owner))}${
-				a.summary && !pending ? " · " + esc(a.summary).slice(0, 120) : ""
-			}</div>
+					<div class="small text-muted">${__(a.activity_type)} · ${esc(frappe.user.full_name(a.activity_owner))}${a.summary && !pending ? " · " + esc(a.summary).slice(0, 120) : ""
+				}</div>
 				</div>
 				<span class="small ${cls}" style="white-space:nowrap">${when}</span>
 				<span style="white-space:nowrap">${action}</span>
@@ -217,12 +216,11 @@ frappe.provide("alantech.activity");
 			.filter((t) => s.counts[t])
 			.map((t) => `${ICONS[t]} ${s.counts[t]} ${__(t + "s")}`)
 			.join(" &nbsp; ");
-		const head = `<div class="small text-muted" style="margin-bottom:6px">${counts || __("No activities yet.")}${
-			s.last_contact ? " &nbsp;·&nbsp; " + __("Last activity {0}", [frappe.datetime.comment_when(s.last_contact)]) : ""
-		}</div>`;
+		const head = `<div class="small text-muted" style="margin-bottom:6px">${counts || __("No activities yet.")}${s.last_contact ? " &nbsp;·&nbsp; " + __("Last activity {0}", [frappe.datetime.comment_when(s.last_contact)]) : ""
+			}</div>`;
 		const pending = s.pending.length
 			? `<div class="small" style="font-weight:600;margin-top:4px">${__("Pending ({0}, {1} overdue)", [s.pending_count, s.overdue_count])}</div>` +
-			  s.pending.map((a) => row(a, true)).join("")
+			s.pending.map((a) => row(a, true)).join("")
 			: "";
 		const recent = s.recent.length
 			? `<div class="small" style="font-weight:600;margin-top:10px">${__("Latest")}</div>` + s.recent.map((a) => row(a, false)).join("")
@@ -268,4 +266,56 @@ frappe.provide("alantech.activity");
 			},
 		});
 	});
+
+	// Core "New Task" dialog (Lead > Activities): its required Description field has no label and core lists
+	// it twice, so saving it empty showed "Missing Values Required" with two empty bullets. For that dialog
+	// only: label the unlabeled required fields when the dialog opens, and list each missing field once.
+	const dialog_get_values = frappe.ui.Dialog.prototype.get_values;
+	const core_msgprint = frappe.msgprint;
+	let checking_task = false;
+	const unique_items = (html) => {
+		const seen = new Set();
+		return html.replace(/<li>([^<]*)/g, (m, t) => (seen.has(t) ? "" : (seen.add(t), m)));
+	};
+	frappe.msgprint = function (msg, ...rest) {
+		if (checking_task) {
+			if (typeof msg === "string") msg = unique_items(msg);
+			else if (msg && typeof msg.message === "string") msg = Object.assign({}, msg, { message: unique_items(msg.message) });
+		}
+		return core_msgprint.call(this, msg, ...rest);
+	};
+	const is_task_dialog = (d) => !!(d.fields_dict?.interaction_type && d.fields_dict?.description);
+	const label_required = (d) =>
+		(d.fields_list || []).forEach((f) => {
+			if (!f.df.reqd) return;
+			if (!f.df.label) f.df.label = __(frappe.unscrub(f.df.fieldname));
+			// a field made without a label has an empty <label> with no text span: add the span
+			const $label = f.$wrapper && f.$wrapper.find("label.control-label").first();
+			if ($label && $label.length && !$label.find(".label-area").length) {
+				$label.html(`<span class="label-area">${frappe.utils.escape_html(f.df.label)}</span>`);
+				f.label_span = $label.find(".label-area")[0];
+			}
+			f.refresh_label && f.refresh_label();
+			f.toggle_label && f.toggle_label(true);
+		});
+	const dialog_show = frappe.ui.Dialog.prototype.show;
+	frappe.ui.Dialog.prototype.show = function (...args) {
+		const r = dialog_show.apply(this, args);
+		if (is_task_dialog(this)) {
+			label_required(this);
+			setTimeout(() => label_required(this), 0);
+			this.$wrapper.one("shown.bs.modal", () => label_required(this));
+		}
+		return r;
+	};
+	frappe.ui.Dialog.prototype.get_values = function (...args) {
+		if (!is_task_dialog(this)) return dialog_get_values.apply(this, args);
+		label_required(this);
+		checking_task = true;
+		try {
+			return dialog_get_values.apply(this, args);
+		} finally {
+			checking_task = false;
+		}
+	};
 })();

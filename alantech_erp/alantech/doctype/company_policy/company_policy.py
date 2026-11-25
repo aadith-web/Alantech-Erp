@@ -16,6 +16,7 @@ class CompanyPolicy(Document):
     def validate(self):
         self.policy_code = (self.policy_code or "").strip()
         self.policy_title = (self.policy_title or "").strip()
+        self.last_updated = now_datetime()
         self.version = (self.version or "").strip()
         self.validate_version()
         self.validate_category()
@@ -175,7 +176,7 @@ def get_applicable_policies(employee):
 def has_permission(doc, ptype=None, user=None, **kwargs):
     user = user or frappe.session.user
     if _is_privileged(user):
-        return None  # leave HR roles to the normal role rules
+        return True    # leave HR roles to the normal role rules
 
     if ptype not in (None, "read", "select"):
         return False

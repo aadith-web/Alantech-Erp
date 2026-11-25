@@ -293,6 +293,7 @@ fixtures = [
     {"dt": "Property Setter", "or_filters": [
         ["name", "like", "%alt\\_%"],
         ["name", "=", "Event-main-field_order"],
+        ["name", "=", "Gender-main-allow_rename"],
     ]},
     {"dt": "Workflow"},
     {"dt": "Workflow State"},
