@@ -10,6 +10,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint, flt, get_last_day, getdate
 
+from alantech_erp.alantech.doctype.session_log.calculation import calculate, day_hours, day_last_out
 from alantech_erp.alantech.doctype.session_log_settings.session_log_settings import (
 	get_session_log_settings,
 )
@@ -47,6 +48,9 @@ def process_log(log):
 	settings = get_session_log_settings()
 	frappe.db.savepoint(SAVEPOINT)
 	try:
+		if cint(log.get("session_no")) > 1:
+			return process_extra_session(log, settings)
+
 		existing = get_existing_attendance(log)
 		if existing and existing.attendance_log != log.name:
 			# attendance made elsewhere (by hand, HRMS auto attendance, ...): skip, do not duplicate
@@ -62,6 +66,8 @@ def process_log(log):
 		log.status = "Processed"
 		log.error_log = None
 		log.save(ignore_permissions=True)
+		sync_other_sessions(log)
+		process_waiting_sessions(log)
 		return True
 
 	except Exception as e:
@@ -77,6 +83,121 @@ def process_log(log):
 			reference_name=log.name,
 		)
 		return False
+
+
+# ---------------------------------------------------------------- sessions of a day
+def process_extra_session(log, settings):
+	"""Session 2, 3, ... of a day. The day's Attendance and Overtime Log belong to Session 1; they are
+	rebuilt here from the whole day, so the hours of every session are counted."""
+	name = frappe.db.get_value(DT, {"employee": log.employee, "log_date": log.log_date, "session_no": 1})
+	if not name:
+		frappe.throw(_("Session 1 of {0} is missing.").format(frappe.format(log.log_date, "Date")))
+	first = frappe.get_doc(DT, name)
+
+	if first.status in PROCESSABLE:
+		frappe.flags.session_log_wake_off = True  # do not come back to this session from Session 1
+		try:
+			done = process_log(first)
+		finally:
+			frappe.flags.session_log_wake_off = False
+		if not done:
+			frappe.throw(_("Session 1 ({0}) could not be processed: see its error log.").format(first.name))
+	first.reload()
+	if first.status != "Processed":
+		add_remark(log, _("Waiting for Session 1 ({0}) to be processed.").format(first.name))
+		if log.status == "Draft":
+			log.status = "Pending Approval"
+		log.save(ignore_permissions=True)
+		return False
+
+	refresh_day_records(first, settings)
+	log.attendance = first.attendance
+	log.overtime = None
+	log.status = "Processed"
+	log.error_log = None
+	log.save(ignore_permissions=True)
+	return True
+
+
+def refresh_day_records(first, settings):
+	"""Recalculate Session 1 (the day totals) and rebuild its Attendance / Overtime Log if they changed."""
+	calculate(first)
+	attendance = (
+		frappe.db.get_value(
+			"Attendance",
+			first.attendance,
+			["status", "working_hours", "out_time", "attendance_log", "docstatus"],
+			as_dict=True,
+		)
+		if first.attendance
+		else None
+	)
+	unchanged = (
+		attendance
+		and attendance.docstatus != 2
+		and attendance.attendance_log == first.name
+		and attendance.status == first.attendance_status
+		and flt(attendance.working_hours) == day_hours(first)
+		and attendance.out_time == day_last_out(first)
+	)
+	if not unchanged:
+		cancel_records(first)
+		first.attendance = make_attendance(first, settings)
+		first.overtime = make_overtime(first, settings) if flt(first.overtime_hours) > 0 else None
+	first.flags.day_refresh = True  # a Processed log may be locked
+	first.save(ignore_permissions=True)
+	sync_other_sessions(first)
+
+
+def cancel_records(log):
+	"""Cancel (or delete, if still a draft) the Attendance and Overtime Log this log created."""
+	for doctype, field in (("Overtime Log", "overtime"), ("Attendance", "attendance")):
+		linked = log.get(field)
+		if not linked or not frappe.db.exists(doctype, linked):
+			continue
+		doc = frappe.get_doc(doctype, linked)
+		if doc.get("attendance_log") != log.name:
+			continue  # not created by this log: leave it alone
+		if doc.docstatus == 1:
+			doc.flags.ignore_permissions = True
+			doc.cancel()
+		elif doc.docstatus == 0:
+			frappe.delete_doc(doctype, linked, ignore_permissions=True)
+		log.set(field, None)
+
+
+def sync_other_sessions(first):
+	"""Later sessions of the day show the same day total, status and Attendance as Session 1."""
+	values = {
+		"attendance": first.attendance,
+		"attendance_status": first.attendance_status,
+		"total_working_hours": first.total_working_hours,
+		"day_last_out": first.day_last_out,
+	}
+	for name in frappe.get_all(
+		DT,
+		filters={"employee": first.employee, "log_date": first.log_date, "name": ["!=", first.name]},
+		pluck="name",
+	):
+		frappe.db.set_value(DT, name, values, update_modified=False)
+
+
+def process_waiting_sessions(first):
+	"""Later sessions approved before Session 1 was processed can go through now."""
+	if frappe.flags.get("session_log_wake_off"):
+		return
+	for name in frappe.get_all(
+		DT,
+		filters={
+			"employee": first.employee,
+			"log_date": first.log_date,
+			"session_no": [">", 1],
+			"status": ["in", ["Draft", "Approved"]],
+		},
+		order_by="session_no asc",
+		pluck="name",
+	):
+		process_log(name)
 
 
 # ---------------------------------------------------------------- attendance
@@ -106,9 +227,9 @@ def make_attendance(log, settings):
 			"shift": log.shift,
 			"late_entry": cint(log.late_entry),
 			"early_exit": cint(log.early_exit),
-			"working_hours": flt(log.working_hours),
+			"working_hours": day_hours(log),  # all sessions of the day
 			"in_time": log.first_in,
-			"out_time": log.last_out,
+			"out_time": day_last_out(log),
 			"attendance_log": log.name,
 		}
 	)
