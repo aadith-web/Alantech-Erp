@@ -12,7 +12,8 @@ fields may be added after the employee is created, but payroll is refused withou
 
 Checked on submit of a Salary Structure Assignment and of a Payroll Entry (all its employees in
 one message), and on a Salary Slip made by hand (slips of a Payroll Entry were checked there).
-Confirmation Date is filled from Date of Joining + Probation Period (months) when left blank.
+Confirmation Date is filled from Date of Joining + Probation Period (months) when left blank, and
+the dates are checked against each other, in setup/employee_dates.py.
 
 Hooked in hooks.py: doc_events (Employee, Salary Structure Assignment, Payroll Entry, Salary Slip)
 and after_migrate (execute: custom fields + import template). Tests skip the check unless
@@ -23,7 +24,6 @@ import frappe
 from frappe import _
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 from frappe.custom.doctype.property_setter.property_setter import make_property_setter
-from frappe.utils import add_months, cint, getdate
 
 CONTRACT_EMPLOYMENT_TYPE = "Contract"
 BANK_SALARY_MODE = "Bank"
@@ -50,7 +50,7 @@ CUSTOM_FIELDS = {
             "fieldtype": "Int",
             "non_negative": 1,
             "insert_after": "scheduled_confirmation_date",
-            "description": "Fills Confirmation Date (Date of Joining + months) when it is blank.",
+            "description": "Confirmation Date = Date of Joining + these months (filled and kept in step). Leave blank to enter the Confirmation Date yourself.",
         },
     ],
 }
@@ -82,13 +82,6 @@ def execute():
         make_property_setter(
             "Employee", fieldname, "in_import_template", 1, "Check", validate_fields_for_doctype=False
         )
-
-
-def fill_confirmation_date(doc, method=None):
-    """Employee.validate: blank Confirmation Date = Date of Joining + Probation Period (months)."""
-    months = cint(doc.get("alt_probation_period"))
-    if not doc.final_confirmation_date and doc.date_of_joining and months:
-        doc.final_confirmation_date = add_months(getdate(doc.date_of_joining), months)
 
 
 def missing_payroll_fields(employee):

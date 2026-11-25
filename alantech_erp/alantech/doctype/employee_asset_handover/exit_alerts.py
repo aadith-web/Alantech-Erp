@@ -62,6 +62,7 @@ def alert_assets_not_returned(employee, show_message=False):
 	subject = _("Assets not returned: {0} {1} and still holds {2} asset(s)").format(who, when, len(assets))
 	lines = "<br>".join(
 		f"&bull; {get_link_to_form('Asset', a.asset)} &ndash; {frappe.utils.escape_html(a.asset_name or '')}"
+		+ (f" &times; {a.qty}" if (a.get("qty") or 1) > 1 else "")  # grouped asset (ClickUp 14yr2e58hbm)
 		for a in assets)
 	message = _("{0} {1}. These assets are still issued to the employee:").format(who, when) + "<br>" + lines \
 		+ "<br><br>" + _("Receive them with an Employee Asset Handover (Type: Receipt) before the Full and Final Statement.")

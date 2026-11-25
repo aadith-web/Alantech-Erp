@@ -5,7 +5,13 @@ frappe.ui.form.on("Employee", {
 	refresh(frm) {
 		alt_employee_docs.render(frm);
 		alt_notice_period.render(frm);
-
+		if (frm.is_new()) {
+			frm.meta.fields.forEach(df => {
+				if (df.reqd) {
+					frm.set_df_property(df.fieldname, 'reqd', 0);
+				}
+			});
+		}
 		// Company Policy card on Connections: open the policy list
 		if (!frm.is_new()) {
 			setTimeout(() => {
@@ -19,6 +25,63 @@ frappe.ui.form.on("Employee", {
 					});
 			}, 500);
 		}
+		if (frm.is_new() || !frappe.model.can_read("Employee Asset Handover")) return;
+			const handover = "Employee Asset Handover";
+
+			if (frappe.model.can_create(handover)) {
+				if (frm.doc.status === "Active") {
+					frm.add_custom_button(__("Issue Asset"), () =>
+						frappe.new_doc(handover, { transaction_type: "Issue", employee: frm.doc.name }), __("Assets"));
+				}
+				frm.add_custom_button(__("Receive Assets"), () =>
+					frappe.new_doc(handover, { transaction_type: "Receipt", employee: frm.doc.name }), __("Assets"));
+			}
+			frm.add_custom_button(__("Handover History"), () =>
+				frappe.set_route("List", handover, { employee: frm.doc.name }), __("Assets"));
+
+			const leaving = frm.doc.status === "Left" || frm.doc.relieving_date || frm.doc.resignation_letter_date;
+			if (!leaving) return;
+			frappe
+				.call({
+					method: "alantech_erp.alantech.doctype.employee_asset_handover.employee_asset_handover.get_employee_assets",
+					args: { employee: frm.doc.name },
+				})
+				.then(({ message: assets = [] }) => {
+					if (!assets.length) return;
+					// grouped assets with their quantity (ClickUp 14yr2e58hbm)
+					const names = assets
+						.map((a) => frappe.utils.escape_html(a.asset_name || a.asset) + ((a.qty || 1) > 1 ? ` × ${a.qty}` : ""))
+						.join(", ");
+					frm.dashboard.set_headline_alert(
+						__("Assets not returned ({0}): {1}", [assets.length, names]),
+						"orange"
+					);
+			});
+	},
+	onload(frm) {
+		frm.set_df_property("cell_number", "description", __("Select the country code, then enter the number"));
+	},
+	cell_number(frm) {
+		// The Phone field sets the typed digits first and adds the country code ("+91-...") right
+		// after: only the value with the code is checked (a number left without one fails on save)
+		const mobile = frm.doc.cell_number || "";
+		const field = frm.fields_dict.cell_number;
+		const show = (error) => {
+			field.df.invalid = !!error;
+			field.set_invalid();
+			field.set_description(
+				error
+					? `<span class="text-danger">${error}</span>`
+					: __("Select the country code, then enter the number")
+			);
+		};
+		if (!mobile.startsWith("+")) {
+			if (!mobile) show(null);
+			return;
+		}
+		frappe
+			.xcall("alantech_erp.setup.employee_validation.check_mobile_number", { mobile })
+			.then((error) => frm.doc.cell_number === mobile && show(error));
 	},
 });
 
@@ -343,77 +406,12 @@ const alt_employee_docs = {
 	},
 };
 
-// Assets: Issue / Receive buttons, and a warning on leaving employees who still hold assets.
-frappe.ui.form.on("Employee", {
-	refresh(frm) {
-		if (frm.is_new() || !frappe.model.can_read("Employee Asset Handover")) return;
-		const handover = "Employee Asset Handover";
-
-		if (frappe.model.can_create(handover)) {
-			if (frm.doc.status === "Active") {
-				frm.add_custom_button(__("Issue Asset"), () =>
-					frappe.new_doc(handover, { transaction_type: "Issue", employee: frm.doc.name }), __("Assets"));
-			}
-			frm.add_custom_button(__("Receive Assets"), () =>
-				frappe.new_doc(handover, { transaction_type: "Receipt", employee: frm.doc.name }), __("Assets"));
-		}
-		frm.add_custom_button(__("Handover History"), () =>
-			frappe.set_route("List", handover, { employee: frm.doc.name }), __("Assets"));
-
-		const leaving = frm.doc.status === "Left" || frm.doc.relieving_date || frm.doc.resignation_letter_date;
-		if (!leaving) return;
-		frappe
-			.call({
-				method: "alantech_erp.alantech.doctype.employee_asset_handover.employee_asset_handover.get_employee_assets",
-				args: { employee: frm.doc.name },
-			})
-			.then(({ message: assets = [] }) => {
-				if (!assets.length) return;
-				const names = assets.map((a) => frappe.utils.escape_html(a.asset_name || a.asset)).join(", ");
-				frm.dashboard.set_headline_alert(
-					__("Assets not returned ({0}): {1}", [assets.length, names]),
-					"orange"
-				);
-			});
-	},
-});
-
-// Mobile: pick the country, then type the number (Phone field). Checked against the country code
-// as soon as it is entered; the same check runs again on save (employee_validation.validate_mobile_number).
-frappe.ui.form.on("Employee", {
-	onload(frm) {
-		frm.set_df_property("cell_number", "description", __("Select the country code, then enter the number"));
-	},
-	cell_number(frm) {
-		// The Phone field sets the typed digits first and adds the country code ("+91-...") right
-		// after: only the value with the code is checked (a number left without one fails on save)
-		const mobile = frm.doc.cell_number || "";
-		const field = frm.fields_dict.cell_number;
-		const show = (error) => {
-			field.df.invalid = !!error;
-			field.set_invalid();
-			field.set_description(
-				error
-					? `<span class="text-danger">${error}</span>`
-					: __("Select the country code, then enter the number")
-			);
-		};
-		if (!mobile.startsWith("+")) {
-			if (!mobile) show(null);
-			return;
-		}
-		frappe
-			.xcall("alantech_erp.setup.employee_validation.check_mobile_number", { mobile })
-			.then((error) => frm.doc.cell_number === mobile && show(error));
-	},
-});
-
 // New employee: fields needed to create it, marked mandatory. The server checks the same list
 // (employee_validation.REQUIRED_ON_CREATE); existing employees are not affected.
 // Department and Reports To are filled from the designation as soon as it is picked.
 const ALT_EMPLOYEE_REQUIRED = [
 	"first_name", "gender", "date_of_birth", "date_of_joining", "company", "status",
-	"department", "designation", "branch", "reports_to", "employment_type", "cell_number",
+	"department", "designation", "branch", "employment_type", "cell_number",
 	"default_shift", "grade",
 ];
 const ALT_TOP_DESIGNATION = "Managing Director"; // reports to no one (org_structure.TOP_DESIGNATION)
@@ -442,10 +440,12 @@ frappe.ui.form.on("Employee", {
 
 const alt_employee_required = {
 	toggle(frm) {
-		const is_new = frm.is_new();
-		ALT_EMPLOYEE_REQUIRED.forEach((field) => frm.toggle_reqd(field, is_new));
-		if (is_new && frm.doc.designation === ALT_TOP_DESIGNATION) frm.toggle_reqd("reports_to", false);
-		const hint = is_new ? __("Company Email or Personal Email is required.") : "";
+		// nothing is mandatory on a new employee, on the form or on the server (employee_validation.py)
+		ALT_EMPLOYEE_REQUIRED.forEach((field) =>
+			frm.toggle_reqd(field, !frm.is_new() || ["first_name", "gender"].includes(field))
+		);
+		if (frm.doc.designation === ALT_TOP_DESIGNATION) frm.toggle_reqd("reports_to", false);
+		const hint = "";
 		["company_email", "personal_email"].forEach((field) => frm.set_df_property(field, "description", hint));
 		alt_employee_required.toggle_email(frm);
 	},
@@ -454,7 +454,7 @@ const alt_employee_required = {
 	// lists them with the other missing fields ("Company Email is required.")
 	toggle_email(frm) {
 		const fields = ["company_email", "personal_email"];
-		const none = frm.is_new() && fields.every((field) => !(frm.doc[field] || "").trim());
+		const none = !frm.is_new() && fields.every((field) => !(frm.doc[field] || "").trim());
 		fields.forEach((field) => frm.toggle_reqd(field, none));
 	},
 
@@ -522,21 +522,45 @@ const alt_employee_required = {
 	},
 };
 
+// Required fields still empty on a saved employee, shown in the same orange banner as the payroll list
+const alt_missing_required = (frm) => {
+	if (frm.is_new()) return [];
+	const blank = (value) => !(value && String(value).trim());
+	const label = (field) => (frm.fields_dict[field] && frm.fields_dict[field].df.label) || field;
+	const missing = ALT_EMPLOYEE_REQUIRED.filter(
+		(field) =>
+			blank(frm.doc[field]) && !(field === "reports_to" && frm.doc.designation === ALT_TOP_DESIGNATION)
+	).map(label);
+	if (blank(frm.doc.company_email) && blank(frm.doc.personal_email)) {
+		missing.push(__("Company Email or Personal Email"));
+	}
+	return missing;
+};
+
 // Fields needed before the first payroll (ClickUp 14yr2e57mhp): listed at the top of a saved,
 // active employee until filled. Salary Structure Assignment / Payroll Entry are refused without
 // them (setup/employee_payroll_fields.py, which also decides the list).
 frappe.ui.form.on("Employee", {
 	refresh(frm) {
 		frm.set_intro("");
-		if (frm.is_new() || frm.doc.status !== "Active") return;
+		if (frm.is_new()) return;
+		const required = alt_missing_required(frm);
+		const esc = (list) => list.map((label) => frappe.utils.escape_html(label)).join(", ");
+		const show = (payroll) => {
+			const lines = [];
+			if (required.length) lines.push(__("Required: {0}", [esc(required)]));
+			if (payroll.length) lines.push(__("Needed before the first payroll: {0}", [esc(payroll)]));
+			if (lines.length) frm.set_intro(lines.join("<br>"), "orange");
+		};
+		show([]);
+		if (frm.doc.status !== "Active") return;
 		frappe
 			.xcall("alantech_erp.setup.employee_payroll_fields.get_missing_payroll_fields", {
 				employee: frm.doc.name,
 			})
 			.then((missing) => {
 				if (!missing || !missing.length || frm.doc.__unsaved) return;
-				const fields = missing.map((label) => frappe.utils.escape_html(label)).join(", ");
-				frm.set_intro(__("Needed before the first payroll: {0}", [fields]), "orange");
+				show(missing);
 			});
 	},
 });
@@ -1235,3 +1259,82 @@ frappe.ui.form.on(
 	"Employee",
 	Object.fromEntries(ALT_BANK_FIELDS.map((f) => [f, (frm) => alt_check_bank_field(frm, f)]))
 );
+
+// Employment dates (setup/employee_dates.py checks the same on save): Offer Date on or before Date of
+// Joining; Confirmation Date after it; with a Probation Period (Months), Confirmation Date = Date of
+// Joining + those months, filled and kept in step (read-only then).
+frappe.ui.form.on("Employee", {
+	refresh(frm) {
+		alt_employment_dates.apply(frm);
+	},
+	date_of_joining(frm) {
+		alt_employment_dates.apply(frm, true);
+		alt_employment_dates.check(frm, "date_of_joining");
+	},
+	alt_probation_period(frm) {
+		alt_employment_dates.apply(frm, true);
+	},
+	scheduled_confirmation_date(frm) {
+		alt_employment_dates.check(frm, "scheduled_confirmation_date");
+	},
+	final_confirmation_date(frm) {
+		alt_employment_dates.check(frm, "final_confirmation_date");
+	},
+});
+
+const alt_employment_dates = {
+	expected(frm) {
+		const months = cint(frm.doc.alt_probation_period);
+		return frm.doc.date_of_joining && months > 0
+			? moment(frm.doc.date_of_joining).add(months, "months").format("YYYY-MM-DD") // same as Python add_months
+			: null;
+	},
+
+	// date pickers limited by the Date of Joining; Confirmation Date from the probation
+	apply(frm, fill) {
+		const joining = frm.doc.date_of_joining;
+		const picker = (fieldname, options) => {
+			const field = frm.fields_dict[fieldname];
+			if (field && field.datepicker) field.datepicker.update(options);
+		};
+		picker("scheduled_confirmation_date", { maxDate: joining ? frappe.datetime.str_to_obj(joining) : null });
+		picker("final_confirmation_date", {
+			minDate: joining ? moment(joining).add(1, "days").toDate() : null,
+		});
+		const expected = alt_employment_dates.expected(frm);
+		frm.set_df_property("final_confirmation_date", "read_only", expected ? 1 : 0);
+		frm.set_df_property(
+			"final_confirmation_date",
+			"description",
+			expected
+				? __("Date of Joining + Probation Period ({0} month(s)). Clear the Probation Period to enter another date.", [cint(frm.doc.alt_probation_period)])
+				: ""
+		);
+		if (fill && expected && frm.doc.final_confirmation_date !== expected) {
+			frm.set_value("final_confirmation_date", expected);
+		}
+	},
+
+	// a date that breaks the order: message at once, value cleared (the server refuses it anyway)
+	check(frm, changed) {
+		const { date_of_joining: joining, scheduled_confirmation_date: offer, final_confirmation_date: confirmation } = frm.doc;
+		if (!joining) return;
+		const user = (d) => frappe.datetime.str_to_user(d);
+		if (offer && frappe.datetime.get_day_diff(offer, joining) > 0) {
+			frappe.msgprint({
+				title: __("Check the Employment Dates"),
+				indicator: "orange",
+				message: __("Offer Date ({0}) cannot be after the Date of Joining ({1}).", [user(offer), user(joining)]),
+			});
+			if (changed === "scheduled_confirmation_date") frm.set_value("scheduled_confirmation_date", null);
+		}
+		if (confirmation && frappe.datetime.get_day_diff(confirmation, joining) <= 0) {
+			frappe.msgprint({
+				title: __("Check the Employment Dates"),
+				indicator: "orange",
+				message: __("Confirmation Date ({0}) must be after the Date of Joining ({1}).", [user(confirmation), user(joining)]),
+			});
+			if (changed === "final_confirmation_date") frm.set_value("final_confirmation_date", null);
+		}
+	},
+};

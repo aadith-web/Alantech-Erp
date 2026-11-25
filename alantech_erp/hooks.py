@@ -38,25 +38,14 @@ app_include_css = [
         "/assets/alantech_erp/js/alantech_documents.js",
 ]
 # app_include_js = "/assets/alantech_erp/js/alantech_erp.js"
+# All desk scripts are concatenated into one file to cut HTTP requests.
+# Source files live in public/js; regenerate with scripts/build_desk_bundle.sh after editing them.
+# Order inside the bundle matches the original list:
+#   csrf_bridge (window.csrf_token), employee_profile_upload, phone_control, customer_quick_entry,
+#   checkin_reminder (HR-F02), notification_read (ClickUp 14yr2e57yr3), employee_company_policy_list,
+#   asset_assign_override, sales_activity (CRM C10), loan_applicant_name
 app_include_js = [
-    # window.csrf_token for frappe-ui uploads in the desk (Employee Profile "Change cover")
-    "/assets/alantech_erp/js/csrf_bridge.js",
-    # country code picker of Phone fields opens on saved records too
-    "/assets/alantech_erp/js/phone_control.js",
-    # Customer quick entry: Tax Type Local -> GSTIN and the address fields are mandatory
-    "/assets/alantech_erp/js/customer_quick_entry.js",
-    # Home page check-in reminder popup (HR-F02)
-    "/assets/alantech_erp/js/checkin_reminder.js",
-    # bell: a notification viewed is marked read, count kept right (ClickUp 14yr2e57yr3)
-    "/assets/alantech_erp/js/notification_read.js",
-    # Employee profile: Company Policy section after Assets (applicable policies, opens the file)
-    "/assets/alantech_erp/js/employee_company_policy_list.js",
-    # "Assign asset" on Employee profile opens Employee Asset Handover (Issue) instead of Asset Movement
-    "/assets/alantech_erp/js/asset_assign_override.js",
-    # Activity menu + Activities panel on Lead, Customer and Deal (CRM C10, sales/activity.py)
-    "/assets/alantech_erp/js/sales_activity.js",
-    # Lending forms: employee name under the Applicant box (loan_rules/loan.get_applicant_name)
-    "/assets/alantech_erp/js/loan_applicant_name.js",
+    "/assets/alantech_erp/js/alantech_desk_bundle.js",
 ]
 
 # include js, css files in header of web template
@@ -83,6 +72,8 @@ web_include_js = ["/assets/alantech_erp/js/alantech_desk.js"]
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 doctype_js = {
+    # Create As Grouped Asset / Single Asset (ClickUp 14yr2e58hv1)
+    "Asset": "public/js/asset.js",
     "Employee": "public/js/employee.js",
     # Sub Bands table: enabled Sub Bands only (ClickUp 14yr2e586v1)
     "Employee Grade": "public/js/employee_grade.js",
@@ -326,6 +317,8 @@ fixtures = [
 ]
 
 doc_events = {
+    # Single Asset: one asset per unit, the rest split off in the background (ClickUp 14yr2e58hv1)
+    "Asset": {"on_submit": "alantech_erp.setup.asset_creation_mode.on_submit"},
     # Level + Band unique across grades, one row per Sub Band, Gross Amount > 0 (ClickUp 14yr2e586v1)
     "Employee Grade": {"validate": "alantech_erp.setup.employee_grade.validate"},
     # earnings formulas written from Percentage / Percentage Of (ClickUp 14yr2e586v4)
@@ -337,7 +330,11 @@ doc_events = {
     # Loan Management flow (HR-F05-x): an HR Manager is also a Loan Manager
     "User": {"validate": "alantech_erp.setup.loan_roles.user_validate"},
     # new Loan Products get the employee loan ledgers for accounts left blank (HR-F05-x)
-    "Loan Product": {"before_insert": "alantech_erp.setup.loan_accounts.loan_product_before_insert"},
+    # new Loan Products get a generated Product Code, LP-0001 ... (setup/loan_product_code.py)
+    "Loan Product": {"before_insert": [
+        "alantech_erp.setup.loan_product_code.set_product_code",
+        "alantech_erp.setup.loan_accounts.loan_product_before_insert",
+    ]},
     # a Loan is made only from an Approved Loan Application (HR-F05-x)
     "Loan": {"validate": "alantech_erp.loan_rules.loan.validate"},
     # Employee Loan Rules: match the Loan Rule, run the checks, block / warn / override (LR-03, LR-05)
@@ -354,6 +351,7 @@ doc_events = {
         "before_cancel": "alantech_erp.alantech.doctype.employee_uniform_issue.employee_uniform_issue.stock_entry_before_cancel",
     },
     "Employee": {
+        "before_validate": "alantech_erp.setup.employee_validation.ignore_mandatory_on_create",
         "before_insert": [
             # blank Employee Number (form or Data Import) -> next E### number
             "alantech_erp.setup.employee_validation.set_employee_number",
@@ -381,11 +379,14 @@ doc_events = {
             "alantech_erp.setup.employee_nationality.validate_indian_ids",
             # UAN, ESIC, IFSC, MICR, PF, bank A/C, IBAN, names: formats (setup/employee_bank_details.py)
             "alantech_erp.setup.employee_bank_details.validate_bank_details",
-            # blank Confirmation Date = Date of Joining + Probation Period (ClickUp 14yr2e57mhp)
-            "alantech_erp.setup.employee_payroll_fields.fill_confirmation_date",
+            # Offer Date <= Date of Joining < Confirmation Date = Joining + Probation Period
+            # (setup/employee_dates.py; also fills a blank Confirmation Date, ClickUp 14yr2e57mhp)
+            "alantech_erp.setup.employee_dates.validate_employment_dates",
         ],
         "on_update": [
             "alantech_erp.org_structure.sync_user_role_profile",
+            # Department / Reports To / Designation changed: user's role profile and own-record restriction
+            "alantech_erp.setup.employee_user.sync_user_access",
             "alantech_erp.setup.access.employee_on_update",
             "alantech_erp.setup.approvers.employee_on_update",
             "alantech_erp.org_structure.fill_vacant_post",
@@ -445,6 +446,8 @@ doc_events = {
     },
     # Work Mode defaults; Regular Hours Per Day > 0 for Flexible Threshold (setup/shift_ot_fields.py)
     "Shift Type": {
+        # 24-hour (End = Start) and overnight shifts; buffers fitted under 24 h (ClickUp 14yr2e58jzh)
+        "before_validate": "alantech_erp.setup.shift_times.before_validate",
         "validate": "alantech_erp.setup.shift_ot_fields.validate",
     },
       "Employee Checkin": {
@@ -617,6 +620,12 @@ override_whitelisted_methods = {
 	# Employee profile > Documents shows the Document Type Master "Mandatory at Joining" documents too
 	# (setup/employee_profile_documents.py wraps HRMS get_profile)
 	"hrms.hr.page.employee_profile.employee_profile.get_profile": "alantech_erp.setup.employee_profile_documents.get_profile",
+	# Documents "Ask for it again" on a mandatory type: creates its Employee Document Type first
+	# Documents actions answer with the list the page refreshes from, so they keep the mandatory rows too
+	"hrms.hr.page.employee_profile.employee_profile.request_document": "alantech_erp.setup.employee_profile_documents.request_document",
+	"hrms.hr.page.employee_profile.employee_profile.upload_document": "alantech_erp.setup.employee_profile_documents.upload_document",
+	"hrms.hr.page.employee_profile.employee_profile.review_document": "alantech_erp.setup.employee_profile_documents.review_document",
+	"hrms.hr.page.employee_profile.employee_profile.remove_document": "alantech_erp.setup.employee_profile_documents.remove_document",
 }
 #
 # each overriding function accepts a `data` argument;
@@ -733,6 +742,8 @@ after_migrate = [
     # Shift Type Work Mode / Early Check-in / Late Checkout / OT Rounding (before shifts.execute)
     "alantech_erp.setup.shift_ot_fields.execute",
     "alantech_erp.setup.shifts.execute",
+    # Shift Type End Time note: next-day and 24-hour shifts (ClickUp 14yr2e58jzh)
+    "alantech_erp.setup.shift_times.execute",
     "alantech_erp.setup.leave_fields.execute",
     "alantech_erp.setup.sales_flow.execute",
     "alantech_erp.org_structure.fill_missing_reports_to",
@@ -746,6 +757,8 @@ after_migrate = [
     # India Payroll module on the Frappe HR rail (the app ships no Dock mount yet)
     "alantech_erp.setup.india_payroll.execute",
     "alantech_erp.setup.asset_handover.execute",
+    # Asset > Create As (Grouped Asset / Single Asset) (ClickUp 14yr2e58hv1)
+    "alantech_erp.setup.asset_creation_mode.execute",
     # Employee / Employee Uniform Issue on the Stock Entry made by a uniform issue
     "alantech_erp.setup.uniform_issue.execute",
     # Quotation approval workflow (Sales Manager, Level 2 above the Selling Settings limit)
@@ -772,6 +785,8 @@ after_migrate = [
     "alantech_erp.setup.loan_roles.execute",
     # Loan Management flow (HR-F05-x): employee loan ledgers, Loan Product accounts, Company settings
     "alantech_erp.setup.loan_accounts.execute",
+    # Loan Product: Product Code generated (LP-0001 ...), read-only on the form
+    "alantech_erp.setup.loan_product_code.execute",
     # demo / UAT sites only (site_config "alantech_demo_data": 1): keep last
     "alantech_erp.demo.data.after_migrate",
 ]

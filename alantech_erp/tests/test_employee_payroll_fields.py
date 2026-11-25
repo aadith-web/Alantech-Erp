@@ -89,21 +89,6 @@ class TestMissingPayrollFields(TestCase):
 		self.assertEqual(epf.missing_payroll_fields(employee(pan_number="  ")), ["PAN Number"])
 
 
-class TestConfirmationDate(TestCase):
-	def test_filled_from_probation(self):
-		doc = frappe._dict(date_of_joining="2026-01-31", alt_probation_period=6, final_confirmation_date=None)
-		epf.fill_confirmation_date(doc)
-		self.assertEqual(getdate(doc.final_confirmation_date), getdate("2026-07-31"))
-
-	def test_not_overwritten_or_without_probation(self):
-		doc = frappe._dict(date_of_joining="2026-01-31", alt_probation_period=6, final_confirmation_date="2026-03-01")
-		epf.fill_confirmation_date(doc)
-		self.assertEqual(doc.final_confirmation_date, "2026-03-01")
-		doc = frappe._dict(date_of_joining="2026-01-31", alt_probation_period=0, final_confirmation_date=None)
-		epf.fill_confirmation_date(doc)
-		self.assertIsNone(doc.final_confirmation_date)
-
-
 class TestPayrollRefused(TestCase):
 	def setUp(self):
 		frappe.db.savepoint("p12")

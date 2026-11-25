@@ -3,7 +3,7 @@
  "allow_import": 1,
  "autoname": "naming_series:",
  "creation": "2026-10-30 12:30:00.000000",
- "modified": "2026-10-30 12:30:00.000000",
+ "modified": "2026-11-25 13:11:02.937553",
  "doctype": "DocType",
  "document_type": "Document",
  "engine": "InnoDB",
@@ -23,10 +23,10 @@
   "department",
   "company",
   "relieving_date",
-  "location",
   "assets_section",
   "get_assets_held",
   "items",
+  "total_assets",
   "inspection_section",
   "inspection_required",
   "inspected_by",
@@ -124,15 +124,6 @@
    "depends_on": "eval:doc.relieving_date"
   },
   {
-   "fieldname": "location",
-   "fieldtype": "Link",
-   "label": "Return To Location",
-   "options": "Location",
-   "depends_on": "eval:doc.transaction_type=='Receipt'",
-   "mandatory_depends_on": "eval:doc.transaction_type=='Receipt'",
-   "description": "Store, office or site where the returned assets are kept."
-  },
-  {
    "fieldname": "assets_section",
    "fieldtype": "Section Break",
    "label": "Assets"
@@ -147,8 +138,16 @@
    "fieldname": "items",
    "fieldtype": "Table",
    "label": "Assets",
-   "options": "Employee Asset Handover Item",
-   "reqd": 1
+   "options": "Employee Asset Handover Item"
+  },
+  {
+   "fieldname": "total_assets",
+   "fieldtype": "Int",
+   "label": "Total Assets",
+   "read_only": 1,
+   "in_list_view": 1,
+   "no_copy": 1,
+   "description": "Number of assets in the table (one per row, whatever its Quantity)."
   },
   {
    "fieldname": "inspection_section",
@@ -161,7 +160,7 @@
    "fieldtype": "Check",
    "label": "Inspect Assets on Return",
    "default": "0",
-   "description": "Tick to record the condition of each asset. An asset marked Damaged gets an Asset Repair (Pending) on submit."
+   "description": "Tick to record who inspected the returned assets and when. Each asset's Condition is selected in the Assets table; an asset marked Damaged gets an Asset Repair (Pending) on submit."
   },
   {
    "fieldname": "inspected_by",
