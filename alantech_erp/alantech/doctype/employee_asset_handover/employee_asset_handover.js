@@ -92,6 +92,7 @@ frappe.ui.form.on("Employee Asset Handover", {
 					frm.add_child("items", {
 						asset: a.asset, asset_name: a.asset_name, current_location: a.location,
 						return_location: a.location,
+						warranty: a.warranty, warranty_expiry_date: a.warranty_expiry_date,
 						qty: a.qty || 1, available_qty: a.qty || 1,
 					})
 				);
@@ -145,12 +146,27 @@ function alt_total_assets(frm) {
 
 const ALT_HANDOVER = "alantech_erp.alantech.doctype.employee_asset_handover.employee_asset_handover";
 
+// Warranty Expiry in red once it has passed (ClickUp 14yr2e58k7e)
+frappe.ui.form.on("Employee Asset Handover", {
+	setup() {
+		const df = frappe.meta.get_docfield("Employee Asset Handover Item", "warranty_expiry_date");
+		if (!df) return;
+		df.formatter = (value) => {
+			if (!value) return "";
+			const text = frappe.datetime.str_to_user(value);
+			return value < frappe.datetime.get_today()
+				? `<span class="text-danger" title="${__("Warranty expired")}">${text} (${__("Expired")})</span>`
+				: text;
+		};
+	},
+});
+
 frappe.ui.form.on("Employee Asset Handover Item", {
 	// details as soon as the asset is picked, not only after Save (ClickUp 14yr2e58az7 / 14yr2e58hbm)
 	asset(frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
 		if (!row.asset) {
-			["asset_name", "current_location", "return_location", "available_qty"].forEach((f) => frappe.model.set_value(cdt, cdn, f, null));
+			["asset_name", "current_location", "return_location", "available_qty", "warranty", "warranty_expiry_date"].forEach((f) => frappe.model.set_value(cdt, cdn, f, null));
 			alt_total_assets(frm);
 			return;
 		}
@@ -168,9 +184,18 @@ frappe.ui.form.on("Employee Asset Handover Item", {
 					// Receipt: back to where the asset is recorded, changeable per row (ClickUp 14yr2e58hwg)
 					return_location: frm.doc.transaction_type === "Receipt" ? d.current_location : null,
 					available_qty: d.available_qty,
+					warranty: d.warranty,
+					warranty_expiry_date: d.warranty_expiry_date,
 					// Receipt: everything the employee holds; Issue: 1 to start with
 					qty: frm.doc.transaction_type === "Receipt" ? d.available_qty || 1 : 1,
 				});
+				if (d.warranty_expired && frm.doc.transaction_type === "Issue") {
+					frappe.show_alert({
+						message: __("Row {0}: the warranty of asset {1} expired on {2}.", [
+							row.idx, row.asset, frappe.datetime.str_to_user(d.warranty_expiry_date)]),
+						indicator: "orange",
+					}, 8);
+				}
 			});
 	},
 

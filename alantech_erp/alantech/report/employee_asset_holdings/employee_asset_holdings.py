@@ -27,6 +27,7 @@ def get_columns():
 		{"fieldname": "asset_status", "label": _("Asset Status"), "fieldtype": "Data", "width": 110},
 		{"fieldname": "location", "label": _("Location"), "fieldtype": "Link", "options": "Location", "width": 120},
 		{"fieldname": "issued_on", "label": _("Issued On"), "fieldtype": "Datetime", "width": 150},
+		{"fieldname": "warranty_expiry_date", "label": _("Warranty Expiry"), "fieldtype": "Date", "width": 120},
 	]
 
 
@@ -36,7 +37,7 @@ def get_data(filters):
 	base = {"docstatus": 1, "status": ["not in", ("Sold", "Scrapped")]}
 	if filters.company:
 		base["company"] = filters.company
-	fields = ["name", "asset_name", "asset_category", "status", "location", "custodian"]
+	fields = ["name", "asset_name", "asset_category", "status", "location", "custodian", "alt_warranty_expiry_date"]
 
 	single_filters = {**base, "custodian": filters.employee or ["is", "set"], "asset_quantity": ["<=", 1]}
 	holdings = [(a, a.custodian, 1) for a in frappe.get_all("Asset", filters=single_filters, fields=fields)]
@@ -66,6 +67,7 @@ def get_data(filters):
 			"asset": a.name, "asset_name": a.asset_name, "qty": qty, "asset_category": a.asset_category,
 			"asset_status": a.status, "location": a.location,
 			"issued_on": issued_on.get((a.name, employee)),
+			"warranty_expiry_date": a.alt_warranty_expiry_date,
 		})
 	rows.sort(key=lambda r: (r["employee_name"] or "", r["asset_name"] or ""))
 	return rows
