@@ -25,8 +25,11 @@ def calculate(doc):
 		doc.shift = shift.name
 	window = get_shift_window(doc.log_date, shift)
 	logs = get_checkins(doc.employee, window)
+	sessions = build_sessions(logs)
+	if session_number(doc) > len(sessions) and session_number(doc) > 1:
+		return  # this session's punches are gone (deleted / moved): leave the log as it is
 
-	set_checkins_table(doc, logs)
+	set_checkins_table(doc, logs if len(sessions) <= 1 else sessions[session_number(doc) - 1]["logs"])
 	set_times(doc, logs, shift, window)
 	doc.day_type = get_day_type(doc.employee, doc.log_date, shift)
 	doc.attendance_status, doc.leave_type = get_status(doc, shift, get_approved_leave(doc.employee, doc.log_date))
@@ -92,26 +95,87 @@ def set_checkins_table(doc, logs):
 		doc.append("checkins", {"checkin": log.name, "time": log.time, "log_type": log.log_type})
 
 
+def session_number(doc):
+	"""1 for the first IN-OUT pair of the day (and for logs made before sessions existed)."""
+	return cint(doc.get("session_no")) or 1
+
+
+def build_sessions(logs):
+	"""The day's IN-OUT pairs in time order: [{"in": datetime, "out": datetime or None, "logs": [...]}].
+
+	Only the last session can be open (IN without OUT). A repeated IN inside an open session and an
+	OUT with no open IN are ignored. A device that sends no IN/OUT gives one session: first punch =
+	in, last punch = out."""
+	typed = [l for l in logs if l.log_type in ("IN", "OUT")]
+	if logs and not typed:
+		last = get_datetime(logs[-1].time) if len(logs) > 1 else None
+		return [{"in": get_datetime(logs[0].time), "out": last, "logs": list(logs)}]
+
+	sessions = []
+	for log in typed:
+		time = get_datetime(log.time)
+		open_session = sessions[-1] if sessions and sessions[-1]["out"] is None else None
+		if log.log_type == "IN":
+			if open_session:
+				open_session["logs"].append(log)
+			else:
+				sessions.append({"in": time, "out": None, "logs": [log]})
+		elif open_session and time > open_session["in"]:
+			open_session["out"] = time
+			open_session["logs"].append(log)
+	return sessions
+
+
+def get_sessions(employee, log_date):
+	shift = get_shift(frappe._dict(employee=employee, log_date=log_date, shift=None))
+	return build_sessions(get_checkins(employee, get_shift_window(log_date, shift)))
+
+
+def day_hours(doc):
+	"""Hours worked in the whole day (sum of all sessions). Logs without a day total use working_hours."""
+	value = doc.get("total_working_hours")
+	return flt(value) if value is not None else flt(doc.working_hours)
+
+
+def day_first_in(doc):
+	return doc.get("day_first_in") or doc.first_in
+
+
+def day_last_out(doc):
+	return doc.get("day_last_out") or doc.last_out
+
+
+def day_missing_checkout(doc):
+	value = doc.get("day_missing_checkout")
+	return cint(value) if value is not None else cint(doc.missing_checkout)
+
+
 def set_times(doc, logs, shift, window):
-	ins = [get_datetime(l.time) for l in logs if l.log_type == "IN"]
-	outs = [get_datetime(l.time) for l in logs if l.log_type == "OUT"]
-	if logs and not ins and not outs:  # device sends no IN/OUT: first punch = in, last = out
-		ins = [get_datetime(logs[0].time)]
-		outs = [get_datetime(logs[-1].time)] if len(logs) > 1 else []
+	"""Session fields (first_in, last_out, working_hours, missing_checkout) are this log's IN-OUT pair.
+	Day fields (total_working_hours, day_last_out, late_entry, early_exit) cover all the day's sessions;
+	late entry / early exit are kept on Session 1, which owns the day's Attendance."""
+	sessions = build_sessions(logs)
+	mine = sessions[session_number(doc) - 1] if session_number(doc) <= len(sessions) else None
+	closed = [s for s in sessions if s["out"]]
+	first_in = sessions[0]["in"] if sessions else None
+	last_out = closed[-1]["out"] if closed else None
+	open_day = bool(sessions) and sessions[-1]["out"] is None
 
-	first_in = min(ins) if ins else None
-	last_out = max(outs) if outs else None
-	if first_in and last_out and last_out <= first_in:
-		last_out = None
+	doc.first_in = mine["in"] if mine else None
+	doc.last_out = mine["out"] if mine else None
+	doc.missing_checkout = 1 if mine and not mine["out"] else 0
+	doc.working_hours = flt(time_diff_in_hours(mine["out"], mine["in"]), 2) if mine and mine["out"] else 0
 
-	doc.first_in = first_in
-	doc.last_out = last_out
-	doc.missing_checkout = 1 if first_in and not last_out else 0
-	doc.working_hours = flt(time_diff_in_hours(last_out, first_in), 2) if first_in and last_out else 0
+	doc.total_working_hours = flt(sum(time_diff_in_hours(s["out"], s["in"]) for s in closed), 2)
+	doc.day_last_out = last_out
+	doc.day_first_in = first_in  # not saved: used by the status / overtime calculation of this run
+	doc.day_missing_checkout = 1 if open_day else 0  # not saved, same
 
+	first = session_number(doc) == 1
 	doc.late_entry = int(
 		bool(
-			shift
+			first
+			and shift
 			and first_in
 			and cint(shift.enable_late_entry_marking)
 			and first_in > window.start + timedelta(minutes=cint(shift.late_entry_grace_period))
@@ -119,8 +183,10 @@ def set_times(doc, logs, shift, window):
 	)
 	doc.early_exit = int(
 		bool(
-			shift
+			first
+			and shift
 			and last_out
+			and not open_day
 			and cint(shift.enable_early_exit_marking)
 			and last_out < window.end - timedelta(minutes=cint(shift.early_exit_grace_period))
 		)
@@ -193,12 +259,12 @@ def get_status(doc, shift, leave):
 		)
 		return ("Half Day" if half else "On Leave"), leave.leave_type
 
-	if not doc.first_in:
+	if not day_first_in(doc):
 		return "Absent", None
-	if doc.missing_checkout:
+	if day_missing_checkout(doc):
 		return MISSING_CHECKOUT_STATUS, None
 
-	hours = flt(doc.working_hours)
+	hours = day_hours(doc)
 	if shift:
 		absent_below = flt(shift.working_hours_threshold_for_absent)
 		half_below = flt(shift.working_hours_threshold_for_half_day)
@@ -211,6 +277,9 @@ def get_status(doc, shift, leave):
 
 # ---------------------------------------------------------------- overtime
 def set_overtime(doc, shift, window):
+	if session_number(doc) > 1:  # the day's overtime is kept on Session 1 only
+		doc.overtime_rule, doc.overtime_hours = None, 0
+		return
 	rule = get_overtime_rule(shift)
 	doc.overtime_rule = rule.name if rule else None
 	doc.overtime_hours = get_overtime_hours(doc, rule, window, shift) if rule else 0
@@ -235,7 +304,7 @@ def get_overtime_hours(doc, rule, window, shift=None):
 	shift's Round OT Minutes To."""
 	from alantech_erp.setup.shift_ot_fields import FLEXIBLE, shift_settings
 
-	worked = flt(doc.working_hours)
+	worked = day_hours(doc)
 	if worked <= 0:
 		return 0
 
@@ -258,9 +327,9 @@ def get_overtime_hours(doc, rule, window, shift=None):
 
 def outside_shift_hours(doc, window, settings):
 	"""Fixed Shift: early check-in and late checkout time that the shift counts as overtime."""
-	if not (window.start and window.end and doc.first_in and doc.last_out):
+	if not (window.start and window.end and day_first_in(doc) and day_last_out(doc)):
 		return 0
-	first_in, last_out = get_datetime(doc.first_in), get_datetime(doc.last_out)
+	first_in, last_out = get_datetime(day_first_in(doc)), get_datetime(day_last_out(doc))
 	hours = 0
 	if settings.early_checkin_ot and first_in < window.start:
 		hours += time_diff_in_hours(min(window.start, last_out), first_in)

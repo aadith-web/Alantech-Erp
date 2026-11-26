@@ -14,8 +14,10 @@
 	const IDLE = "bg-transparent";
 	const CSS = `.alt-cp-panel { display: none; } .alt-cp-on > .alt-cp-panel { display: block; } .alt-cp-on > :not(.alt-cp-panel) { display: none !important; }`;
 
-	// A policy counts as new for this many days after its effective date
+	// A policy counts as new for this many days after its effective date, until the employee opens it
 	const NEW_DAYS = 30;
+	const SEEN_KEY = "alt_cp_seen";
+	const OPEN_KEY = "alt_cp_open";
 
 	let panel_open = false;
 	let open_column = null; // the content column the panel is in
@@ -24,9 +26,35 @@
 	let loading = false;
 	let loading_since = 0;
 
-	function new_count(rows) {
+	function policy_key(employee, row) {
+		return [employee, row.policy_code || row.policy_title, row.version || "", row.effective_date || ""].join("|");
+	}
+
+	function seen_set() {
+		try {
+			return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || "[]"));
+		} catch (e) {
+			return new Set();
+		}
+	}
+
+	function mark_seen(employee, row) {
+		const seen = seen_set();
+		seen.add(policy_key(employee, row));
+		try {
+			localStorage.setItem(SEEN_KEY, JSON.stringify([...seen]));
+		} catch (e) { }
+	}
+
+	function new_count(rows, employee) {
 		const cutoff = Date.now() - NEW_DAYS * 24 * 60 * 60 * 1000;
-		return rows.filter((row) => row.effective_date && new Date(row.effective_date).getTime() >= cutoff).length;
+		const seen = seen_set();
+		return rows.filter(
+			(row) =>
+				row.effective_date &&
+				new Date(row.effective_date).getTime() >= cutoff &&
+				!seen.has(policy_key(employee, row)),
+		).length;
 	}
 
 	// Count badge after the label, like the Documents and Assets counts
@@ -88,13 +116,14 @@
 		button.classList.toggle(IDLE, !active);
 	}
 
-	function show_panel(nav, employee) {
+	function show_panel(nav, employee, scroll) {
 		const column = column_of(nav);
 		if (!column) return;
 		let panel = column.querySelector(":scope > .alt-cp-panel");
 		if (!panel) {
 			panel = document.createElement("div");
 			panel.className = "alt-cp-panel px-4 sm:px-0 space-y-3";
+			panel.style.scrollMarginTop = "170px"; // keeps the heading below the sticky header and tabs
 			column.prepend(panel);
 		}
 		if (!panel_open) {
@@ -103,9 +132,11 @@
 		open_column = column;
 		column.classList.add("alt-cp-on");
 		panel_open = true;
+		try { sessionStorage.setItem(OPEN_KEY, employee); } catch (e) { }
 		[...nav.querySelectorAll(":scope > button")].forEach((b) => set_button_state(b, false));
 		set_button_state(nav.querySelector(":scope > button[data-alt-cp]"), true);
 		render(panel, employee);
+		if (scroll) panel.scrollIntoView({ behavior: "smooth", block: "start" });
 	}
 
 	// Leave the panel and show Vue's content again. `restore` puts back the sidebar button that was
@@ -114,6 +145,7 @@
 	function hide_panel(restore) {
 		if (!panel_open) return;
 		panel_open = false;
+		try { sessionStorage.removeItem(OPEN_KEY); } catch (e) { }
 		open_column?.classList.remove("alt-cp-on");
 		const root = find_profile_root();
 		const nav = root && desktop_nav(root);
@@ -144,7 +176,7 @@
 			});
 		load.then((rows) => {
 			if (!panel.isConnected || !panel.parentElement?.classList.contains("alt-cp-on")) return;
-			const fresh = new_count(rows);
+			const fresh = new_count(rows, employee);
 			const head = text(
 				"div",
 				"text-p-lg font-semibold text-ink-gray-8",
@@ -156,14 +188,14 @@
 			}
 			const list = document.createElement("div");
 			list.className = "flex flex-col gap-2";
-			for (const row of rows) list.appendChild(policy_row(row));
+			for (const row of rows) list.appendChild(policy_row(row, employee));
 			panel.replaceChildren(head, list);
 		}).catch(() => {
 			panel.replaceChildren(text("p", "text-p-base text-ink-red-3", __("Could not load company policies.")));
 		});
 	}
 
-	function policy_row(row) {
+	function policy_row(row, employee) {
 		const item = document.createElement("button");
 		item.type = "button";
 		item.className = "w-full text-left flex items-center justify-between gap-3 rounded-6 border px-4 py-3 bg-surface-white hover:bg-surface-gray-2";
@@ -175,8 +207,13 @@
 		);
 		item.append(info, text("span", "text-p-sm text-ink-gray-5 shrink-0", __("Open")));
 		item.addEventListener("click", () => {
-			if (row.policy_file) window.open(row.policy_file, "_blank", "noopener");
-			else frappe.show_alert({ message: __("This policy has no file attached."), indicator: "orange" });
+			if (row.policy_file) {
+				mark_seen(employee, row);
+				window.open(row.policy_file, "_blank", "noopener");
+				// refresh the "N new" text; the sidebar badge updates on the next ensure() tick
+				const panel = open_column?.querySelector(":scope > .alt-cp-panel");
+				if (panel) render(panel, employee);
+			} else frappe.show_alert({ message: __("This policy has no file attached."), indicator: "orange" });
 		});
 		return item;
 	}
@@ -194,7 +231,10 @@
 	// fresh click handler, and keep its look in step with the panel
 	function ensure() {
 		const employee = employee_from_route();
-		if (!employee) return;
+		if (!employee) {
+			try { sessionStorage.removeItem(OPEN_KEY); } catch (e) { }
+			return;
+		}
 		const root = find_profile_root();
 		if (!root) return;
 		const nav = desktop_nav(root);
@@ -209,7 +249,15 @@
 			root.__alt_cp_listening = true;
 			root.addEventListener("click", (event) => {
 				const button = event.target.closest?.("button");
-				if (!button || button.hasAttribute("data-alt-cp") || !panel_open) return;
+				if (!button) return;
+				// any sidebar item (direct child of the nav): bring the content to the top.
+				// Our own button scrolls through show_panel, so skip it here.
+				const side = button.closest("aside");
+				if (side && !button.hasAttribute("data-alt-cp") && side.nextElementSibling) {
+					const column = side.nextElementSibling;
+					setTimeout(() => scroll_to(column), 150);
+				}
+				if (button.hasAttribute("data-alt-cp") || button.closest(".alt-cp-panel") || !panel_open) return;
 				hide_panel(false);
 				// Vue restyles a button only when its section changes, so the Assets button is restyled
 				// by hand when it is clicked while its own panel is showing
@@ -231,14 +279,20 @@
 				const current = employee_from_route();
 				const live_root = find_profile_root();
 				const live_nav = live_root && desktop_nav(live_root);
-				if (current && live_nav) show_panel(live_nav, current);
+				if (current && live_nav) show_panel(live_nav, current, true);
 			});
 		}
+
+		// coming back from the policy tab: Vue re-rendered and closed the panel, so show the list again
+		let want = null;
+		try { want = sessionStorage.getItem(OPEN_KEY); } catch (e) { }
+		if (want === employee && !panel_open) show_panel(nav, employee);
+
 		set_button_state(our_button, panel_open);
 
 		// the new-policy count comes from the same list the panel shows
 		if (cache.employee === employee && cache.rows) {
-			set_count(our_button, new_count(cache.rows));
+			set_count(our_button, new_count(cache.rows, employee));
 		} else if (!loading || Date.now() - loading_since > 10000) {
 			// a request that never answers is retried after 10 seconds
 			loading = true;
@@ -246,9 +300,9 @@
 			frappe.xcall(METHOD, { employee })
 				.then((rows) => {
 					cache = { employee, rows };
-					set_count(our_button, new_count(rows));
+					set_count(our_button, new_count(rows, employee));
 				})
-				.catch(() => {})
+				.catch(() => { })
 				.finally(() => (loading = false));
 		}
 	}

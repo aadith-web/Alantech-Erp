@@ -30,6 +30,7 @@ alantech_erp.patches.v16.document_number_required
 alantech_erp.patches.v16.reset_employee_document_type_permissions
 alantech_erp.patches.v16.remove_sample_designations
 alantech_erp.patches.v16.move_off_sample_designations
+alantech_erp.patches.v16.session_log_session_no
 alantech_erp.patches.v16.handover_return_location_per_row
 alantech_erp.patches.v16.reset_handover_item_grid_columns
 alantech_erp.patches.v16.handover_total_assets_count

@@ -23,7 +23,12 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, cint, get_datetime, getdate, today
 
-from alantech_erp.alantech.doctype.session_log.calculation import calculate, get_shift, get_shift_window
+from alantech_erp.alantech.doctype.session_log.calculation import (
+	calculate,
+	get_sessions,
+	get_shift,
+	get_shift_window,
+)
 from alantech_erp.alantech.doctype.session_log.processing import add_remark, process_log
 from alantech_erp.alantech.doctype.session_log_settings.session_log_settings import (
 	TRIGGER_DAILY,
@@ -111,7 +116,30 @@ def build_log_safely(employee, log_date):
 
 
 def build_log(employee, log_date):
-	name = frappe.db.exists(DT, {"employee": employee, "log_date": getdate(log_date)})
+	"""One Session Log per IN-OUT pair of the day (session_no 1, 2, ...). Returns Session 1's log.
+
+	Session 1 owns the day's Attendance and Overtime Log; when a later session is processed they are
+	rebuilt from the whole day (see processing.process_extra_session)."""
+	day = getdate(log_date)
+	first = None
+	for number in range(1, max(len(get_sessions(employee, day)), 1) + 1):
+		log = build_session_log(employee, day, number)
+		first = first or log
+	return first
+
+
+def find_log(employee, log_date, session_no):
+	"""A log made before sessions existed has no session_no and counts as Session 1."""
+	rows = frappe.db.sql_list(
+		"""select name from `tabSession Log`
+		where employee = %s and log_date = %s and coalesce(nullif(session_no, 0), 1) = %s limit 1""",
+		(employee, getdate(log_date), session_no),
+	)
+	return rows[0] if rows else None
+
+
+def build_session_log(employee, log_date, session_no):
+	name = find_log(employee, log_date, session_no)
 	if name:
 		log = frappe.get_doc(DT, name)
 		if log.status == "Pending Approval" and cint(log.missing_checkout):
@@ -126,6 +154,7 @@ def build_log(employee, log_date):
 				"employee": employee,
 				"company": frappe.db.get_value("Employee", employee, "company"),
 				"log_date": getdate(log_date),
+				"session_no": session_no,
 			}
 		)
 		log.insert(ignore_permissions=True)  # after_insert processes a Draft log
