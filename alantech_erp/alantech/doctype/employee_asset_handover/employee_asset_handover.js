@@ -21,7 +21,7 @@ frappe.ui.form.on("Employee Asset Handover", {
 	},
 
 	onload(frm) {
-		// opened from Employee > Receive Assets: fill the table straight away
+		// opened from Employee > Return Assets: fill the table straight away
 		if (frm.is_new() && frm.doc.transaction_type === "Receipt" && frm.doc.employee && !(frm.doc.items || []).some((r) => r.asset)) {
 			frm.trigger("get_assets_held");
 		}

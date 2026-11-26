@@ -33,7 +33,7 @@ frappe.ui.form.on("Employee", {
 					frm.add_custom_button(__("Issue Asset"), () =>
 						frappe.new_doc(handover, { transaction_type: "Issue", employee: frm.doc.name }), __("Assets"));
 				}
-				frm.add_custom_button(__("Receive Assets"), () =>
+				frm.add_custom_button(__("Return Assets"), () =>
 					frappe.new_doc(handover, { transaction_type: "Receipt", employee: frm.doc.name }), __("Assets"));
 			}
 			frm.add_custom_button(__("Handover History"), () =>
