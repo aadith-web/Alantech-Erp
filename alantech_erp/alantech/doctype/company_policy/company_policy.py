@@ -16,7 +16,7 @@ class CompanyPolicy(Document):
     def validate(self):
         self.policy_code = (self.policy_code or "").strip()
         self.policy_title = (self.policy_title or "").strip()
-        self.last_updated = now_datetime()
+        self.last_updated = nowdate()
         self.version = (self.version or "").strip()
         self.validate_version()
         self.validate_category()

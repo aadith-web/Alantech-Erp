@@ -57,9 +57,11 @@ def punches(*pairs, day=DAY):
 	return [frappe._dict(time=at(t, day), log_type=lt) for t, lt in pairs]
 
 
-def times(logs, sh=None):
+def times(logs, sh=None, session_no=None):
 	sh = sh or shift()
 	doc = frappe._dict()
+	if session_no:
+		doc.session_no = session_no
 	set_times(doc, logs, sh, get_shift_window(DAY, sh))
 	return doc
 
@@ -90,10 +92,32 @@ class UnitTestShiftWindow(UnitTestCase):
 
 class UnitTestTimes(UnitTestCase):
 	def test_first_in_last_out_and_hours(self):
-		doc = times(punches(("09:00:00", "IN"), ("13:00:00", "OUT"), ("13:30:00", "IN"), ("17:45:00", "OUT")))
-		self.assertEqual((doc.first_in, doc.last_out), (at("09:00:00"), at("17:45:00")))
-		self.assertEqual(doc.working_hours, 8.75)  # breaks are not deducted
+		logs = punches(("09:00:00", "IN"), ("13:00:00", "OUT"), ("13:30:00", "IN"), ("17:45:00", "OUT"))
+		doc = times(logs)  # Session 1: its own IN-OUT pair
+		self.assertEqual((doc.first_in, doc.last_out), (at("09:00:00"), at("13:00:00")))
+		self.assertEqual(doc.working_hours, 4)
+		self.assertEqual(doc.total_working_hours, 8.25)  # the break is not counted
+		self.assertEqual(doc.day_last_out, at("17:45:00"))
 		self.assertEqual((doc.missing_checkout, doc.late_entry, doc.early_exit), (0, 0, 0))
+
+	def test_each_in_out_pair_is_a_session(self):
+		logs = punches(("09:00:00", "IN"), ("11:00:00", "OUT"), ("14:00:00", "IN"), ("18:00:00", "OUT"))
+		first, second = times(logs, session_no=1), times(logs, session_no=2)
+		self.assertEqual((first.first_in, first.last_out, first.working_hours), (at("09:00:00"), at("11:00:00"), 2))
+		self.assertEqual((second.first_in, second.last_out, second.working_hours), (at("14:00:00"), at("18:00:00"), 4))
+		self.assertEqual((first.total_working_hours, second.total_working_hours), (6, 6))  # 2 h + 4 h
+
+	def test_open_last_session_is_a_missing_checkout(self):
+		logs = punches(("09:00:00", "IN"), ("11:00:00", "OUT"), ("14:00:00", "IN"))
+		first, second = times(logs, session_no=1), times(logs, session_no=2)
+		self.assertEqual((first.missing_checkout, second.missing_checkout), (0, 1))
+		self.assertEqual((first.day_missing_checkout, first.total_working_hours), (1, 2))
+		self.assertEqual(first.early_exit, 0)  # not known until the day is closed
+
+	def test_late_entry_and_early_exit_belong_to_session_1(self):
+		logs = punches(("09:16:00", "IN"), ("12:00:00", "OUT"), ("13:00:00", "IN"), ("16:44:00", "OUT"))
+		self.assertEqual((times(logs, session_no=1).late_entry, times(logs, session_no=1).early_exit), (1, 1))
+		self.assertEqual((times(logs, session_no=2).late_entry, times(logs, session_no=2).early_exit), (0, 0))
 
 	def test_missing_checkout(self):
 		doc = times(punches(("09:00:00", "IN")))

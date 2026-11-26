@@ -4,6 +4,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
+from frappe.utils import cint
 
 from alantech_erp.alantech.doctype.session_log.calculation import calculate
 from alantech_erp.alantech.doctype.session_log.processing import initial_status, process_log
@@ -33,24 +34,30 @@ class SessionLog(Document):
 
 	def validate_locked(self):
 		"""Processed logs are read-only when Lock After Processing is on (Reopen unlocks them)."""
-		if self.is_new() or self.flags.reopening:
+		if self.is_new() or self.flags.reopening or self.flags.day_refresh:
 			return
 		before = self.get_doc_before_save()
 		if before and before.status == "Processed" and get_session_log_settings().lock_after_processing:
 			frappe.throw(_("Session Log {0} is Processed and locked. Use Reopen to change it.").format(self.name))
 
 	def validate_duplicate(self):
-		"""One Session Log per employee per date (the DB index enforces it as well)."""
+		"""One Session Log per employee, date and session no (the DB index enforces it as well)."""
 		existing = frappe.db.exists(
 			DOCTYPE,
-			{"employee": self.employee, "log_date": self.log_date, "name": ["!=", self.name or ""]},
+			{
+				"employee": self.employee,
+				"log_date": self.log_date,
+				"session_no": cint(self.session_no) or 1,
+				"name": ["!=", self.name or ""],
+			},
 		)
 		if existing:
 			frappe.throw(
-				_("A Session Log for {0} on {1} already exists: {2}").format(
+				_("A Session Log for {0} on {1} (session {3}) already exists: {2}").format(
 					frappe.bold(self.employee_name or self.employee),
 					frappe.format(self.log_date, "Date"),
 					frappe.utils.get_link_to_form(DOCTYPE, existing),
+					cint(self.session_no) or 1,
 				),
 				frappe.DuplicateEntryError,
 				title=_("Duplicate Session Log"),
@@ -66,8 +73,15 @@ class SessionLog(Document):
 
 
 def on_doctype_update():
-	"""Runs on migrate: unique DB index on (employee, log_date)."""
-	frappe.db.add_unique(DOCTYPE, ["employee", "log_date"], constraint_name="unique_employee_log_date")
+	"""Runs on migrate: unique DB index on (employee, log_date, session_no). The old index on
+	(employee, log_date) allowed only one log a day, so it is dropped first."""
+	try:
+		frappe.db.sql_ddl("ALTER TABLE `tabSession Log` DROP INDEX `unique_employee_log_date`")
+	except Exception:
+		pass  # already dropped (or never there)
+	frappe.db.add_unique(
+		DOCTYPE, ["employee", "log_date", "session_no"], constraint_name="unique_employee_log_date_session"
+	)
 
 
 # ---------- permissions: employees see only their own logs ----------

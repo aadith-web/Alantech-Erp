@@ -50,7 +50,7 @@ def get_data(filters, start, end):
 		filters=conditions,
 		or_filters=or_conditions,
 		fields=[
-			"name", "employee", "employee_name", "department", "branch", "log_date", "day_type",
+			"name", "employee", "employee_name", "department", "branch", "log_date", "session_no", "day_type",
 			"first_in", "last_out", "working_hours", "attendance_status", "late_entry", "early_exit",
 			"missing_checkout", "overtime_rule", "overtime_hours", "status", "remarks", "error_log",
 		],
@@ -90,6 +90,11 @@ def get_employee_summary(data):
 				half_day=0, on_leave=0, off_days=0, ot_hours=0.0, logs=0),
 		)
 		emp.logs += 1
+		if cint(row.get("session_no")) > 1:
+			# a later IN-OUT session of the same day: the day is counted once, on Session 1
+			if row.error_log and not row.remarks:
+				row.remarks = row.error_log
+			continue
 		if is_off_day(row):
 			emp.off_days += 1  # weekly off / holiday without work: not an absence
 		else:

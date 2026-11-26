@@ -298,6 +298,7 @@ fixtures = [
         ["name", "like", "%alt\\_%"],
         ["name", "=", "Event-main-field_order"],
         ["name", "=", "Gender-main-allow_rename"],
+        ["name", "=", "Opportunity-main-field_order"],
     ]},
     {"dt": "Workflow"},
     {"dt": "Workflow State"},
