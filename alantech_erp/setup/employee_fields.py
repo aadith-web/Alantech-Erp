@@ -52,6 +52,15 @@ EMPLOYEE_FIELDS = {
             "options": "\nSavings\nCurrent",
             "insert_after": "alt_ifsc_code",
         },
+        # Employment tab, after Branch. Employee Promotion's Location fetches it
+        # (fixtures: Employee Promotion-location, fetch_from employee.custom_employee_location)
+        {
+            "fieldname": "custom_employee_location",
+            "label": "Location",
+            "fieldtype": "Link",
+            "options": "Employee Location",
+            "insert_after": "branch",
+        },
     ],
     # copied from the linked Employee (see sync_user_employee_number)
     "User": [

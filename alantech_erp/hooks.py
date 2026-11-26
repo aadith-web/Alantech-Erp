@@ -272,6 +272,8 @@ fixtures = [
     {"dt": "Print Format", "filters": [["name", "in", ["Offer Letter", "Appointment Letter"]]]},
     {"dt": "Letter Head", "filters": [["name", "in", ["AlanTech"]]]},
     {"dt": "Dashboard Chart", "filters": [["name", "in", ["Attendance Count"]]]},
+    # one Custom Field entry only: every entry of a doctype exports to the same
+    # fixtures/custom_field.json, so a second entry overwrites the first
     {"dt": "Custom Field", "or_filters": [
         ["fieldname", "like", "alt\\_%"],
         ["name", "in", [
@@ -288,6 +290,8 @@ fixtures = [
           "Company-custom_hr_signatory_name",
           "Company-custom_hr_email",
           "Company-custom_hr_office_address",
+          "Employee Promotion-branch",
+          "Employee Promotion-location",
         ]],
     ]},
     {"dt": "Property Setter", "or_filters": [
@@ -311,7 +315,6 @@ fixtures = [
         "Vice President",
     ]]]},
     {"dt": "Department", "filters": [["name", "!=", "All Departments"]]},
-    {"dt": "Custom Field", "filters": [["name", "in", ["Employee Promotion-branch","Employee Promotion-location"]]]},
     {"dt": "Client Script", "filters": [["name", "=", "Notification List Subject Format"]]},
     {"dt": "Document Type Master"}
 ]
