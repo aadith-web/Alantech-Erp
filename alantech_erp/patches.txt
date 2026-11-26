@@ -34,3 +34,6 @@ alantech_erp.patches.v16.session_log_session_no
 alantech_erp.patches.v16.handover_return_location_per_row
 alantech_erp.patches.v16.reset_handover_item_grid_columns
 alantech_erp.patches.v16.handover_total_assets_count
+alantech_erp.patches.v16.handover_item_warranty
+alantech_erp.patches.v16.asset_warranty_expiry
+alantech_erp.patches.v16.asset_warranty_years_months

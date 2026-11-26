@@ -318,7 +318,12 @@ fixtures = [
 
 doc_events = {
     # Single Asset: one asset per unit, the rest split off in the background (ClickUp 14yr2e58hv1)
-    "Asset": {"on_submit": "alantech_erp.setup.asset_creation_mode.on_submit"},
+    "Asset": {
+        "on_submit": "alantech_erp.setup.asset_creation_mode.on_submit",
+        # Warranty as years / months; Warranty Expiry Date = Purchase Date + Warranty (14yr2e58k7e)
+        "validate": "alantech_erp.setup.asset_warranty.validate",
+        "before_update_after_submit": "alantech_erp.setup.asset_warranty.validate",
+    },
     # Level + Band unique across grades, one row per Sub Band, Gross Amount > 0 (ClickUp 14yr2e586v1)
     "Employee Grade": {"validate": "alantech_erp.setup.employee_grade.validate"},
     # earnings formulas written from Percentage / Percentage Of (ClickUp 14yr2e586v4)

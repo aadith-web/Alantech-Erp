@@ -32,6 +32,10 @@ Inspected By / Date / Remarks.
 Total Assets (ClickUp 14yr2e58jwz): the number of assets (rows with an asset), kept on the form and
 shown as a column in the list (patches/v16/handover_total_assets_count.py filled it on existing handovers).
 
+Warranty (ClickUp 14yr2e58k7e): each row shows the Asset's Warranty and Warranty Expiry (custom fields
+on Asset, setup/asset_handover.py) as soon as the asset is picked; issuing an asset whose warranty
+has expired is allowed but warned. The handover's Date is labelled Handover Date.
+
 Assets table on a new form (ClickUp 14yr2e58jwx): not marked mandatory (an empty mandatory table has a
 red border that looks like an error); a new Issue starts with one empty row to fill; saving without
 an asset is refused on the server: "Add at least one asset in the Assets table."
@@ -40,12 +44,16 @@ an asset is refused on the server: "Add at least one asset in the Assets table."
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import cint, get_datetime, get_link_to_form, nowdate
+from frappe.utils import cint, formatdate, get_datetime, get_link_to_form, getdate, nowdate
 
 ISSUE, RECEIPT = "Issue", "Receipt"
 GOOD, DAMAGED = "Good", "Damaged"
 CLOSED_ASSET_STATUSES = ("Sold", "Scrapped")
 HANDOVER_ROLES = {"System Manager", "HR Manager", "HR User"}
+
+
+def warranty_expired(expiry, on=None):
+	return bool(expiry) and getdate(expiry) < getdate(on or nowdate())
 
 
 def total_assets(rows):
@@ -115,13 +123,19 @@ class EmployeeAssetHandover(Document):
 
 			asset = frappe.db.get_value("Asset", row.asset,
 			                            ["asset_name", "company", "location", "custodian", "status", "docstatus",
-			                             "asset_quantity"],
+			                             "asset_quantity", "alt_warranty", "alt_warranty_expiry_date"],
 			                            as_dict=True)
 			if not asset:
 				frappe.throw(_("Row {0}: Asset {1} does not exist.").format(row.idx, row.asset))
 			row.asset_name = asset.asset_name
 			row.current_location = asset.location
+			row.warranty = asset.alt_warranty
+			row.warranty_expiry_date = asset.alt_warranty_expiry_date
 			label = f"{row.asset} ({asset.asset_name})"
+			if self.transaction_type == ISSUE and warranty_expired(asset.alt_warranty_expiry_date, self.transaction_date):
+				frappe.msgprint(_("Row {0}: the warranty of asset {1} expired on {2}.").format(
+					row.idx, label, formatdate(asset.alt_warranty_expiry_date)),
+					title=_("Warranty Expired"), indicator="orange")
 			if self.transaction_type == RECEIPT and not row.return_location:
 				frappe.throw(_("Row {0}: select the Return To Location for asset {1}.").format(row.idx, label),
 					title=_("Return To Location Missing"))
@@ -359,8 +373,8 @@ def available_qty(name, transaction_type=ISSUE, employee=None, asset=None):
 def get_asset_details(asset, transaction_type=ISSUE, employee=None):
 	"""For the row as soon as an asset is picked: name, location, Available Qty, grouped or not."""
 	check_handover_access()
-	details = frappe.db.get_value("Asset", asset, ["asset_name", "location", "asset_quantity", "custodian", "status"],
-	                              as_dict=True)
+	details = frappe.db.get_value("Asset", asset, ["asset_name", "location", "asset_quantity", "custodian", "status",
+	                                               "alt_warranty", "alt_warranty_expiry_date"], as_dict=True)
 	if not details:
 		return {}
 	return {
@@ -369,6 +383,9 @@ def get_asset_details(asset, transaction_type=ISSUE, employee=None):
 		"asset_quantity": cint(details.asset_quantity) or 1,
 		"grouped": is_grouped(details),
 		"available_qty": available_qty(asset, transaction_type, employee, details),
+		"warranty": details.alt_warranty,
+		"warranty_expiry_date": details.alt_warranty_expiry_date,
+		"warranty_expired": warranty_expired(details.alt_warranty_expiry_date),
 	}
 
 
@@ -385,13 +402,15 @@ def get_assets_held(employee):
 		"Asset",
 		filters={"custodian": employee, "docstatus": 1, "status": ["not in", CLOSED_ASSET_STATUSES],
 		         "asset_quantity": ["<=", 1]},
-		fields=["name as asset", "asset_name", "location", "status"],
+		fields=["name as asset", "asset_name", "location", "status", "alt_warranty as warranty",
+		        "alt_warranty_expiry_date as warranty_expiry_date"],
 	)
 	for a in assets:
 		a.qty = 1
 	grouped = frappe.get_all(
 		"Asset", filters={"docstatus": 1, "status": ["not in", CLOSED_ASSET_STATUSES], "asset_quantity": [">", 1]},
-		fields=["name as asset", "asset_name", "location", "status"],
+		fields=["name as asset", "asset_name", "location", "status", "alt_warranty as warranty",
+		        "alt_warranty_expiry_date as warranty_expiry_date"],
 	)
 	held = held_qty([g.asset for g in grouped], employee)
 	for g in grouped:
