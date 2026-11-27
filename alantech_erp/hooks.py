@@ -72,6 +72,10 @@ web_include_js = ["/assets/alantech_erp/js/alantech_desk.js"]
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 doctype_js = {
+    # Grade / Sub Band / Amount on Employee Promotion (ClickUp 14yr2e58nc6)
+    "Employee Promotion": "public/js/employee_promotion.js",
+    # "Create Promotion" on a submitted Appraisal (ClickUp 14yr2e58nc7)
+    "Appraisal": "public/js/appraisal.js",
     # Create As Grouped Asset / Single Asset (ClickUp 14yr2e58hv1)
     "Asset": "public/js/asset.js",
     "Employee": "public/js/employee.js",
@@ -330,6 +334,11 @@ doc_events = {
     },
     # Level + Band unique across grades, one row per Sub Band, Gross Amount > 0 (ClickUp 14yr2e586v1)
     "Employee Grade": {"validate": "alantech_erp.setup.employee_grade.validate"},
+    # Grade / Sub Band / Amount; Amount -> Revised CTC on submit (ClickUp 14yr2e58nc6)
+    "Employee Promotion": {
+        "validate": "alantech_erp.setup.promotion_grade.validate",
+        "before_submit": "alantech_erp.setup.promotion_grade.before_submit",
+    },
     # earnings formulas written from Percentage / Percentage Of (ClickUp 14yr2e586v4)
     "Salary Structure": {
         "validate": "alantech_erp.setup.default_salary_structure.set_percentage_formulas",
@@ -790,6 +799,11 @@ after_migrate = [
     "alantech_erp.alantech.doctype.employee_notice_period.employee_notice_period.execute",
     # Employee Grade Level / Band / Sub Bands table; Sub Band master A to E (ClickUp 14yr2e586v1)
     "alantech_erp.setup.employee_grade.execute",
+    # Employee Promotion: Grade / Sub Band / Amount custom fields (ClickUp 14yr2e58nc6)
+    "alantech_erp.setup.promotion_grade.execute",
+    # Employee role: SELECT on Designation / KRA / Employee Feedback Criteria so an employee can save
+    # and submit their Appraisal ("Insufficient Permission for Designation")
+    "alantech_erp.setup.appraisal_permissions.execute",
     # Loan Management flow (HR-F05-x): existing HR Managers get Loan Manager
     "alantech_erp.setup.loan_roles.execute",
     # Loan Management flow (HR-F05-x): employee loan ledgers, Loan Product accounts, Company settings
