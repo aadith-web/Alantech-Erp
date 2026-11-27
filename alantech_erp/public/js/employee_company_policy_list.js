@@ -14,9 +14,8 @@
 	const IDLE = "bg-transparent";
 	const CSS = `.alt-cp-panel { display: none; } .alt-cp-on > .alt-cp-panel { display: block; } .alt-cp-on > :not(.alt-cp-panel) { display: none !important; }`;
 
-	// A policy counts as new for this many days after its effective date, until the employee opens it
+	// A policy counts as new for this many days after its effective date
 	const NEW_DAYS = 30;
-	const SEEN_KEY = "alt_cp_seen";
 	const OPEN_KEY = "alt_cp_open";
 
 	let panel_open = false;
@@ -26,35 +25,9 @@
 	let loading = false;
 	let loading_since = 0;
 
-	function policy_key(employee, row) {
-		return [employee, row.policy_code || row.policy_title, row.version || "", row.effective_date || ""].join("|");
-	}
-
-	function seen_set() {
-		try {
-			return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || "[]"));
-		} catch (e) {
-			return new Set();
-		}
-	}
-
-	function mark_seen(employee, row) {
-		const seen = seen_set();
-		seen.add(policy_key(employee, row));
-		try {
-			localStorage.setItem(SEEN_KEY, JSON.stringify([...seen]));
-		} catch (e) { }
-	}
-
-	function new_count(rows, employee) {
+	function new_count(rows) {
 		const cutoff = Date.now() - NEW_DAYS * 24 * 60 * 60 * 1000;
-		const seen = seen_set();
-		return rows.filter(
-			(row) =>
-				row.effective_date &&
-				new Date(row.effective_date).getTime() >= cutoff &&
-				!seen.has(policy_key(employee, row)),
-		).length;
+		return rows.filter((row) => row.effective_date && new Date(row.effective_date).getTime() >= cutoff).length;
 	}
 
 	// Count badge after the label, like the Documents and Assets counts
@@ -114,6 +87,27 @@
 		if (!button) return;
 		button.classList.toggle(ACTIVE, active);
 		button.classList.toggle(IDLE, !active);
+	}
+
+	// Scroll whatever actually scrolls (it may be inside the island's shadow root) so the content is at the top
+	function scroll_to(el) {
+		const parent_of = (n) => {
+			if (n.parentElement) return n.parentElement;
+			const r = n.getRootNode();
+			return r instanceof ShadowRoot ? r.host : null;
+		};
+		let node = parent_of(el);
+		while (node) {
+			const oy = getComputedStyle(node).overflowY;
+			if ((oy === "auto" || oy === "scroll") && node.scrollHeight > node.clientHeight) break;
+			node = parent_of(node);
+		}
+		const top = el.getBoundingClientRect().top;
+		if (node) {
+			node.scrollTo({ top: node.scrollTop + top - node.getBoundingClientRect().top - 16, behavior: "smooth" });
+		} else {
+			window.scrollTo({ top: window.scrollY + top - 170, behavior: "smooth" }); // 170 = sticky header + tabs
+		}
 	}
 
 	function show_panel(nav, employee, scroll) {
@@ -176,7 +170,7 @@
 			});
 		load.then((rows) => {
 			if (!panel.isConnected || !panel.parentElement?.classList.contains("alt-cp-on")) return;
-			const fresh = new_count(rows, employee);
+			const fresh = new_count(rows);
 			const head = text(
 				"div",
 				"text-p-lg font-semibold text-ink-gray-8",
@@ -188,14 +182,14 @@
 			}
 			const list = document.createElement("div");
 			list.className = "flex flex-col gap-2";
-			for (const row of rows) list.appendChild(policy_row(row, employee));
+			for (const row of rows) list.appendChild(policy_row(row));
 			panel.replaceChildren(head, list);
 		}).catch(() => {
 			panel.replaceChildren(text("p", "text-p-base text-ink-red-3", __("Could not load company policies.")));
 		});
 	}
 
-	function policy_row(row, employee) {
+	function policy_row(row) {
 		const item = document.createElement("button");
 		item.type = "button";
 		item.className = "w-full text-left flex items-center justify-between gap-3 rounded-6 border px-4 py-3 bg-surface-white hover:bg-surface-gray-2";
@@ -207,13 +201,8 @@
 		);
 		item.append(info, text("span", "text-p-sm text-ink-gray-5 shrink-0", __("Open")));
 		item.addEventListener("click", () => {
-			if (row.policy_file) {
-				mark_seen(employee, row);
-				window.open(row.policy_file, "_blank", "noopener");
-				// refresh the "N new" text; the sidebar badge updates on the next ensure() tick
-				const panel = open_column?.querySelector(":scope > .alt-cp-panel");
-				if (panel) render(panel, employee);
-			} else frappe.show_alert({ message: __("This policy has no file attached."), indicator: "orange" });
+			if (row.policy_file) window.open(row.policy_file, "_blank", "noopener");
+			else frappe.show_alert({ message: __("This policy has no file attached."), indicator: "orange" });
 		});
 		return item;
 	}
@@ -240,8 +229,12 @@
 		const nav = desktop_nav(root);
 		const assets = assets_button(nav);
 		add_style(root);
-		// Vue replaced the content column (the panel went with it): the panel is no longer showing
-		if (panel_open && !open_column?.isConnected) panel_open = false;
+		if (
+			panel_open &&
+			(!open_column?.isConnected ||
+				!open_column.classList.contains("alt-cp-on") ||
+				!open_column.querySelector(":scope > .alt-cp-panel"))
+		) panel_open = false;
 
 		// Clicks on any Vue sidebar button, anywhere in the shadow root, leave the panel for that section.
 		// Listening on the root (which Vue keeps) survives the sidebar being re-rendered.
@@ -250,7 +243,7 @@
 			root.addEventListener("click", (event) => {
 				const button = event.target.closest?.("button");
 				if (!button) return;
-				// any sidebar item (direct child of the nav): bring the content to the top.
+				// any sidebar item: bring the content to the top.
 				// Our own button scrolls through show_panel, so skip it here.
 				const side = button.closest("aside");
 				if (side && !button.hasAttribute("data-alt-cp") && side.nextElementSibling) {
@@ -292,7 +285,7 @@
 
 		// the new-policy count comes from the same list the panel shows
 		if (cache.employee === employee && cache.rows) {
-			set_count(our_button, new_count(cache.rows, employee));
+			set_count(our_button, new_count(cache.rows));
 		} else if (!loading || Date.now() - loading_since > 10000) {
 			// a request that never answers is retried after 10 seconds
 			loading = true;
@@ -300,7 +293,7 @@
 			frappe.xcall(METHOD, { employee })
 				.then((rows) => {
 					cache = { employee, rows };
-					set_count(our_button, new_count(rows, employee));
+					set_count(our_button, new_count(rows));
 				})
 				.catch(() => { })
 				.finally(() => (loading = false));
