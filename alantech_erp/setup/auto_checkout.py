@@ -30,6 +30,15 @@ def auto_create_missing_checkout():
 			frappe.log_error(title=f"Auto checkout for {employee} failed", reference_doctype=DT)
 
 
+
+def set_auto_checkout_default_on():
+	"""One time: existing sites hold a saved 0, which overrides the doctype default of 1."""
+	key = "alt_auto_checkout_default_on"
+	if frappe.db.get_default(key):
+		return
+	frappe.db.set_single_value("Session Log Settings", "auto_create_missing_checkout", 1)
+	frappe.db.set_default(key, "1")
+	
 def get_employees_with_open_checkin(now):
 	"""Employees whose latest IN/OUT log is an IN, looking back LOOKBACK_DAYS.
 

@@ -793,6 +793,8 @@ after_migrate = [
     "alantech_erp.setup.loan_accounts.execute",
     # Loan Product: Product Code generated (LP-0001 ...), read-only on the form
     "alantech_erp.setup.loan_product_code.execute",
+        "alantech_erp.setup.auto_checkout.set_auto_checkout_default_on",
     # demo / UAT sites only (site_config "alantech_demo_data": 1): keep last
     "alantech_erp.demo.data.after_migrate",
+
 ]
