@@ -528,10 +528,10 @@ function rowDocumentType(button) {
 	const IDLE = "bg-transparent";
 	const CSS = `.alt-cp-panel { display: none; } .alt-cp-on > .alt-cp-panel { display: block; } .alt-cp-on > :not(.alt-cp-panel) { display: none !important; }`;
 
-	// A policy counts as new for this many days after its effective date, until the employee opens it
+	// A policy counts as new for this many days after its effective date, until it is opened
 	const NEW_DAYS = 30;
-	const SEEN_KEY = "alt_cp_seen";
 	const OPEN_KEY = "alt_cp_open";
+	const SEEN_KEY = "alt_cp_seen";
 
 	let panel_open = false;
 	let open_column = null; // the content column the panel is in
@@ -539,9 +539,10 @@ function rowDocumentType(button) {
 	let cache = { employee: null, rows: null };
 	let loading = false;
 	let loading_since = 0;
+	let my_employee = null;
 
 	function policy_key(employee, row) {
-		return [employee, row.policy_code || row.policy_title, row.version || "", row.effective_date || ""].join("|");
+		return [frappe.session.user, employee, row.policy_code || row.policy_title, row.version || "", row.effective_date || ""].join("|");
 	}
 
 	function seen_set() {
@@ -553,13 +554,13 @@ function rowDocumentType(button) {
 	}
 
 	function mark_seen(employee, row) {
+		if (!my_employee || my_employee !== employee) return; // only the employee themselves clears it
 		const seen = seen_set();
 		seen.add(policy_key(employee, row));
-		try {
-			localStorage.setItem(SEEN_KEY, JSON.stringify([...seen]));
-		} catch (e) { }
+		try { localStorage.setItem(SEEN_KEY, JSON.stringify([...seen])); } catch (e) { }
 	}
 
+	// new = effective within the last NEW_DAYS and not opened yet
 	function new_count(rows, employee) {
 		const cutoff = Date.now() - NEW_DAYS * 24 * 60 * 60 * 1000;
 		const seen = seen_set();
@@ -578,12 +579,33 @@ function rowDocumentType(button) {
 			current?.remove();
 			return;
 		}
-		if (current && current.textContent === String(n)) return;
+		const label = `${n} ${__("new")}`;
+		if (current && current.textContent === label) return;
 		current?.remove();
-		const badge = text("span", "text-p-sm text-ink-gray-5 shrink-0", String(n));
+		const badge = text("span", "text-p-sm text-ink-gray-5 shrink-0", label);
+		badge.style.fontSize = "11px";
 		badge.setAttribute("data-alt-cp-count", "");
 		badge.title = __("New policies");
-		button.append(badge);
+		const total = button.querySelector(":scope > [data-alt-cp-total]");
+		if (total) total.before(badge);
+		else button.append(badge);
+	}
+
+	// Total number of policies, as a pill on the right edge like the Documents count
+	function set_total(button, n) {
+		const current = button.querySelector(":scope > [data-alt-cp-total]");
+		if (!n) {
+			current?.remove();
+			return;
+		}
+		if (current && current.textContent === String(n)) return;
+		current?.remove();
+		const pill = text("span", "ml-auto shrink-0 text-ink-gray-6", String(n));
+		pill.style.cssText =
+			"font-size:11px;min-width:20px;height:20px;padding:0 6px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:var(--surface-gray-2,#edf0f5)";
+		pill.setAttribute("data-alt-cp-total", "");
+		pill.title = __("Total policies");
+		button.append(pill);
 	}
 
 	function employee_from_route() {
@@ -628,6 +650,27 @@ function rowDocumentType(button) {
 		if (!button) return;
 		button.classList.toggle(ACTIVE, active);
 		button.classList.toggle(IDLE, !active);
+	}
+
+	// Scroll whatever actually scrolls (it may be inside the island's shadow root) so the content is at the top
+	function scroll_to(el) {
+		const parent_of = (n) => {
+			if (n.parentElement) return n.parentElement;
+			const r = n.getRootNode();
+			return r instanceof ShadowRoot ? r.host : null;
+		};
+		let node = parent_of(el);
+		while (node) {
+			const oy = getComputedStyle(node).overflowY;
+			if ((oy === "auto" || oy === "scroll") && node.scrollHeight > node.clientHeight) break;
+			node = parent_of(node);
+		}
+		const top = el.getBoundingClientRect().top;
+		if (node) {
+			node.scrollTo({ top: node.scrollTop + top - node.getBoundingClientRect().top - 16, behavior: "smooth" });
+		} else {
+			window.scrollTo({ top: window.scrollY + top - 170, behavior: "smooth" }); // 170 = sticky header + tabs
+		}
 	}
 
 	function show_panel(nav, employee, scroll) {
@@ -724,7 +767,7 @@ function rowDocumentType(button) {
 			if (row.policy_file) {
 				mark_seen(employee, row);
 				window.open(row.policy_file, "_blank", "noopener");
-				// refresh the "N new" text; the sidebar badge updates on the next ensure() tick
+				// refresh the "N new" text in the panel; the sidebar badge updates on the next tick
 				const panel = open_column?.querySelector(":scope > .alt-cp-panel");
 				if (panel) render(panel, employee);
 			} else frappe.show_alert({ message: __("This policy has no file attached."), indicator: "orange" });
@@ -754,8 +797,19 @@ function rowDocumentType(button) {
 		const nav = desktop_nav(root);
 		const assets = assets_button(nav);
 		add_style(root);
-		// Vue replaced the content column (the panel went with it): the panel is no longer showing
-		if (panel_open && !open_column?.isConnected) panel_open = false;
+		if (my_employee === null) {
+			my_employee = "";
+			frappe.db.get_value("Employee", { user_id: frappe.session.user }, "name")
+				.then((r) => { my_employee = r?.message?.name || ""; })
+				.catch(() => { });
+		}
+		// Vue replaced the content column or dropped our panel: the panel is no longer showing
+		if (
+			panel_open &&
+			(!open_column?.isConnected ||
+				!open_column.classList.contains("alt-cp-on") ||
+				!open_column.querySelector(":scope > .alt-cp-panel"))
+		) panel_open = false;
 
 		// Clicks on any Vue sidebar button, anywhere in the shadow root, leave the panel for that section.
 		// Listening on the root (which Vue keeps) survives the sidebar being re-rendered.
@@ -764,7 +818,7 @@ function rowDocumentType(button) {
 			root.addEventListener("click", (event) => {
 				const button = event.target.closest?.("button");
 				if (!button) return;
-				// any sidebar item (direct child of the nav): bring the content to the top.
+				// any sidebar item: bring the content to the top.
 				// Our own button scrolls through show_panel, so skip it here.
 				const side = button.closest("aside");
 				if (side && !button.hasAttribute("data-alt-cp") && side.nextElementSibling) {
@@ -807,6 +861,7 @@ function rowDocumentType(button) {
 		// the new-policy count comes from the same list the panel shows
 		if (cache.employee === employee && cache.rows) {
 			set_count(our_button, new_count(cache.rows, employee));
+			set_total(our_button, cache.rows.length);
 		} else if (!loading || Date.now() - loading_since > 10000) {
 			// a request that never answers is retried after 10 seconds
 			loading = true;
@@ -815,6 +870,7 @@ function rowDocumentType(button) {
 				.then((rows) => {
 					cache = { employee, rows };
 					set_count(our_button, new_count(rows, employee));
+					set_total(our_button, rows.length);
 				})
 				.catch(() => { })
 				.finally(() => (loading = false));
