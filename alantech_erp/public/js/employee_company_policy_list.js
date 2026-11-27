@@ -37,12 +37,33 @@
 			current?.remove();
 			return;
 		}
-		if (current && current.textContent === String(n)) return;
+		const label = `${n} ${__("new")}`;
+		if (current && current.textContent === label) return;
 		current?.remove();
-		const badge = text("span", "text-p-sm text-ink-gray-5 shrink-0", String(n));
+		const badge = text("span", "text-p-sm text-ink-gray-5 shrink-0", label);
+		badge.style.fontSize = "11px";
 		badge.setAttribute("data-alt-cp-count", "");
 		badge.title = __("New policies");
-		button.append(badge);
+		const total = button.querySelector(":scope > [data-alt-cp-total]");
+		if (total) total.before(badge);
+		else button.append(badge);
+	}
+
+	// Total number of policies, as a pill on the right edge like the Documents count
+	function set_total(button, n) {
+		const current = button.querySelector(":scope > [data-alt-cp-total]");
+		if (!n) {
+			current?.remove();
+			return;
+		}
+		if (current && current.textContent === String(n)) return;
+		current?.remove();
+		const pill = text("span", "ml-auto shrink-0 text-ink-gray-6", String(n));
+		pill.style.cssText =
+			"font-size:11px;min-width:20px;height:20px;padding:0 6px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:var(--surface-gray-2,#edf0f5)";
+		pill.setAttribute("data-alt-cp-total", "");
+		pill.title = __("Total policies");
+		button.append(pill);
 	}
 
 	function employee_from_route() {
@@ -286,6 +307,7 @@
 		// the new-policy count comes from the same list the panel shows
 		if (cache.employee === employee && cache.rows) {
 			set_count(our_button, new_count(cache.rows));
+			set_total(our_button, cache.rows.length);
 		} else if (!loading || Date.now() - loading_since > 10000) {
 			// a request that never answers is retried after 10 seconds
 			loading = true;
@@ -294,6 +316,7 @@
 				.then((rows) => {
 					cache = { employee, rows };
 					set_count(our_button, new_count(rows));
+					set_total(our_button, rows.length);
 				})
 				.catch(() => { })
 				.finally(() => (loading = false));
